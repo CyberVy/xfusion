@@ -1,6 +1,0 @@
-requests
-torch
-diffusers
-compel
-tqdm
-flask
