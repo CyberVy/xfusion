@@ -1,9 +1,0 @@
-requests
-peft
-torch
-diffusers
-optimum-quanto
-transformers
-compel
-tqdm
-flask
