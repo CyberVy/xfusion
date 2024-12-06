@@ -40,11 +40,16 @@ def download_file(url,filename=None,directory=None,mute=False,**kwargs):
 
     total_size = int(response.headers.get('content-length', 0))
 
-    with open(f"{directory}unfinished.{filename}", 'wb') as file, tqdm(desc=filename,total=total_size, unit='B',unit_scale=True,unit_divisor=1024,) as progress_bar:
-        for data in response.iter_content(8192 * 2):
-            file.write(data)
-            if not mute:
+    if not mute:
+        with open(f"{directory}unfinished.{filename}", 'wb') as file, tqdm(desc=filename,total=total_size, unit='B',unit_scale=True,unit_divisor=1024,) as progress_bar:
+            for data in response.iter_content(8192 * 2):
+                file.write(data)
                 progress_bar.update(len(data))
+    else:
+        with open(f"{directory}unfinished.{filename}", 'wb') as file:
+            for data in response.iter_content(8192 * 2):
+                file.write(data)
+                
     os.rename(f"{directory}unfinished.{filename}",f"{directory}{filename}")
     return f"{directory}{filename}"
 
