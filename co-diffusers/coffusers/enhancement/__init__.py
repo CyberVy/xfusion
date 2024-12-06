@@ -17,6 +17,7 @@ def get_enhancer(pipeline_or_model,**kwargs):
         return enhancer
     elif model_version in ["flux"]:
         # todo: implement flux enhancer
+        kwargs.pop("model_version")
         if isinstance(pipeline_or_model, str):
             pipeline = load_flux_pipeline(pipeline_or_model, **kwargs)
         else:
