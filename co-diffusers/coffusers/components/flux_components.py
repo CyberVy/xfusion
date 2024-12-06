@@ -73,7 +73,7 @@ def load_flux_vae(directory=None,use_local_files=False,delete_internet_files=Tru
         file_list = get_flux_vae_files(directory)
 
     vae = AutoencoderKL.from_pretrained(directory, torch_dtype=torch.float16)
-    print("VAE ready")
+    print("VAE ready.")
 
     if not use_local_files and delete_internet_files:
         for file in file_list:
