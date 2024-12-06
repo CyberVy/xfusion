@@ -95,23 +95,25 @@ def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_fil
     return scheduler
 
 def load_flux_pipeline(uri="https://civitai.com/api/download/models/979329?type=Model&format=SafeTensor&size=full&fp=fp16",**kwargs):
-    def f(model):
+    def q(model):
         quantize(model,weights=qfloat8)
         freeze(model)
 
-    transformer = load_flux_transformer(uri=uri)
-    threads_execute(f,(transformer,),_await=False)
+    _t5_thread = threads_execute(get_t5_encoder_files,("./t5_encoder",),_await=False)[0]
 
+    transformer = load_flux_transformer(uri=uri)
+    threads_execute(q,(transformer,),_await=False)
+
+    _t5_thread.join()
     t5_tokenizer, t5_encoder = load_t5_tokenizer(), load_t5_encoder()
-    _thread_t5 = threads_execute(f,(t5_encoder,),_await=False)[0]
+    threads_execute(q,(t5_encoder,),_await=True)
 
     clip_tokenizer, clip_encoder = load_clip_tokenizer(), load_clip_encoder()
     vae = load_flux_vae()
     scheduler = load_flux_scheduler()
-    _thread_t5.join()
+
     pipeline = FluxPipeline(transformer=transformer, vae=vae, scheduler=scheduler,
                             text_encoder=clip_encoder, text_encoder_2=t5_encoder,
                             tokenizer=clip_tokenizer, tokenizer_2=t5_tokenizer,**kwargs)
     print("FLUX Pipeline ready.")
     return pipeline
-
