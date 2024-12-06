@@ -6,7 +6,7 @@ import os
 import re
 
 
-def download_file(url,filename=None,directory=None,**kwargs):
+def download_file(url,filename=None,directory=None,mute=False,**kwargs):
 
     directory = "./" if directory is None else directory
 
@@ -43,7 +43,8 @@ def download_file(url,filename=None,directory=None,**kwargs):
     with open(f"{directory}unfinished.{filename}", 'wb') as file, tqdm(desc=filename,total=total_size, unit='B',unit_scale=True,unit_divisor=1024,) as progress_bar:
         for data in response.iter_content(8192 * 2):
             file.write(data)
-            progress_bar.update(len(data))
+            if not mute:
+                progress_bar.update(len(data))
     os.rename(f"{directory}unfinished.{filename}",f"{directory}{filename}")
     return f"{directory}{filename}"
 
