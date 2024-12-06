@@ -102,7 +102,7 @@ def load_flux_pipeline(uri="https://civitai.com/api/download/models/979329?type=
 
     _t5_thread = threads_execute(get_t5_encoder_files,("./t5_encoder",),_await=False)[0]
 
-    transformer = load_flux_transformer("~/",uri=uri)
+    transformer = load_flux_transformer("~/transformer",uri=uri)
     threads_execute(q,(transformer,),_await=False)
 
     _t5_thread.join()
