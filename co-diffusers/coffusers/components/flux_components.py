@@ -100,7 +100,7 @@ def load_flux_pipeline(uri="https://civitai.com/api/download/models/979329?type=
         freeze(model)
 
     transformer = load_flux_transformer(uri=uri)
-    threads_execute(f,(transformer,),_await=True)
+    threads_execute(f,(transformer,),_await=False)
 
     t5_tokenizer, t5_encoder = load_t5_tokenizer(), load_t5_encoder()
     _thread_t5 = threads_execute(f,(t5_encoder,),_await=False)[0]
