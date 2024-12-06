@@ -2,6 +2,7 @@ import os
 import torch
 from .component_utils import load_t5_tokenizer,load_t5_encoder
 from .component_utils import load_clip_tokenizer,load_clip_encoder
+from .component_utils import get_t5_encoder_files
 from ..download import download_file
 from ..const import hf_token
 from ..utils import threads_execute
