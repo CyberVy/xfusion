@@ -112,7 +112,6 @@ def load_flux_pipeline(uri="https://civitai.com/api/download/models/979329?type=
     pipeline = FluxPipeline(transformer=transformer, vae=vae, scheduler=scheduler,
                             text_encoder=clip_encoder, text_encoder_2=t5_encoder,
                             tokenizer=clip_tokenizer, tokenizer_2=t5_tokenizer,**kwargs)
-    pipeline.enable_model_cpu_offload()
     print("FLUX Pipeline ready.")
     return pipeline
 
