@@ -138,15 +138,16 @@ def load_flux_pipeline(uri=default_flux_transformer_url,download_kwargs=None):
 
     _t5_thread = threads_execute(_get_t5_encoder_files_mute,("./t5_encoder",),_await=False)[0]
 
-    transformer = load_flux_transformer("/transformer",uri=uri)
+    transformer = load_flux_transformer("/transformer",uri=uri,download_kwargs=download_kwargs)
     threads_execute(q,(transformer,),_await=True)
 
-    t5_tokenizer, t5_encoder = load_t5_tokenizer(), load_t5_encoder(directory="./t5_encoder",use_local_files=True)
+    _t5_thread.join()
+    t5_tokenizer, t5_encoder = load_t5_tokenizer(download_kwargs=download_kwargs), load_t5_encoder(directory="./t5_encoder",use_local_files=True)
     threads_execute(q,(t5_encoder,),_await=True)
 
-    clip_tokenizer, clip_encoder = load_clip_tokenizer(), load_clip_encoder()
-    vae = load_flux_vae()
-    scheduler = load_flux_scheduler()
+    clip_tokenizer, clip_encoder = load_clip_tokenizer(download_kwargs=download_kwargs), load_clip_encoder(download_kwargs=download_kwargs)
+    vae = load_flux_vae(download_kwargs=download_kwargs)
+    scheduler = load_flux_scheduler(download_kwargs=download_kwargs)
 
     pipeline = FluxPipeline(transformer=transformer, vae=vae, scheduler=scheduler,
                             text_encoder=clip_encoder, text_encoder_2=t5_encoder,
