@@ -1,4 +1,5 @@
 # components_utils.py
+
 t5_tokenizer_url_list = [
     "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/tokenizer_2/special_tokens_map.json?download=true",
     "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/tokenizer_2/spiece.model?download=true",
@@ -26,6 +27,7 @@ clip_encoder_url_list = [
 ]
 
 # flux_components.py
+
 default_flux_transformer_url = "https://civitai.com/api/download/models/979329?type=Model&format=SafeTensor&size=full&fp=fp16"
 
 flux_vae_url_list = [
@@ -37,4 +39,13 @@ flux_scheduler_url_list = [
 ]
 
 # stable_diffusion_components.py
+
+# https://civitai.com/models/277058/epicrealism-xl
 default_stable_diffusion_model_url = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+
+# collection
+
+# https://civitai.com/models/134778/xxmix0731girl
+lora_sdxl_xxxmix_girl = {"name":"xxmix_girl","url":"https://civitai.com/api/download/models/148469?type=Model&format=SafeTensor"}
+
+
