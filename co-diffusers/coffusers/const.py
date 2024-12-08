@@ -7,4 +7,4 @@ cookie = civitai_cookie + hf_cookie
 cookie = cookie if cookie else os.environ.get("cookie")
 
 hf_token = "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"
-hf_token = hf_token if hf_token else os.environ.get("hf_token")
+hf_token = hf_token if hf_token else os.environ.get("HF_HUB_TOKEN")
