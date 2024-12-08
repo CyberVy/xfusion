@@ -61,7 +61,7 @@ def load_t5_encoder(directory=None, use_local_files=False, delete_internet_files
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if kwargs.get("token") is None:
-        kwargs.update(token=token)
+        kwargs.update(token=HF_HUB_TOKEN)
 
     directory = "./t5_encoder" if directory is None else directory
     file_list = []
