@@ -20,7 +20,6 @@ class PipelineEnhancerBase(EasyInitSubclass):
             self.scheduler = scheduler_type.from_config(self.scheduler.config,**kwargs)
         else:
             # from https://huggingface.co/docs/diffusers/api/schedulers/overview
-            scheduler_type = scheduler_type.upper()
             scheduler_map = {
                 "DPM++ 2M":(DPMSolverMultistepScheduler,{}),
                 "DPM++ 2M Karras":(DPMSolverMultistepScheduler,{"use_karras_sigmas":True}),
