@@ -43,7 +43,7 @@ class PipelineEnhancerBase(EasyInitSubclass):
             self.scheduler = scheduler_type.from_config(self.scheduler.config,**kwargs)
         else:
             scheduler_map = self.scheduler_map
-            if scheduler_type in scheduler_map:
+            if scheduler_type.lower() in [item.lower() for item in scheduler_map.keys()]:
                 self.scheduler = scheduler_map[scheduler_type][0].from_config(self.scheduler.config,**scheduler_map[scheduler_type][1])
             else:
                 print(f"{scheduler_type} is not supported yet.")
