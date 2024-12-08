@@ -43,6 +43,6 @@ class PipelineEnhancerBase(EasyInitSubclass):
                 "UNIPC":(UniPCMultistepScheduler,{}),
             }
             if scheduler_type in scheduler_map:
-                self.scheduler = scheduler_map[scheduler_type](0).from_config(self.scheduler.config,**scheduler_map[scheduler_type](1))
+                self.scheduler = scheduler_map[scheduler_type][0].from_config(self.scheduler.config,**scheduler_map[scheduler_type][1])
             else:
                 print(f"{scheduler_type} is not supported yet.")
