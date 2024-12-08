@@ -20,8 +20,7 @@ class PipelineEnhancerBase(EasyInitSubclass):
             "DPM++ 2M": (DPMSolverMultistepScheduler, {}),
             "DPM++ 2M Karras": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True}),
             "DPM++ 2M SDE": (DPMSolverMultistepScheduler, {"algorithm_type": "sde-dpmsolver++"}),
-            "DPM++ 2M SDE Karras": (
-            DPMSolverMultistepScheduler, {"use_karras_sigmas": True, "algorithm_type": "sde-dpmsolver++"}),
+            "DPM++ 2M SDE Karras": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True, "algorithm_type": "sde-dpmsolver++"}),
             "DPM++ 2S a": (DPMSolverSinglestepScheduler, {}),
             "DPM++ 2S a Karras": (DPMSolverSinglestepScheduler, {"use_karras_sigmas": True}),
             "DPM++ SDE": (DPMSolverSinglestepScheduler, {}),
