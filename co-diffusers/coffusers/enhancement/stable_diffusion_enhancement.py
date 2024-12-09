@@ -151,8 +151,8 @@ class SDPipelineEnhancer(PipelineEnhancerBase,SDLoraEnhancerMixin, SDCLIPEnhance
         return self
 
     def __call__(self,**kwargs):
-        prompt = kwargs["prompt"]
-        negative_prompt = kwargs["negative_prompt"]
+        prompt = kwargs.get("prompt")
+        negative_prompt = kwargs.get("negative_prompt","")
         if isinstance(prompt,list) and isinstance(negative_prompt,list):
             prompt_type = list
         elif isinstance(prompt,list) and not isinstance(negative_prompt,list):
