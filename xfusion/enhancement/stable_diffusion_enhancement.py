@@ -1,7 +1,7 @@
 # limited support to sd3 now
 
 from .enhancement_utils import PipelineEnhancerBase
-from ..components.component_utils import get_clip_from_pipeline
+from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..utils import EasyInitSubclass
 from ..download import download_file,DownloadArgumentsMixin
 from ..message import TGBotMixin
@@ -64,7 +64,7 @@ def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     :param negative_prompt:
     :return:
     """
-    tokenizers,text_encoders = get_clip_from_pipeline(pipeline)
+    tokenizers,text_encoders = get_tokenizers_and_text_encoders_from_pipeline(pipeline)
     tokenizers = [tokenizer for tokenizer in tokenizers if tokenizer]
     text_encoders = [text_encoder for text_encoder in text_encoders if text_encoder]
 
@@ -91,7 +91,7 @@ class SDCLIPEnhancerMixin:
     overrides = ["tokenizers","text_encoders","skip_clip_layer","get_embeds_from_pipeline","__call__"]
 
     def __init__(self):
-        self.tokenizers, self.text_encoders = get_clip_from_pipeline(self)
+        self.tokenizers, self.text_encoders = get_tokenizers_and_text_encoders_from_pipeline(self)
 
     def skip_clip_layer(self,n):
         text_encoders = [text_encoder for text_encoder in self.text_encoders if text_encoder]
