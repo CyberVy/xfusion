@@ -31,7 +31,7 @@ def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
 class SDLoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
     # __oins__ here is the pipeline instance to implement.
     __oins__ = None
-    overrides = ["lora_dict","set_lora","set_lora_strength"]
+    overrides = ["lora_dict","set_lora","set_lora_strength","delete_adapters"]
 
     def __init__(self):
         DownloadArgumentsMixin.__init__(self)
@@ -53,6 +53,12 @@ class SDLoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
         self.lora_dict.update({lora_name:weight})
         self.set_adapters(list(self.lora_dict.keys()),list(self.lora_dict.values()))
 
+    def delete_adapters(self,adapter_names):
+        self.__oins__.delete_adapters(adapter_names)
+        if isinstance(adapter_names, str):
+            adapter_names = [adapter_names]
+        for name in adapter_names:
+            self.lora_dict.pop(name)
 
 def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     """
