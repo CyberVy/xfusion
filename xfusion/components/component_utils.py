@@ -190,7 +190,7 @@ def get_clip_prompt_embeds(tokenizer,text_encoder,prompt,num_images_per_prompt: 
         prompt_embeds = prompt_embeds.view(batch_size * num_images_per_prompt, -1)
         return prompt_embeds
 
-def get_clip_from_pipeline(pipeline):
+def get_tokenizers_and_text_encoders_from_pipeline(pipeline):
 
     tokenizers = []
     text_encoders = []
