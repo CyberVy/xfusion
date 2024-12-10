@@ -15,7 +15,7 @@ import gc
 from random import randint
 
 
-def set_lora(pipeline,lora_uri,lora_name,weight=0.5,download_kwargs=None):
+def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
 
     use_internet = True
     if lora_uri.startswith(".") or lora_uri.startswith("/") or lora_uri.startswith("~"):
@@ -27,12 +27,11 @@ def set_lora(pipeline,lora_uri,lora_name,weight=0.5,download_kwargs=None):
         pipeline.load_lora_weights(lora_path,adapter_name=lora_name)
     else:
         pipeline.load_lora_weights(lora_uri,adapter_name=lora_name)
-    pipeline.set_adapters([lora_name],adapter_weights=[weight])
 
 class SDLoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
     # __oins__ here is the pipeline instance to implement.
     __oins__ = None
-    overrides = ["lora_dict","set_lora","set_lora_weight"]
+    overrides = ["lora_dict","set_lora","set_lora_strength"]
 
     def __init__(self):
         DownloadArgumentsMixin.__init__(self)
@@ -44,14 +43,16 @@ class SDLoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
             return
 
         if lora_name not in self.lora_dict:
-            set_lora(self.__oins__,lora_uri,lora_name,weight,self.download_kwargs)
+            load_lora(self,lora_uri,lora_name,self.download_kwargs)
             self.lora_dict.update({lora_name:weight})
+            self.set_adapters(list(self.lora_dict.keys()),list(self.lora_dict.values()))
         else:
-            self.set_lora_weight(lora_name,weight)
+            self.set_lora_strength(lora_name,weight)
 
-    def set_lora_weight(self,lora_name,weight):
-        self.__oins__.set_adapters([lora_name],adapter_weights=[weight])
+    def set_lora_strength(self,lora_name,weight):
         self.lora_dict.update({lora_name:weight})
+        self.set_adapters(list(self.lora_dict.keys()),list(self.lora_dict.values()))
+
 
 def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     """
@@ -90,7 +91,7 @@ class SDCLIPEnhancerMixin:
     overrides = ["tokenizers","text_encoders","skip_clip_layer","get_embeds_from_pipeline","__call__"]
 
     def __init__(self):
-        self.tokenizers, self.text_encoders = get_clip_from_pipeline(self.__oins__)
+        self.tokenizers, self.text_encoders = get_clip_from_pipeline(self)
 
     def skip_clip_layer(self,n):
         text_encoders = [text_encoder for text_encoder in self.text_encoders if text_encoder]
@@ -108,7 +109,7 @@ class SDCLIPEnhancerMixin:
 
     def get_embeds_from_pipeline(self,prompt,negative_prompt,clip_skip=None):
         self.skip_clip_layer(clip_skip)
-        r =  get_embeds_from_pipeline(self.__oins__,prompt,negative_prompt)
+        r =  get_embeds_from_pipeline(self,prompt,negative_prompt)
         self.skip_clip_layer(0)
         return r
 
@@ -171,7 +172,7 @@ class SDPipelineEnhancer(PipelineEnhancerBase,SDLoraEnhancerMixin, SDCLIPEnhance
 
         for lora,weight in self.lora_dict.items():
             if lora not in prompt_str:
-                self.set_lora_weight(lora, 0)
+                self.set_lora_strength(lora, 0)
                 print(f"LoRA{lora}:{weight} is disable due to {lora} is not in prompts.")
         try:
             r = SDCLIPEnhancerMixin.__call__(self,**kwargs)
@@ -179,7 +180,7 @@ class SDPipelineEnhancer(PipelineEnhancerBase,SDLoraEnhancerMixin, SDCLIPEnhance
             raise e
         finally:
             for lora,weight in saved_lora_dict.items():
-                self.set_lora_weight(lora,weight)
+                self.set_lora_strength(lora,weight)
         return r
 
     def load_i2i_pipeline(self):
