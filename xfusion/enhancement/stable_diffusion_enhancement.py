@@ -40,7 +40,7 @@ class SDLoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
         self.download_kwargs.update(directory="./lora")
 
     def set_lora(self,lora_uri="",lora_name="",weight=0.4):
-        if not (lora_name or lora_name):
+        if not lora_name:
             return
 
         if lora_name not in self.lora_dict:
