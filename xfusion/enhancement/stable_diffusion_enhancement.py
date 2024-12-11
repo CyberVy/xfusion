@@ -193,12 +193,15 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
         return r
 
     def load_i2i_pipeline(self):
+        pipeline = None
         if self.__oinstype__ == StableDiffusionPipeline:
-            return SDPipelineEnhancer(StableDiffusionImg2ImgPipeline(**self.components))
+            pipeline = SDPipelineEnhancer(StableDiffusionImg2ImgPipeline(**self.components))
         elif self.__oinstype__ == StableDiffusionXLPipeline:
-            return SDPipelineEnhancer(StableDiffusionXLImg2ImgPipeline(**self.components))
+            pipeline =  SDPipelineEnhancer(StableDiffusionXLImg2ImgPipeline(**self.components))
         elif self.__oinstype__ == StableDiffusion3Pipeline:
-            return SDPipelineEnhancer(StableDiffusion3Img2ImgPipeline(**self.components))
+            pipeline =  SDPipelineEnhancer(StableDiffusion3Img2ImgPipeline(**self.components))
+        pipeline.lora_dict = self.lora_dict
+        return pipeline
 
     def generate_image_and_send_to_telegram(self,prompt,negative_prompt=None,num=1,seed=None,use_enhancer=True,**kwargs):
         return generate_image_and_send_to_telegram(
