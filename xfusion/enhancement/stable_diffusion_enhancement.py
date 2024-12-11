@@ -1,7 +1,8 @@
 # limited support to sd3 now
 
-from .enhancement_utils import PipelineEnhancerBase
+from .enhancement_utils import PipelineEnhancerBase,FromURLMixin
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
+from ..components import load_stable_diffusion_pipeline
 from ..utils import EasyInitSubclass
 from ..download import download_file,DownloadArgumentsMixin
 from ..message import TGBotMixin
@@ -143,7 +144,9 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
         torch.cuda.empty_cache();gc.collect()
     return images
 
-class SDPipelineEnhancer(PipelineEnhancerBase,SDLoraEnhancerMixin, SDCLIPEnhancerMixin, TGBotMixin, EasyInitSubclass):
+class SDPipelineEnhancer(PipelineEnhancerBase,
+                         SDLoraEnhancerMixin,SDCLIPEnhancerMixin,FromURLMixin,
+                         TGBotMixin,EasyInitSubclass):
     overrides = ["model_name","to"]
 
     def __init__(self,__oins__):
@@ -200,3 +203,7 @@ class SDPipelineEnhancer(PipelineEnhancerBase,SDLoraEnhancerMixin, SDCLIPEnhance
     def generate_image_and_send_to_telegram(self,prompt,negative_prompt=None,num=1,seed=None,use_enhancer=True,**kwargs):
         return generate_image_and_send_to_telegram(
             self,prompt=prompt,negative_prompt=negative_prompt,num=num,seed=seed,use_enhancer=use_enhancer,**kwargs)
+
+    @classmethod
+    def from_url(cls,url,model_version=None,**kwargs):
+        return load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs)
