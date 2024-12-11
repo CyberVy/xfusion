@@ -75,13 +75,13 @@ def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     tokenizers = [tokenizer for tokenizer in tokenizers if tokenizer]
     text_encoders = [text_encoder for text_encoder in text_encoders if text_encoder]
 
-    if isinstance(pipeline,StableDiffusionPipeline):
+    if isinstance(pipeline,StableDiffusionPipeline) or isinstance(pipeline,StableDiffusionImg2ImgPipeline):
         compel = Compel(tokenizers,text_encoders,truncate_long_prompts=False)
         conditioning = compel(prompt)
         negative_conditioning = compel(negative_prompt)
         [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
         return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning}
-    elif isinstance(pipeline,StableDiffusionXLPipeline):
+    elif isinstance(pipeline,StableDiffusionXLPipeline) or isinstance(pipeline,StableDiffusionXLImg2ImgPipeline):
         compel = Compel(tokenizers,text_encoders,returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,requires_pooled=[False,True],truncate_long_prompts=False)
         conditioning,pooled = compel(prompt)
         negative_conditioning, negative_pooled = compel(negative_prompt)
