@@ -53,3 +53,10 @@ class PipelineEnhancerBase(EasyInitSubclass):
 
     def load_i2i_pipeline(self):
         raise NotImplementedError(f"{object.__getattribute__(self,'__class__')} not implement 'load_i2i_pipeline'")
+
+class FromURLMixin:
+    overrides = ["from_url"]
+
+    @classmethod
+    def from_url(cls,url,**kwargs):
+        raise NotImplementedError(f"{cls} not implement 'from_url'")
