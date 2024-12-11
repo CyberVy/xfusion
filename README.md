@@ -1,10 +1,16 @@
 # Hello Xfusion!
-# **Installation**
+Xfusion is a Python library built on top of [Diffusers](https://github.com/huggingface/diffusers). It specializes in assembling open-source AI models, with a particular focus on models like Stable Diffusion, Flux, and others.
+
+# Features
+- Enhanced support for models from sources outside Hugging Face.
+- Simple and efficient model loading using just a model URL.
+
+# Installation
 ```bash
 pip install -q git+https://github.com/huggingface/diffusers.git
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
-# **Code Example**
+# Code Example
 ```python
 from xfusion.enhancement import load_enhancer
 import torch
@@ -36,3 +42,5 @@ height = None
 ```python
 images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.Generator(pipeline.device).manual_seed(seed),width=width,height=height,num_inference_steps=num_inference_steps,guidance_scale=guidance_scale,clip_skip=clip_skip)
 ```
+# Acknowledgments
+Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
