@@ -1,4 +1,5 @@
-from .enhancement_utils import PipelineEnhancerBase
+from .enhancement_utils import PipelineEnhancerBase,FromURLMixin
+from ..components.flux_components import load_flux_pipeline
 from ..utils import EasyInitSubclass
 from ..message import TGBotMixin
 from diffusers import FluxImg2ImgPipeline
@@ -26,8 +27,8 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
         torch.cuda.empty_cache();gc.collect()
     return images
 
-class FluxPipelineEnhancer(PipelineEnhancerBase,TGBotMixin,EasyInitSubclass):
-    overrides = [""]
+class FluxPipelineEnhancer(PipelineEnhancerBase,FromURLMixin,TGBotMixin,EasyInitSubclass):
+    overrides = []
 
     def __init__(self,__oins__):
         PipelineEnhancerBase.__init__(self,__oins__)
@@ -38,3 +39,7 @@ class FluxPipelineEnhancer(PipelineEnhancerBase,TGBotMixin,EasyInitSubclass):
 
     def load_i2i_pipeline(self):
         return FluxPipelineEnhancer(FluxImg2ImgPipeline(**self.components))
+
+    @classmethod
+    def from_url(cls,url,**kwargs):
+        return load_flux_pipeline(url,**kwargs)
