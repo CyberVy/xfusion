@@ -4,6 +4,7 @@ Xfusion is a Python library built on top of [Diffusers](https://github.com/huggi
 # Features
 - Enhanced support for models from sources outside Hugging Face.
 - Simple and efficient model loading using just a model URL.
+- Extension for models.
 
 # Supported Models
 - Stable Diffusion 1.5/2/3/3.5/XL
