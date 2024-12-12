@@ -104,6 +104,33 @@ class EasyInitSubclass:
     def __next__(self):
         return self.__oins__.__next__()
 
+
+class EditableImage(list):
+
+    def __init__(self,image):
+        list.__init__(self,[image])
+
+    def edit(self,image):
+        self.append(image)
+        return self
+
+    @property
+    def now(self):
+        return self[-1]
+
+    def back(self,n=1):
+        if n > len(self) - 1:
+            n = len(self) - 1
+        for item in range(n):
+            self.pop(-1)
+        return self[-1]
+
+    def reset(self):
+        for _ in range(len(self) - 1):
+            self.pop(-1)
+        return self
+
+
 def threads_execute(f,args,_await=True):
     threads = []
     if _await:
