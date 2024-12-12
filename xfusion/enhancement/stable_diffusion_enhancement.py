@@ -39,16 +39,12 @@ class SDLoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
         self.lora_dict = {}
         self.download_kwargs.update(directory="./lora")
 
-    def set_lora(self,lora_uri="",lora_name="",weight=0.4):
-        if not lora_name:
-            return
-
+    def set_lora(self,lora_uri,lora_name,weight=0.4):
         if lora_name not in self.lora_dict:
             load_lora(self,lora_uri,lora_name,self.download_kwargs)
-            self.lora_dict.update({lora_name:weight})
             self.set_adapters(list(self.lora_dict.keys()),list(self.lora_dict.values()))
-        else:
-            self.set_lora_strength(lora_name,weight)
+            
+        self.set_lora_strength(lora_name,weight)
 
     def set_lora_strength(self,lora_name,weight):
         self.lora_dict.update({lora_name:weight})
