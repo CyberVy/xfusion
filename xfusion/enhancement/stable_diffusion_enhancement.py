@@ -169,7 +169,7 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
         for lora,weight in self.lora_dict.items():
             if lora not in prompt_str:
                 self.set_lora_strength(lora, 0)
-                print(f"LoRA{lora}:{weight} is disable due to {lora} is not in prompts.")
+                print(f"LoRA {lora}:{weight} is disable due to {lora} is not in prompts.")
         try:
             r = SDCLIPEnhancerMixin.__call__(self,**kwargs)
         except Exception as e:
