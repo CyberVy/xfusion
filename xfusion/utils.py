@@ -123,7 +123,7 @@ class EditableImage(list):
             n = len(self) - 1
         for item in range(n):
             self.pop(-1)
-        return self[-1]
+        return self
 
     def reset(self):
         for _ in range(len(self) - 1):
