@@ -7,9 +7,9 @@ from ..utils import EasyInitSubclass
 from ..download import download_file,DownloadArgumentsMixin
 from ..message import TGBotMixin
 from compel import Compel,ReturnedEmbeddingsType
-from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline
-from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline
-from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline
+from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline
+from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline
+from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
 import torch
 import threading
 import gc
@@ -147,18 +147,13 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
 class SDPipelineEnhancer(PipelineEnhancerBase,
                          SDLoraEnhancerMixin,SDCLIPEnhancerMixin,FromURLMixin,
                          TGBotMixin,EasyInitSubclass):
-    overrides = ["model_name","to"]
+    overrides = []
 
     def __init__(self,__oins__):
         PipelineEnhancerBase.__init__(self, __oins__)
         SDLoraEnhancerMixin.__init__(self)
         SDCLIPEnhancerMixin.__init__(self)
         TGBotMixin.__init__(self)
-        self.model_name = self.name_or_path
-
-    def to(self, *args, **kwargs):
-        self.__oins__ = self.__oins__.to(*args, **kwargs)
-        return self
 
     def __call__(self,**kwargs):
         prompt = kwargs.get("prompt")
@@ -192,14 +187,13 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
                 self.set_lora_strength(lora,weight)
         return r
 
-    def load_i2i_pipeline(self):
-        pipeline = None
-        if self.__oinstype__ == StableDiffusionPipeline:
-            pipeline = SDPipelineEnhancer(StableDiffusionImg2ImgPipeline(**self.components))
-        elif self.__oinstype__ == StableDiffusionXLPipeline:
-            pipeline =  SDPipelineEnhancer(StableDiffusionXLImg2ImgPipeline(**self.components))
-        elif self.__oinstype__ == StableDiffusion3Pipeline:
-            pipeline =  SDPipelineEnhancer(StableDiffusion3Img2ImgPipeline(**self.components))
+    def load_i2i_pipeline(self,**kwargs):
+        pipeline = PipelineEnhancerBase.load_i2i_pipeline(self,**kwargs)
+        pipeline.lora_dict = self.lora_dict
+        return pipeline
+
+    def load_inpainting_pipeline(self,**kwargs):
+        pipeline = PipelineEnhancerBase.load_inpainting_pipeline(self,**kwargs)
         pipeline.lora_dict = self.lora_dict
         return pipeline
 
