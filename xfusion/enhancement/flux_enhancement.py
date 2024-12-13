@@ -22,9 +22,10 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
         image = pipeline(**kwargs).images[0] if use_enhancer else pipeline.__oins__(**kwargs).images[0]
         images.append(image)
         caption = f"Prompt: {prompt[:768]}\n\nStep: {kwargs.get('num_inference_steps')}, CFG: {kwargs.get('guidance_scale')}, CLIP Skip: {kwargs.get('clip_skip')}\nSampler: {pipeline.scheduler.config._class_name}\nSeed: {item}\n\nModel:{pipeline.model_name}"
-        threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name="Colab.PNG",file_type="PNG",caption=caption)).start()
+        threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
         torch.cuda.empty_cache();gc.collect()
     return images
+
 
 class FluxPipelineEnhancer(PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,TGBotMixin,EasyInitSubclass):
     overrides = []
