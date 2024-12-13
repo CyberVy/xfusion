@@ -36,7 +36,7 @@ def get_flux_scheduler_files(directory,**kwargs):
 
 def load_flux_transformer(
         directory=None,uri=default_flux_transformer_url,
-        use_local_files=False, delete_internet_files=True,download_kwargs=None,**kwargs):
+        use_local_files=False, delete_internet_files=False,download_kwargs=None,**kwargs):
     """
     :param directory: the transformer where to download
     :param uri: the uri of the transformer
@@ -72,7 +72,7 @@ def load_flux_transformer(
         os.remove(file_list[0])
     return transformer
 
-def load_flux_vae(directory=None,use_local_files=False,delete_internet_files=True,download_kwargs=None,**kwargs):
+def load_flux_vae(directory=None,use_local_files=False,delete_internet_files=False,download_kwargs=None,**kwargs):
     """
     :param directory:
     :param use_local_files:
@@ -100,7 +100,7 @@ def load_flux_vae(directory=None,use_local_files=False,delete_internet_files=Tru
             os.remove(file)
     return vae
 
-def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_files=True,download_kwargs=None,**kwargs):
+def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_files=False,download_kwargs=None,**kwargs):
     """
     :param directory:
     :param use_local_files:
@@ -128,7 +128,7 @@ def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_fil
             os.remove(file)
     return scheduler
 
-def load_flux_pipeline(uri=None,download_kwargs=None,**kwargs):
+def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None,**kwargs):
     uri = default_flux_transformer_url if uri is None else uri
     download_kwargs = {} if download_kwargs is None else download_kwargs
     def q(model):
@@ -140,16 +140,18 @@ def load_flux_pipeline(uri=None,download_kwargs=None,**kwargs):
 
     _t5_thread = threads_execute(_get_t5_encoder_files_mute,("./t5_encoder",),_await=False)[0]
 
-    transformer = load_flux_transformer("/transformer",uri=uri,download_kwargs=download_kwargs,**kwargs)
+    transformer = load_flux_transformer("/transformer",uri=uri,download_kwargs=download_kwargs,
+                                        delete_internet_files=delete_internet_files,**kwargs)
     threads_execute(q,(transformer,),_await=True)
 
     _t5_thread.join()
     t5_tokenizer, t5_encoder = load_t5_tokenizer(download_kwargs=download_kwargs,**kwargs), load_t5_encoder(directory="./t5_encoder",use_local_files=True,**kwargs)
     threads_execute(q,(t5_encoder,),_await=True)
 
-    clip_tokenizer, clip_encoder = load_clip_tokenizer(download_kwargs=download_kwargs,**kwargs), load_clip_encoder(download_kwargs=download_kwargs,**kwargs)
-    vae = load_flux_vae(download_kwargs=download_kwargs,**kwargs)
-    scheduler = load_flux_scheduler(download_kwargs=download_kwargs,**kwargs)
+    clip_tokenizer, clip_encoder = (load_clip_tokenizer(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs),
+                                    load_clip_encoder(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs))
+    vae = load_flux_vae(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
+    scheduler = load_flux_scheduler(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
 
     pipeline = FluxPipeline(transformer=transformer, vae=vae, scheduler=scheduler,
                             text_encoder=clip_encoder, text_encoder_2=t5_encoder,
