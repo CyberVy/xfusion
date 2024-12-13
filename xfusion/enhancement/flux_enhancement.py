@@ -2,7 +2,6 @@ from .enhancement_utils import PipelineEnhancerBase,LoraEnhancerMixin,FromURLMix
 from ..components.flux_components import load_flux_pipeline
 from ..utils import EasyInitSubclass
 from ..message import TGBotMixin
-from diffusers import FluxImg2ImgPipeline,FluxInpaintPipeline
 import torch
 import threading
 import gc
@@ -39,5 +38,5 @@ class FluxPipelineEnhancer(PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,T
         return generate_image_and_send_to_telegram(self,prompt,num,seed=seed,use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
-    def from_url(cls,url,**kwargs):
+    def from_url(cls,url=None,**kwargs):
         return load_flux_pipeline(url,**kwargs)
