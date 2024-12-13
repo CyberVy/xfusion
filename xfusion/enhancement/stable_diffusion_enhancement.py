@@ -153,5 +153,5 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
             self,prompt=prompt,negative_prompt=negative_prompt,num=num,seed=seed,use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
-    def from_url(cls,url,model_version=None,**kwargs):
+    def from_url(cls,url=None,model_version=None,**kwargs):
         return load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs)
