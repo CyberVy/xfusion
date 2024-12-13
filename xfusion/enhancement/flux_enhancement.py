@@ -32,6 +32,7 @@ class FluxPipelineEnhancer(PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,T
 
     def __init__(self,__oins__):
         PipelineEnhancerBase.__init__(self,__oins__)
+        LoraEnhancerMixin.__init__(self)
         TGBotMixin.__init__(self)
 
     def generate_image_and_send_to_telegram(self,prompt,num=1,seed=None,use_enhancer=True,**kwargs):
