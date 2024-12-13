@@ -1,10 +1,9 @@
 # limited support to sd3 now
 
-from .enhancement_utils import PipelineEnhancerBase,FromURLMixin,pipeline_map
+from .enhancement_utils import PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
 from ..utils import EasyInitSubclass
-from ..download import download_file,DownloadArgumentsMixin
 from ..message import TGBotMixin
 from compel import Compel,ReturnedEmbeddingsType
 import torch
@@ -12,46 +11,6 @@ import threading
 import gc
 from random import randint
 
-
-def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
-
-    use_internet = True
-    if lora_uri.startswith(".") or lora_uri.startswith("/") or lora_uri.startswith("~"):
-        use_internet = False
-    if download_kwargs is None:
-        download_kwargs = {}
-    if use_internet:
-        lora_path = download_file(lora_uri,**download_kwargs)
-        pipeline.load_lora_weights(lora_path,adapter_name=lora_name)
-    else:
-        pipeline.load_lora_weights(lora_uri,adapter_name=lora_name)
-
-class SDLoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
-    # __oins__ here is the pipeline instance to implement.
-    __oins__ = None
-    overrides = ["lora_dict","set_lora","set_lora_strength","delete_adapters"]
-
-    def __init__(self):
-        DownloadArgumentsMixin.__init__(self)
-        self.lora_dict = {}
-        self.download_kwargs.update(directory="./lora")
-
-    def set_lora(self,lora_uri,lora_name,weight=0.4):
-        if lora_name not in self.lora_dict:
-            load_lora(self,lora_uri,lora_name,self.download_kwargs)
-
-        self.set_lora_strength(lora_name,weight)
-
-    def set_lora_strength(self,lora_name,weight):
-        self.lora_dict.update({lora_name:weight})
-        self.set_adapters(list(self.lora_dict.keys()),list(self.lora_dict.values()))
-
-    def delete_adapters(self,adapter_names):
-        self.__oins__.delete_adapters(adapter_names)
-        if isinstance(adapter_names, str):
-            adapter_names = [adapter_names]
-        for name in adapter_names:
-            self.lora_dict.pop(name)
 
 def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     """
@@ -137,13 +96,13 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
     return images
 
 class SDPipelineEnhancer(PipelineEnhancerBase,
-                         SDLoraEnhancerMixin,SDCLIPEnhancerMixin,FromURLMixin,
+                         LoraEnhancerMixin,SDCLIPEnhancerMixin,FromURLMixin,
                          TGBotMixin,EasyInitSubclass):
     overrides = []
 
     def __init__(self,__oins__):
         PipelineEnhancerBase.__init__(self, __oins__)
-        SDLoraEnhancerMixin.__init__(self)
+        LoraEnhancerMixin.__init__(self)
         SDCLIPEnhancerMixin.__init__(self)
         TGBotMixin.__init__(self)
 
