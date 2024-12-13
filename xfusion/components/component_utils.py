@@ -22,7 +22,7 @@ def get_t5_encoder_files(directory,**kwargs):
         file_list.append(download_file(url, directory=directory,**kwargs))
     return file_list
 
-def load_t5_tokenizer(directory=None, use_local_files=False, delete_internet_files=True,download_kwargs=None,**kwargs):
+def load_t5_tokenizer(directory=None, use_local_files=False, delete_internet_files=False,download_kwargs=None,**kwargs):
     """
     :param directory:
     :param use_local_files:
@@ -48,7 +48,7 @@ def load_t5_tokenizer(directory=None, use_local_files=False, delete_internet_fil
             os.remove(file)
     return t5_tokenizer
 
-def load_t5_encoder(directory=None, use_local_files=False, delete_internet_files=True,download_kwargs=None,**kwargs):
+def load_t5_encoder(directory=None, use_local_files=False, delete_internet_files=False,download_kwargs=None,**kwargs):
     """
     :param directory:
     :param use_local_files:
@@ -117,7 +117,7 @@ def get_clip_encoder_files(directory,**kwargs):
         file_list.append(download_file(url, directory=directory,**kwargs))
     return file_list
 
-def load_clip_tokenizer(directory=None,use_local_files=False,delete_internet_files=True,download_kwargs=None,**kwargs):
+def load_clip_tokenizer(directory=None,use_local_files=False,delete_internet_files=False,download_kwargs=None,**kwargs):
     """
     :param directory:
     :param use_local_files:
@@ -144,7 +144,7 @@ def load_clip_tokenizer(directory=None,use_local_files=False,delete_internet_fil
 
     return clip_tokenizer
 
-def load_clip_encoder(directory=None,use_local_files=False,delete_internet_files=True,download_kwargs=None,**kwargs):
+def load_clip_encoder(directory=None,use_local_files=False,delete_internet_files=False,download_kwargs=None,**kwargs):
     download_kwargs = {} if download_kwargs is None else download_kwargs
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
