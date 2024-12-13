@@ -1,4 +1,5 @@
 from ..utils import EasyInitSubclass
+from ..download import DownloadArgumentsMixin,download_file
 from diffusers.schedulers import DPMSolverMultistepScheduler,DPMSolverSinglestepScheduler
 from diffusers.schedulers import KDPM2DiscreteScheduler,KDPM2AncestralDiscreteScheduler
 from diffusers.schedulers import EulerDiscreteScheduler,EulerAncestralDiscreteScheduler
@@ -81,6 +82,49 @@ class PipelineEnhancerBase(EasyInitSubclass):
 
     def load_inpainting_pipeline(self,**kwargs):
         return self.enhancer_class(pipeline_map[self.model_version][2](**self.components, **kwargs))
+
+
+def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
+
+    use_internet = True
+    if lora_uri.startswith(".") or lora_uri.startswith("/") or lora_uri.startswith("~"):
+        use_internet = False
+    if download_kwargs is None:
+        download_kwargs = {}
+    if use_internet:
+        lora_path = download_file(lora_uri,**download_kwargs)
+        pipeline.load_lora_weights(lora_path,adapter_name=lora_name)
+    else:
+        pipeline.load_lora_weights(lora_uri,adapter_name=lora_name)
+
+
+class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
+    # __oins__ here is the pipeline instance to implement.
+    __oins__ = None
+    overrides = ["lora_dict","set_lora","set_lora_strength","delete_adapters"]
+
+    def __init__(self):
+        DownloadArgumentsMixin.__init__(self)
+        self.lora_dict = {}
+        self.download_kwargs.update(directory="./lora")
+
+    def set_lora(self,lora_uri,lora_name,weight=0.4):
+        if lora_name not in self.lora_dict:
+            load_lora(self,lora_uri,lora_name,self.download_kwargs)
+
+        self.set_lora_strength(lora_name,weight)
+
+    def set_lora_strength(self,lora_name,weight):
+        self.lora_dict.update({lora_name:weight})
+        self.set_adapters(list(self.lora_dict.keys()),list(self.lora_dict.values()))
+
+    def delete_adapters(self,adapter_names):
+        self.__oins__.delete_adapters(adapter_names)
+        if isinstance(adapter_names, str):
+            adapter_names = [adapter_names]
+        for name in adapter_names:
+            self.lora_dict.pop(name)
+
 
 class FromURLMixin:
     overrides = ["from_url"]
