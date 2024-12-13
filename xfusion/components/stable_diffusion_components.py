@@ -8,7 +8,7 @@ import torch
 import os
 
 
-def load_stable_diffusion_pipeline(model=default_stable_diffusion_model_url,
+def load_stable_diffusion_pipeline(model=None,
                                    model_version=None, file_format="safetensors", download_kwargs=None, **kwargs):
     """
     :param model: hugging face repo id or unet file URI
@@ -19,6 +19,7 @@ def load_stable_diffusion_pipeline(model=default_stable_diffusion_model_url,
     :return:
     """
     use_internet = True
+    model = default_stable_diffusion_model_url if model is None else model
     model_version = "" if model_version is None else model_version
     model_version = str(model_version).lower()
     if download_kwargs is None:
