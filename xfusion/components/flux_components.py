@@ -128,7 +128,8 @@ def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_fil
             os.remove(file)
     return scheduler
 
-def load_flux_pipeline(uri=default_flux_transformer_url,download_kwargs=None,**kwargs):
+def load_flux_pipeline(uri=None,download_kwargs=None,**kwargs):
+    uri = default_flux_transformer_url if uri is None else uri
     download_kwargs = {} if download_kwargs is None else download_kwargs
     def q(model):
         quantize(model,weights=qfloat8)
