@@ -107,8 +107,10 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
         TGBotMixin.__init__(self)
 
     def __call__(self,**kwargs):
+        if kwargs.get("negative_prompt") is None:
+            kwargs.update(negative_prompt="")
         prompt = kwargs.get("prompt")
-        negative_prompt = kwargs.get("negative_prompt") or ""
+        negative_prompt = kwargs.get("negative_prompt")
         if isinstance(prompt,list) and isinstance(negative_prompt,list):
             prompt_type = list
         elif isinstance(prompt,list) and not isinstance(negative_prompt,list):
