@@ -1,4 +1,4 @@
-import threading
+import threading,os,shutil
 
 class EasyInitSubclass:
     """
@@ -147,3 +147,13 @@ def threads_execute(f,args,_await=True):
             threads.append(thread)
             thread.start()
     return threads
+
+
+def delete_all_contents_of_path(folder_path):
+    if os.path.exists(folder_path):
+        for file_or_dir in os.listdir(folder_path):
+            full_path = os.path.join(folder_path, file_or_dir)
+            if os.path.isfile(full_path) or os.path.islink(full_path):
+                os.remove(full_path)
+            elif os.path.isdir(full_path):
+                shutil.rmtree(full_path)
