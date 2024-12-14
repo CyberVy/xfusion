@@ -143,11 +143,15 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
     def load_i2i_pipeline(self,**kwargs):
         pipeline = PipelineEnhancerBase.load_i2i_pipeline(self,**kwargs)
         pipeline.lora_dict = self.lora_dict
+        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
+        pipeline.set_download_kwargs(**self.download_kwargs)
         return pipeline
 
     def load_inpainting_pipeline(self,**kwargs):
         pipeline = PipelineEnhancerBase.load_inpainting_pipeline(self,**kwargs)
         pipeline.lora_dict = self.lora_dict
+        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
+        pipeline.set_download_kwargs(**self.download_kwargs)
         return pipeline
 
     def generate_image_and_send_to_telegram(self,prompt,negative_prompt=None,num=1,seed=None,use_enhancer=True,**kwargs):
