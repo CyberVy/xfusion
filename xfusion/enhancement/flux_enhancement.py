@@ -35,9 +35,24 @@ class FluxPipelineEnhancer(PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,T
         LoraEnhancerMixin.__init__(self)
         TGBotMixin.__init__(self)
 
+    def load_i2i_pipeline(self,**kwargs):
+        pipeline = PipelineEnhancerBase.load_i2i_pipeline(self,**kwargs)
+        pipeline.lora_dict = self.lora_dict
+        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
+        pipeline.set_download_kwargs(**self.download_kwargs)
+        return pipeline
+
+    def load_inpainting_pipeline(self,**kwargs):
+        pipeline = PipelineEnhancerBase.load_inpainting_pipeline(self,**kwargs)
+        pipeline.lora_dict = self.lora_dict
+        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
+        pipeline.set_download_kwargs(**self.download_kwargs)
+        return pipeline
+
     def generate_image_and_send_to_telegram(self,prompt,num=1,seed=None,use_enhancer=True,**kwargs):
         return generate_image_and_send_to_telegram(self,prompt,num,seed=seed,use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
     def from_url(cls,url=None,**kwargs):
         return load_flux_pipeline(url,**kwargs)
+
