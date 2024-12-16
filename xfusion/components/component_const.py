@@ -28,7 +28,7 @@ clip_encoder_url_list = [
 
 # flux_components.py
 
-default_flux_transformer_url = "https://civitai.com/api/download/models/886251?type=Model&format=SafeTensor"
+default_flux_transformer_url = "https://civitai.com/api/download/models/691639?type=Model&format=SafeTensor&size=pruned&fp=fp8"
 
 flux_vae_url_list = [
     "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/vae/diffusion_pytorch_model.safetensors?download=true",
