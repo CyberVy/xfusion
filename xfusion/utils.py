@@ -103,6 +103,9 @@ class EasyInitSubclass:
 
     def __next__(self):
         return self.__oins__.__next__()
+    
+    def __del__(self):
+        print(f"{self.__class__} has been cleared.")
 
 def delete(obj):
     if obj is None:
