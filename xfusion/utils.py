@@ -1,4 +1,4 @@
-import threading,os,shutil
+import threading,os,shutil,gc
 
 class EasyInitSubclass:
     """
@@ -104,6 +104,26 @@ class EasyInitSubclass:
     def __next__(self):
         return self.__oins__.__next__()
 
+def delete(obj):
+    if obj is None:
+        return 0,[],-1
+    _id = id(obj)
+    i = 0
+    referrers = []
+    _i = 0
+    for dic in gc.get_referrers(obj):
+        if isinstance(dic,dict):
+            target_keys = []
+            for key, value in dic.items():
+                if id(value) == _id:
+                    target_keys.append(key)
+                    i += 1
+                    referrers.append(key)
+            for target_key in target_keys:
+                dic.update({target_key:None})
+        else:
+            _i += 1
+    return i,referrers,_i
 
 class EditableImage(list):
 
@@ -130,7 +150,6 @@ class EditableImage(list):
             self.pop(-1)
         return self
 
-
 def threads_execute(f,args,_await=True):
     threads = []
     if _await:
@@ -147,7 +166,6 @@ def threads_execute(f,args,_await=True):
             threads.append(thread)
             thread.start()
     return threads
-
 
 def delete_all_contents_of_path(folder_path):
     if os.path.exists(folder_path):
