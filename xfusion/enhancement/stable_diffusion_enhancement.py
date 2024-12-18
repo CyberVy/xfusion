@@ -8,7 +8,6 @@ from ..message import TGBotMixin
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 import threading
-import gc
 from random import randint
 
 
@@ -92,7 +91,6 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
         images.append(image)
         caption = f"Prompt: {prompt[:384]}\n\nNegative Prompt: {negative_prompt[:384]}\n\nStep: {kwargs.get('num_inference_steps')}, CFG: {kwargs.get('guidance_scale')}, CLIP Skip: {kwargs.get('clip_skip')}\nSampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSeed: {item}\n\nModel:{pipeline.model_name}"
         threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
-        torch.cuda.empty_cache();gc.collect()
     return images
 
 class SDPipelineEnhancer(PipelineEnhancerBase,
