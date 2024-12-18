@@ -1,3 +1,5 @@
+import gc
+
 from ..utils import EasyInitSubclass
 from ..download import DownloadArgumentsMixin,download_file
 from diffusers.schedulers import DPMSolverMultistepScheduler,DPMSolverSinglestepScheduler
@@ -11,6 +13,7 @@ from diffusers import FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline
 from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline
 from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline
 from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
+import torch
 
 # from https://huggingface.co/docs/diffusers/api/schedulers/overview
 scheduler_map = {
@@ -82,6 +85,10 @@ class PipelineEnhancerBase(EasyInitSubclass):
 
     def load_inpainting_pipeline(self,**kwargs):
         return self.enhancer_class(pipeline_map[self.model_version][2](**self.components, **kwargs))
+
+    def __del__(self):
+        EasyInitSubclass.__del__(self)
+        torch.cuda.empty_cache()
 
 
 def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
