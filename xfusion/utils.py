@@ -112,7 +112,7 @@ class EasyInitSubclass:
 
     def __del__(self):
         # final step before self is completely deleted from RAM
-        print(f"{self} has been deleted from RAM.")
+        print(f"{object.__getattribute__(self,"__class__").__name__}:{id(self)} has been deleted from RAM.")
 
 def delete(obj):
     # delete the object instead of the reference from RAM
