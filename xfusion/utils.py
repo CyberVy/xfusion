@@ -1,58 +1,41 @@
 import threading,os,shutil,gc
 
+
 class EasyInitSubclass:
     """
         A utility class for delegating most behavior to an internal object (`__oins__`),
         while allowing specific attributes and methods to be overridden in subclasses.
 
-        **Purpose**:
+        Purpose:
             - Simplifies the extension of complex objects by delegating their behaviors to `__oins__`.
             - Allows subclasses to define their own attributes and methods by explicitly listing them in the `overrides` attribute.
 
-        **How It Works**:
-            - Any attribute or method not listed in `overrides` is delegated to the internal object `__oins__`.
-            - Subclasses should list all their custom attributes and methods in the `overrides` attribute.
-
-        **Important**:
+        Important Notes:
             - Make sure to include all directly defined attributes and methods of your subclass in the `overrides` list.
             - Init EasyInitSubclass first when subclassed.
             - Do not put the variable names starting with "__" but not ending with "__" into attribute overrides (It,s a python feature called Name Mangling).
             - If an `AttributeError` occurs for an overridden attribute, verify that the attribute is correctly listed in `overrides`.
 
-        **Example**:
-            Extending a simple object with additional behavior:
+        Example:
+            >>> class Extended(EasyInitSubclass):
+            >>>    # Custom attributes and methods
+            >>>    extended_value = []
+            >>>    overrides = ["extended_method", "extended_value"]
+            >>>
+            >>>    def extended_method(self):
+            >>>        return self.extended_value
+            >>>
+            >>>    def __init__(self, obj):
+            >>>        EasyInitSubclass.__init__(self, obj)
+            >>>        # Initialize custom attributes
+            >>>        self.extended_value = []
+            >>> obj = 1  # Original object
+            >>> extended_obj = Extended(obj)
+            >>> print(extended_obj.extended_method())
 
-            ```python
-            from xfusion.utils import EasyInitSubclass
-
-            class Extended(EasyInitSubclass):
-                # Custom attributes and methods
-                extended_value = []
-                overrides = ["extended_method", "extended_value"]
-
-                def extended_method(self):
-                    return self.extended_value
-
-                def __init__(self, obj):
-                    EasyInitSubclass.__init__(self, obj)
-                    # Initialize custom attributes
-                    self.extended_value = []
-
-            # Example usage
-            obj = 1  # Original object
-            extended_obj = Extended(obj)
-            print(extended_obj.extended_method())  # Outputs: []
-            ```
-
-        **Attributes**:
+        Attributes:
             - `overrides` (list): A list of attribute and method names that should not be delegated to `__oins__`.
 
-        **Subclassing Notes**:
-            - Always include custom attributes and methods in `overrides` to ensure they are accessed and modified directly.
-            - For delegation, the internal object (`__oins__`) must implement the corresponding attributes or methods.
-
-        **Error Handling**:
-            - If you encounter `AttributeError: __oins__.__class__ object has no attribute '{item}'`, ensure that `{item}` is correctly listed in `overrides` if it is directly defined in the subclass.
         """
     overrides = ["__oins__"]
 
@@ -115,12 +98,40 @@ class EasyInitSubclass:
         print(f"{object.__getattribute__(self,'__class__').__name__}:{id(self)} has been deleted from RAM.")
 
 def delete(obj):
-    # delete the object instead of the reference from RAM
-    # if only want to delete the reference, use "del variable" which is the same as locals().pop("variable")
-    # the last step before the object completely is deleted from RAM is object.__del__ is called
-    # so if object.__del__ is called, it means the object is completely released.
+    """
+        Delete all references to a given object to help release memory.
+
+        In Python, objects are typically stored in their `__dict__` attribute, while global objects are stored in `globals()`.
+        This function removes all references to the specified object from the global scope (`globals()`) and the `__dict__` of other global objects.
+
+        Important Notes:
+        1. Do not pass the `__dict__` attribute of an object directly to this function. Instead, delete the owner object itself.
+        2. If you only need to remove a variable reference, use `del variable`, which is equivalent to `locals().pop("variable")`.
+        3. An object is completely released from memory when its `__del__` method is called. If `__del__` is triggered, it indicates that the object has been fully garbage collected.
+
+        Use Cases:
+        - This function is particularly useful in environments like IPython, where manual cleanup of references may be necessary to free memory.
+
+        Parameters:
+        obj : object
+            The target object whose references need to be cleared.
+
+        Returns:
+        tuple[int, list, int]
+            - The number of references removed.
+            - A list of keys in dictionaries (e.g., `globals()`) that referred to the object.
+            - The number of non-dictionary references that were not modified during the process.
+
+        Note: This function is intended for specific scenarios where manual memory management is required.
+        In most cases, Python's garbage collector handles reference counting automatically.
+
+        Example:
+        >>> a = [1,2,3]
+        >>> b = a
+        >>> delete(a)
+    """
     if obj is None:
-        return 0,[],-1
+        return 0,[],0
     _id = id(obj)
     i = 0
     referrers = []
