@@ -126,7 +126,6 @@ def delete(obj):
                 dic.update({target_key:None})
         else:
             _i += 1
-    gc.collect()
     return i,referrers,_i
 
 class EditableImage(list):
