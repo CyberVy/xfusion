@@ -132,18 +132,17 @@ def delete(obj):
     """
     if obj is None:
         return 0,[],0
-    _id = id(obj)
     i = 0
-    referrers = []
     _i = 0
+    referrers = []
     for dic in gc.get_referrers(obj):
         if isinstance(dic,dict):
             target_keys = []
             for key, value in dic.items():
-                if id(value) == _id:
+                if value is obj:
                     target_keys.append(key)
-                    i += 1
                     referrers.append(key)
+                    i += 1
             for target_key in target_keys:
                 dic.update({target_key:None})
         else:
