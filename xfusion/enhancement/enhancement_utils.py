@@ -86,10 +86,6 @@ class PipelineEnhancerBase(EasyInitSubclass):
     def load_inpainting_pipeline(self,**kwargs):
         return self.enhancer_class(pipeline_map[self.model_version][2](**self.components, **kwargs))
 
-    def __del__(self):
-        EasyInitSubclass.__del__(self)
-        torch.cuda.empty_cache()
-
 
 def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
 
