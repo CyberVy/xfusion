@@ -104,10 +104,18 @@ class EasyInitSubclass:
     def __next__(self):
         return self.__oins__.__next__()
     
+    def __enter__(self):
+        return self.__oins__.__enter__(self)
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self.__oins__.__exit__(self,exc_type,exc_val,exc_tb)
+    
     def __del__(self):
-        print(f"{self.__class__} has been cleared.")
+        print(f"{self} has been cleared.")
 
 def delete(obj):
+    # delete the object instead of the reference from RAM
+    # if only want delete the reference, use "del variable" which is the same as locals().pop("variable")
     if obj is None:
         return 0,[],-1
     _id = id(obj)
