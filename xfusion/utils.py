@@ -131,23 +131,35 @@ def delete(obj):
         >>> delete(a)
     """
     if obj is None:
-        return 0,[],0
+        return 0, [], 0
     i = 0
     _i = 0
     referrers = []
-    for dic in gc.get_referrers(obj):
-        if isinstance(dic,dict):
-            target_keys = []
-            for key, value in dic.items():
-                if value is obj:
-                    target_keys.append(key)
-                    referrers.append(key)
+    for item in gc.get_referrers(obj):
+        if hasattr(item, "__dict__"):
+            __dict__ = item.__dict__
+        elif isinstance(item, dict):
+            __dict__ = item
+        elif isinstance(item, list):
+            for index, _ in enumerate(item):
+                if _ is obj:
+                    item.pop(index)
                     i += 1
-            for target_key in target_keys:
-                dic.update({target_key:None})
+            continue
         else:
             _i += 1
-    return i,referrers,_i
+            continue
+
+        target_keys = []
+        for key, value in __dict__.items():
+            if value is obj:
+                target_keys.append(key)
+                referrers.append(key)
+                i += 1
+        for target_key in target_keys:
+            __dict__.update({target_key: None})
+
+    return i, referrers, _i
 
 class EditableImage(list):
 
