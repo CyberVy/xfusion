@@ -13,6 +13,7 @@ def load_stable_diffusion_ui(fns):
             with gr.Column():
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt"))
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt"))
+            with gr.Column():
                 t2i_inputs.append(gr.Slider(0,10,2.5,step=0.1,label="Guidance Scale"))
                 t2i_inputs.append(gr.Slider(0,50,28,step=1,label="Step"))
                 t2i_inputs.append(gr.Slider(0, 10, 1, step=1, label="CLIP"))
@@ -20,7 +21,6 @@ def load_stable_diffusion_ui(fns):
                 t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
                 t2i_inputs.append(gr.Textbox(value="0",placeholder="Give me an integer.", label="Seed"))
                 t2i_inputs.append(gr.Textbox(value="1",placeholder="Amount of the pictures.", label="Num"))
-
             with gr.Column():
                 t2i_outputs.append(gr.Textbox())
                 t2i_btn = gr.Button("Run")
@@ -34,6 +34,7 @@ def load_stable_diffusion_ui(fns):
                 i2i_inputs.append(gr.Image())
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt"))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt"))
+            with gr.Column():
                 i2i_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
                 i2i_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
                 i2i_inputs.append(gr.Slider(0, 50, 28, step=1, label="Step"))
