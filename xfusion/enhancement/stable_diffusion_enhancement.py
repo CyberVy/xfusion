@@ -179,6 +179,16 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
     @lru_cache()
     def load_ui(self,*args,**kwargs):
         i2i_pipeline = self.load_i2i_pipeline()
+        def t2i_fn(prompt, negative_prompt="",
+                   guidance_scale=2, num_inference_steps=28, clip_skip=0,
+                   width=None, height=None,
+                   seed=None, num=1):
+            return self.generate_image_and_send_to_telegram(
+                                prompt=prompt,negative_prompt=negative_prompt,
+                                guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
+                                width=width,height=height,
+                                seed=int(seed),num=int(num))
+
         def i2i_fn(image,
                    prompt,negative_prompt="",
                    strength=0.3,
@@ -191,9 +201,9 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
                                 strength=strength,
                                 guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
                                 width=width,height=height,
-                                seed=seed,num=num)
+                                seed=int(seed),num=int(num))
 
-        fns = {"t2i":self.generate_image_and_send_to_telegram,"i2i":i2i_fn}
+        fns = {"t2i":t2i_fn,"i2i":i2i_fn}
         server = load_stable_diffusion_ui(fns)
         server.launch(*args,**kwargs)
         return server
