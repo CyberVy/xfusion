@@ -176,7 +176,6 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
     def from_url(cls,url=None,model_version=None,**kwargs):
         return load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs)
 
-    @lru_cache()
     def load_ui(self,*args,**kwargs):
         i2i_pipeline = self.load_i2i_pipeline()
         def t2i_fn(prompt, negative_prompt="",
