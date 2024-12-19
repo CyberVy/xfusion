@@ -9,6 +9,7 @@ from ..utils import EasyInitSubclass
 from ..message import TGBotMixin
 from compel import Compel,ReturnedEmbeddingsType
 import torch
+from PIL import Image
 import threading
 from functools import lru_cache
 from random import randint
@@ -184,6 +185,7 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
                    guidance_scale=2,num_inference_steps=28,clip_skip=0,
                    width=None,height=None,
                    seed=None,num=1):
+            image = Image.fromarray(image)
             return i2i_pipeline.generate_image_and_send_to_telegram(image=image,
                                 prompt=prompt,negative_prompt=negative_prompt,
                                 strength=strength,
