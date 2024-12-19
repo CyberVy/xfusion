@@ -1,3 +1,6 @@
+import gradio as gr
+
+
 def load_stable_diffusion_ui(fns):
     t2i_fn = fns["t2i"]
     i2i_fn = fns["i2i"]
