@@ -193,14 +193,13 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
                    prompt,negative_prompt="",
                    strength=0.3,
                    guidance_scale=2,num_inference_steps=28,clip_skip=0,
-                   width=None,height=None,
                    seed=None,num=1):
             image = Image.fromarray(image)
-            return i2i_pipeline.generate_image_and_send_to_telegram(image=image,
+            return i2i_pipeline.generate_image_and_send_to_telegram(
+                                image=image,
                                 prompt=prompt,negative_prompt=negative_prompt,
                                 strength=strength,
                                 guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
-                                width=width,height=height,
                                 seed=int(seed),num=int(num))
 
         fns = {"t2i":t2i_fn,"i2i":i2i_fn}
