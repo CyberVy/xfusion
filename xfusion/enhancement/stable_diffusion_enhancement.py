@@ -3,11 +3,14 @@
 from .enhancement_utils import PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
+from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
+from ..ui.ui_utils import UIMixin
 from ..utils import EasyInitSubclass
 from ..message import TGBotMixin
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 import threading
+from functools import lru_cache
 from random import randint
 
 
@@ -95,7 +98,7 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
 
 class SDPipelineEnhancer(PipelineEnhancerBase,
                          LoraEnhancerMixin,SDCLIPEnhancerMixin,FromURLMixin,
-                         TGBotMixin,EasyInitSubclass):
+                         TGBotMixin,UIMixin,EasyInitSubclass):
     overrides = []
 
     def __init__(self,__oins__):
@@ -143,6 +146,7 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
         pipeline.lora_dict = self.lora_dict
         pipeline.set_telegram_kwargs(**self.telegram_kwargs)
         pipeline.set_download_kwargs(**self.download_kwargs)
+        pipeline.load_ui = lambda : None
         return pipeline
 
     def load_inpainting_pipeline(self,**kwargs):
@@ -150,12 +154,31 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
         pipeline.lora_dict = self.lora_dict
         pipeline.set_telegram_kwargs(**self.telegram_kwargs)
         pipeline.set_download_kwargs(**self.download_kwargs)
+        pipeline.load_ui = lambda : None
         return pipeline
 
-    def generate_image_and_send_to_telegram(self,prompt,negative_prompt=None,num=1,seed=None,use_enhancer=True,**kwargs):
+    def generate_image_and_send_to_telegram(self,
+                                            prompt,negative_prompt=None,
+                                            guidance_scale=2,num_inference_steps=28,clip_skip=0,
+                                            width=None,height=None,
+                                            seed=None,num=1,
+                                            use_enhancer=True,**kwargs):
         return generate_image_and_send_to_telegram(
-            self,prompt=prompt,negative_prompt=negative_prompt,num=num,seed=seed,use_enhancer=use_enhancer,**kwargs)
+            self,
+            prompt=prompt,negative_prompt=negative_prompt,
+            guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
+            width=width,height=height,
+            seed=seed,num=num,
+            use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
     def from_url(cls,url=None,model_version=None,**kwargs):
         return load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs)
+
+    @lru_cache()
+    def load_ui(self,*args,**kwargs):
+        i2i_pipeline = self.load_i2i_pipeline()
+        fns = {"t2i":self.generate_image_and_send_to_telegram,"i2i":i2i_pipeline.generate_image_and_send_to_telegram}
+        server = load_stable_diffusion_ui(fns)
+        server.launch(*args,**kwargs)
+        return server
