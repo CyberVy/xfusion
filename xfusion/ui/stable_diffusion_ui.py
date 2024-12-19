@@ -31,6 +31,7 @@ def load_stable_diffusion_ui(fns):
                 i2i_inputs.append(gr.Image())
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt"))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt"))
+                i2i_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
                 i2i_inputs.append(gr.Slider(0, 10, 2, step=0.1, label="Guidance Scale"))
                 i2i_inputs.append(gr.Slider(0, 50, 28, step=1, label="Step"))
                 i2i_inputs.append(gr.Slider(0, 0, 10, step=1, label="CLIP"))
