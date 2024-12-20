@@ -1,7 +1,5 @@
-from .enhancement_utils import PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin
+from .enhancement_utils import PipelineEnhancerBase
 from ..components.flux_components import load_flux_pipeline
-from ..utils import EasyInitSubclass
-from ..message import TGBotMixin
 import torch
 import threading
 from random import randint
@@ -25,27 +23,11 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
     return images
 
 
-class FluxPipelineEnhancer(PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,TGBotMixin,EasyInitSubclass):
+class FluxPipelineEnhancer(PipelineEnhancerBase):
     overrides = []
 
     def __init__(self,__oins__):
         PipelineEnhancerBase.__init__(self,__oins__)
-        LoraEnhancerMixin.__init__(self)
-        TGBotMixin.__init__(self)
-
-    def load_i2i_pipeline(self,**kwargs):
-        pipeline = PipelineEnhancerBase.load_i2i_pipeline(self,**kwargs)
-        pipeline.lora_dict = self.lora_dict
-        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
-        pipeline.set_download_kwargs(**self.download_kwargs)
-        return pipeline
-
-    def load_inpainting_pipeline(self,**kwargs):
-        pipeline = PipelineEnhancerBase.load_inpainting_pipeline(self,**kwargs)
-        pipeline.lora_dict = self.lora_dict
-        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
-        pipeline.set_download_kwargs(**self.download_kwargs)
-        return pipeline
 
     def generate_image_and_send_to_telegram(self,prompt,num=1,seed=None,use_enhancer=True,**kwargs):
         return generate_image_and_send_to_telegram(self,prompt,num,seed=seed,use_enhancer=use_enhancer,**kwargs)
@@ -53,4 +35,3 @@ class FluxPipelineEnhancer(PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,T
     @classmethod
     def from_url(cls,url=None,**kwargs):
         return load_flux_pipeline(url,**kwargs)
-
