@@ -99,32 +99,6 @@ class EasyInitSubclass:
 
 def delete(obj):
     """
-        Delete all references to a given object to help release memory.
-
-        In Python, objects are typically stored in their `__dict__` attribute, while global objects are stored in `globals()`.
-        This function removes all references to the specified object from the global scope (`globals()`) and the `__dict__` of other global objects.
-
-        Important Notes:
-        1. Do not pass the `__dict__` attribute of an object directly to this function. Instead, delete the owner object itself.
-        2. If you only need to remove a variable reference, use `del variable`, which is equivalent to `locals().pop("variable")`.
-        3. An object is completely released from memory when its `__del__` method is called. If `__del__` is triggered, it indicates that the object has been fully garbage collected.
-
-        Use Cases:
-        - This function is particularly useful in environments like IPython, where manual cleanup of references may be necessary to free memory.
-
-        Parameters:
-        obj : object
-            The target object whose references need to be cleared.
-
-        Returns:
-        tuple[int, list, int]
-            - The number of references removed.
-            - A list of keys in dictionaries (e.g., `globals()`) that referred to the object.
-            - The number of non-dictionary references that were not modified during the process.
-
-        Note: This function is intended for specific scenarios where manual memory management is required.
-        In most cases, Python's garbage collector handles reference counting automatically.
-
         Example:
         >>> a = [1,2,3]
         >>> b = a
@@ -135,6 +109,7 @@ def delete(obj):
     i = 0
     _i = 0
     referrers = []
+    _referrers = []
     for item in gc.get_referrers(obj):
         if hasattr(item, "__dict__"):
             __dict__ = item.__dict__
@@ -143,10 +118,12 @@ def delete(obj):
         elif isinstance(item, list):
             for index, _ in enumerate(item):
                 if _ is obj:
-                    item.pop(index)
+                    item[index] = None
+                    referrers.append(f"list.{index}")
                     i += 1
             continue
         else:
+            _referrers.append(id(item))
             _i += 1
             continue
 
@@ -154,12 +131,12 @@ def delete(obj):
         for key, value in __dict__.items():
             if value is obj:
                 target_keys.append(key)
-                referrers.append(key)
+                referrers.append(f"dict.{key}")
                 i += 1
         for target_key in target_keys:
             __dict__.update({target_key: None})
 
-    return i, referrers, _i
+    return i, referrers, _i, _referrers
 
 class EditableImage(list):
 
