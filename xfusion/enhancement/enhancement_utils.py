@@ -94,11 +94,12 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
 
 
 class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
-    overrides = ["enhancer_class","model_version","pipeline_type","pipeline_class","model_name","_scheduler","scheduler_map",
+    overrides = ["enhancer_class","model_version","pipeline_type","pipeline_class",
+                 "model_name","_scheduler","scheduler_map",
                  "image_to_image_pipeline","inpainting_pipeline",
                  "check_original_pipeline","set_scheduler","reset_scheduler","to","load_i2i_pipeline","load_inpainting_pipeline"]
 
-    def __init__(self,__oins__):
+    def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
         TGBotMixin.__init__(self)
         LoraEnhancerMixin.__init__(self)
@@ -108,30 +109,33 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         self.model_name = self.name_or_path
         self._scheduler = self.scheduler
         self.scheduler_map = scheduler_map
+        if init_sub_pipelines:
+            if self.pipeline_type != 0:
+                self.text_to_image_pipeline = self.enhancer_class(pipeline_map[self.model_version][0](**self.components),
+                                                                  init_sub_pipelines=False)
+                self.text_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
+                self.text_to_image_pipeline.lora_dict = self.lora_dict
+                self.text_to_image_pipeline.download_kwargs = self.download_kwargs
+            else:
+                self.text_to_image_pipeline = self
 
-        if self.pipeline_type != 0:
-            self.text_to_image_pipeline = self.enhancer_class(pipeline_map[self.model_version][0](**self.components))
-            self.text_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
-            self.text_to_image_pipeline.lora_dict = self.lora_dict
-            self.text_to_image_pipeline.download_kwargs = self.download_kwargs
-        else:
-            self.text_to_image_pipeline = self
+            if self.pipeline_type != 1:
+                self.image_to_image_pipeline = self.enhancer_class(pipeline_map[self.model_version][1](**self.components),
+                                                                   init_sub_pipelines=False)
+                self.image_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
+                self.image_to_image_pipeline.lora_dict = self.lora_dict
+                self.image_to_image_pipeline.download_kwargs = self.download_kwargs
+            else:
+                self.image_to_image_pipeline = self
 
-        if self.pipeline_type != 1:
-            self.image_to_image_pipeline = self.enhancer_class(pipeline_map[self.model_version][1](**self.components))
-            self.image_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
-            self.image_to_image_pipeline.lora_dict = self.lora_dict
-            self.image_to_image_pipeline.download_kwargs = self.download_kwargs
-        else:
-            self.image_to_image_pipeline = self
-
-        if self.pipeline_type != 2:
-            self.inpainting_pipeline =  self.enhancer_class(pipeline_map[self.model_version][2](**self.components))
-            self.inpainting_pipeline.telegram_kwargs = self.telegram_kwargs
-            self.inpainting_pipeline.lora_dict = self.lora_dict
-            self.inpainting_pipeline.download_kwargs = self.download_kwargs
-        else:
-            self.inpainting_pipeline = self
+            if self.pipeline_type != 2:
+                self.inpainting_pipeline =  self.enhancer_class(pipeline_map[self.model_version][2](**self.components),
+                                                                init_sub_pipelines=False)
+                self.inpainting_pipeline.telegram_kwargs = self.telegram_kwargs
+                self.inpainting_pipeline.lora_dict = self.lora_dict
+                self.inpainting_pipeline.download_kwargs = self.download_kwargs
+            else:
+                self.inpainting_pipeline = self
 
     def check_original_pipeline(self):
         for model_version, pipeline_class_tuple in pipeline_map.items():
