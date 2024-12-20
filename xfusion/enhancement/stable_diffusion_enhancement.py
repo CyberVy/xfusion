@@ -96,8 +96,8 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
 class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     overrides = []
 
-    def __init__(self,__oins__):
-        PipelineEnhancerBase.__init__(self, __oins__)
+    def __init__(self,__oins__,init_sub_pipelines=True):
+        PipelineEnhancerBase.__init__(self, __oins__,init_sub_pipelines=init_sub_pipelines)
         SDCLIPEnhancerMixin.__init__(self)
 
     def __call__(self,**kwargs):
