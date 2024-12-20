@@ -26,8 +26,8 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
 class FluxPipelineEnhancer(PipelineEnhancerBase):
     overrides = []
 
-    def __init__(self,__oins__):
-        PipelineEnhancerBase.__init__(self,__oins__)
+    def __init__(self,__oins__,init_sub_pipelines=True):
+        PipelineEnhancerBase.__init__(self,__oins__,init_sub_pipelines=init_sub_pipelines)
 
     def generate_image_and_send_to_telegram(self,prompt,num=1,seed=None,use_enhancer=True,**kwargs):
         return generate_image_and_send_to_telegram(self,prompt,num,seed=seed,use_enhancer=use_enhancer,**kwargs)
