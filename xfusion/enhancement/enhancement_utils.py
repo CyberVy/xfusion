@@ -97,7 +97,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
     overrides = ["enhancer_class","model_version","pipeline_type","pipeline_class",
                  "model_name","_scheduler","scheduler_map",
                  "image_to_image_pipeline","inpainting_pipeline",
-                 "check_original_pipeline","set_scheduler","reset_scheduler","to","load_i2i_pipeline","load_inpainting_pipeline"]
+                 "check_original_pipeline","set_scheduler","reset_scheduler","to","clear"]
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
