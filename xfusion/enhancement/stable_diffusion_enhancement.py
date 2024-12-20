@@ -8,7 +8,6 @@ from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
 import threading
-from functools import lru_cache
 from random import randint
 
 
@@ -177,7 +176,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                                 guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
                                 seed=int(seed),num=int(num))
 
-        fns = {"text_to_image":text_to_image,"image_to_image":image_to_image}
-        server = load_stable_diffusion_ui(fns)
+        server = load_stable_diffusion_ui(fns={"text_to_image":text_to_image,"image_to_image":image_to_image})
         server.launch(*args,**kwargs)
         return server
