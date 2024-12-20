@@ -161,5 +161,5 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         return self
 
     def clear(self):
-        for component in self.components:
+        for component in self.components.values():
             delete(component)
