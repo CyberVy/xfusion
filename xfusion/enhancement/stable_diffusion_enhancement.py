@@ -1,12 +1,9 @@
 # limited support to sd3 now
 
-from .enhancement_utils import PipelineEnhancerBase,LoraEnhancerMixin,FromURLMixin,pipeline_map
+from .enhancement_utils import PipelineEnhancerBase,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..ui.ui_utils import UIMixin
-from ..utils import EasyInitSubclass
-from ..message import TGBotMixin
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -97,16 +94,12 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
         threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
     return images
 
-class SDPipelineEnhancer(PipelineEnhancerBase,
-                         LoraEnhancerMixin,SDCLIPEnhancerMixin,FromURLMixin,
-                         TGBotMixin,UIMixin,EasyInitSubclass):
+class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     overrides = []
 
     def __init__(self,__oins__):
         PipelineEnhancerBase.__init__(self, __oins__)
-        LoraEnhancerMixin.__init__(self)
         SDCLIPEnhancerMixin.__init__(self)
-        TGBotMixin.__init__(self)
 
     def __call__(self,**kwargs):
         if kwargs.get("negative_prompt") is None:
@@ -142,22 +135,6 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
                 self.set_lora_strength(lora,weight)
         return r
 
-    def load_i2i_pipeline(self,**kwargs):
-        pipeline = PipelineEnhancerBase.load_i2i_pipeline(self,**kwargs)
-        pipeline.lora_dict = self.lora_dict
-        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
-        pipeline.set_download_kwargs(**self.download_kwargs)
-        pipeline.load_ui = lambda : None
-        return pipeline
-
-    def load_inpainting_pipeline(self,**kwargs):
-        pipeline = PipelineEnhancerBase.load_inpainting_pipeline(self,**kwargs)
-        pipeline.lora_dict = self.lora_dict
-        pipeline.set_telegram_kwargs(**self.telegram_kwargs)
-        pipeline.set_download_kwargs(**self.download_kwargs)
-        pipeline.load_ui = lambda : None
-        return pipeline
-
     def generate_image_and_send_to_telegram(self,
                                             prompt,negative_prompt="",
                                             guidance_scale=2,num_inference_steps=28,clip_skip=0,
@@ -177,8 +154,7 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
         return load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs)
 
     def load_ui(self,*args,**kwargs):
-        i2i_pipeline = self.load_i2i_pipeline()
-        def t2i_fn(prompt, negative_prompt="",
+        def text_to_image(prompt, negative_prompt="",
                    guidance_scale=2, num_inference_steps=28, clip_skip=0,
                    width=None, height=None,
                    seed=None, num=1):
@@ -188,20 +164,20 @@ class SDPipelineEnhancer(PipelineEnhancerBase,
                                 width=width,height=height,
                                 seed=int(seed),num=int(num))
 
-        def i2i_fn(image,
+        def image_to_image(image,
                    prompt,negative_prompt="",
                    strength=0.3,
                    guidance_scale=2,num_inference_steps=28,clip_skip=0,
                    seed=None,num=1):
             image = Image.fromarray(image)
-            return i2i_pipeline.generate_image_and_send_to_telegram(
+            return self.image_to_image_pipeline.generate_image_and_send_to_telegram(
                                 image=image,
-                                prompt=prompt,negative_prompt=negative_prompt,
+                                    prompt=prompt,negative_prompt=negative_prompt,
                                 strength=strength,
                                 guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
                                 seed=int(seed),num=int(num))
 
-        fns = {"t2i":t2i_fn,"i2i":i2i_fn}
+        fns = {"text_to_image":text_to_image,"image_to_image":image_to_image}
         server = load_stable_diffusion_ui(fns)
         server.launch(*args,**kwargs)
         return server
