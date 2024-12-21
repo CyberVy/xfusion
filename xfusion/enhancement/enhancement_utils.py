@@ -167,10 +167,10 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         self.__oins__ = self.__oins__.to(*args, **kwargs)
         return self
 
-    def enable_model_cpu_offload(self,*args,**kwargs):
-        self.__oins__.enable_model_cpu_offload(self,*args,**kwargs)
-        for pipeline in self.sub_pipelines:
-            pipeline.__oins__.enable_model_cpu_offload(*args,**kwargs)
+    # def enable_model_cpu_offload(self,*args,**kwargs):
+    #     self.__oins__.enable_model_cpu_offload(self,*args,**kwargs)
+    #     for pipeline in self.sub_pipelines:
+    #         pipeline.__oins__.enable_model_cpu_offload(*args,**kwargs)
 
     # todo:
     def image_normalize(self,image):
