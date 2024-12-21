@@ -95,9 +95,11 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
 
 class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     overrides = ["enhancer_class","model_version","pipeline_type","pipeline_class",
-                 "model_name","_scheduler","scheduler_map",
+                 "model_name","_scheduler","scheduler_map","sub_pipelines",
                  "image_to_image_pipeline","inpainting_pipeline",
-                 "check_original_pipeline","set_scheduler","reset_scheduler","to","clear"]
+                 "check_original_pipeline","set_scheduler","reset_scheduler",
+                 "to","enable_model_cpu_offload",
+                 "clear"]
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
@@ -109,6 +111,8 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         self.model_name = self.name_or_path
         self._scheduler = self.scheduler
         self.scheduler_map = scheduler_map
+
+        self.sub_pipelines = []
         if init_sub_pipelines:
             if self.pipeline_type != 0:
                 self.text_to_image_pipeline = self.enhancer_class(pipeline_map[self.model_version][0](**self.components),
@@ -116,6 +120,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 self.text_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
                 self.text_to_image_pipeline.lora_dict = self.lora_dict
                 self.text_to_image_pipeline.download_kwargs = self.download_kwargs
+                self.sub_pipelines.append(self.text_to_image_pipeline)
             else:
                 self.text_to_image_pipeline = self
 
@@ -125,6 +130,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 self.image_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
                 self.image_to_image_pipeline.lora_dict = self.lora_dict
                 self.image_to_image_pipeline.download_kwargs = self.download_kwargs
+                self.sub_pipelines.append(self.image_to_image_pipeline)
             else:
                 self.image_to_image_pipeline = self
 
@@ -134,6 +140,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 self.inpainting_pipeline.telegram_kwargs = self.telegram_kwargs
                 self.inpainting_pipeline.lora_dict = self.lora_dict
                 self.inpainting_pipeline.download_kwargs = self.download_kwargs
+                self.sub_pipelines.append(self.inpainting_pipeline)
             else:
                 self.inpainting_pipeline = self
 
@@ -159,6 +166,15 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
     def to(self, *args, **kwargs):
         self.__oins__ = self.__oins__.to(*args, **kwargs)
         return self
+
+    def enable_model_cpu_offload(self,*args,**kwargs):
+        for pipeline in self.sub_pipelines:
+            pipeline.enable_model_cpu_offload(*args,**kwargs)
+        return
+
+    # todo:
+    def image_normalize(self,image):
+        ...
 
     def clear(self):
         for component in self.components.values():
