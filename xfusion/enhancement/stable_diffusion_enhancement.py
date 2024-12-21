@@ -4,6 +4,7 @@ from .enhancement_utils import PipelineEnhancerBase,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
+from ..utils import image_normalize
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -118,6 +119,14 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         else:
             raise ValueError("The type of prompt and negative_prompt need to be str or list.")
 
+        image = kwargs.get("image")
+        if image and isinstance(image,Image.Image):
+            kwargs.update(image=image_normalize(image,1024 * 1536))
+
+        mask_image = kwargs.get("mask_image")
+        if mask_image and isinstance(mask_image, Image.Image):
+            kwargs.update(mask_image=image_normalize(image, 1024 * 1536))
+
         prompt_str = f"{prompt} {negative_prompt}" if prompt_type == str else f"{' '.join(prompt)} {' '.join(negative_prompt)}"
         saved_lora_dict = self.lora_dict.copy()
 
@@ -141,40 +150,43 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                                             seed=None,num=1,
                                             use_enhancer=True,**kwargs):
         return generate_image_and_send_to_telegram(
-            self,
-            prompt=prompt,negative_prompt=negative_prompt,
-            guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
-            width=width,height=height,
-            seed=seed,num=num,
-            use_enhancer=use_enhancer,**kwargs)
+               self,
+               prompt=prompt,negative_prompt=negative_prompt,
+               guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
+               width=width,height=height,
+               seed=seed,num=num,
+               use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
     def from_url(cls,url=None,model_version=None,**kwargs):
         return load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs)
 
     def load_ui(self,*args,**kwargs):
-        def text_to_image(prompt, negative_prompt="",
+
+        def text_to_image(
+                   prompt, negative_prompt="",
                    guidance_scale=2, num_inference_steps=28, clip_skip=0,
                    width=None, height=None,
                    seed=None, num=1):
-            return self.generate_image_and_send_to_telegram(
-                                prompt=prompt,negative_prompt=negative_prompt,
-                                guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
-                                width=width,height=height,
-                                seed=int(seed),num=int(num))
+            return self.text_to_image_pipeline.generate_image_and_send_to_telegram(
+                   prompt=prompt,negative_prompt=negative_prompt,
+                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
+                   width=width,height=height,
+                   seed=int(seed),num=int(num))
 
-        def image_to_image(image,
+        def image_to_image(
+                   image,
                    prompt,negative_prompt="",
                    strength=0.3,
                    guidance_scale=2,num_inference_steps=28,clip_skip=0,
                    seed=None,num=1):
             image = Image.fromarray(image)
             return self.image_to_image_pipeline.generate_image_and_send_to_telegram(
-                                image=image,
-                                    prompt=prompt,negative_prompt=negative_prompt,
-                                strength=strength,
-                                guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
-                                seed=int(seed),num=int(num))
+                   image=image,
+                   prompt=prompt,negative_prompt=negative_prompt,
+                   strength=strength,
+                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
+                   seed=int(seed),num=int(num))
 
         server = load_stable_diffusion_ui(fns={"text_to_image":text_to_image,"image_to_image":image_to_image})
         server.launch(*args,**kwargs)
