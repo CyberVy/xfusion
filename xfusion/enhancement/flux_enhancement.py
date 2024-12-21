@@ -1,6 +1,7 @@
 from .enhancement_utils import PipelineEnhancerBase
 from ..components.flux_components import load_flux_pipeline
 from ..ui.flux_ui import load_flux_ui
+from ..utils import image_normalize
 from PIL import Image
 import torch
 import threading
@@ -30,6 +31,16 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         PipelineEnhancerBase.__init__(self,__oins__,init_sub_pipelines=init_sub_pipelines)
+
+    def __call__(self, *args, **kwargs):
+        image = kwargs.get("image")
+        if image and isinstance(image, Image.Image):
+            kwargs.update(image=image_normalize(image, 1024 * 1536))
+
+        mask_image = kwargs.get("mask_image")
+        if mask_image and isinstance(mask_image, Image.Image):
+            kwargs.update(mask_image=image_normalize(image, 1024 * 1536))
+        return self.__oins__.__call__(*args,**kwargs)
 
     def generate_image_and_send_to_telegram(self,
                                             prompt,
