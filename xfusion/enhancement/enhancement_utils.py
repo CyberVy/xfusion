@@ -98,7 +98,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                  "model_name","_scheduler","scheduler_map","sub_pipelines",
                  "image_to_image_pipeline","inpainting_pipeline",
                  "check_original_pipeline","set_scheduler","reset_scheduler",
-                 "to","enable_model_cpu_offload",
+                 "to",
                  "image_normalize","clear"]
 
     def __init__(self,__oins__,init_sub_pipelines=True):
