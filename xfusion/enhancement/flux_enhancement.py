@@ -1,5 +1,7 @@
 from .enhancement_utils import PipelineEnhancerBase
 from ..components.flux_components import load_flux_pipeline
+from ..ui.flux_ui import load_flux_ui
+from PIL import Image
 import torch
 import threading
 from random import randint
@@ -29,9 +31,47 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
     def __init__(self,__oins__,init_sub_pipelines=True):
         PipelineEnhancerBase.__init__(self,__oins__,init_sub_pipelines=init_sub_pipelines)
 
-    def generate_image_and_send_to_telegram(self,prompt,num=1,seed=None,use_enhancer=True,**kwargs):
-        return generate_image_and_send_to_telegram(self,prompt,num,seed=seed,use_enhancer=use_enhancer,**kwargs)
+    def generate_image_and_send_to_telegram(self,
+                                            prompt,
+                                            guidance_scale,num_inference_steps,
+                                            width,height,
+                                            num=1,seed=None,use_enhancer=True,**kwargs):
+        return generate_image_and_send_to_telegram(self,prompt,
+                                                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
+                                                   width=width, height=height,
+                                                   num=num,seed=seed,
+                                                   use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
     def from_url(cls,url=None,**kwargs):
         return load_flux_pipeline(url,**kwargs)
+
+    def load_ui(self,*arg,**kwargs):
+
+        def text_to_image(prompt,
+                          guidance_scale=2, num_inference_steps=28,
+                          width=None, height=None,
+                          seed=None, num=1):
+
+            return self.text_to_image_pipeline.generate_image_and_send_to_telegram(
+                   prompt=prompt,
+                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
+                   width=width,height=height,
+                   seed=seed,num=num)
+
+        def image_to_image(image,
+                           prompt,
+                           strength,
+                           guidance_scale=2, num_inference_steps=28,
+                           seed=None, num=1):
+            image = Image.fromarray(image)
+            return self.image_to_image_pipeline.generate_image_and_send_to_telegram(
+                   image=image,
+                   prompt=prompt,
+                   strength=strength,
+                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
+                   seed=seed,num=num)
+
+        server = load_flux_ui({"text_to_image":text_to_image,"image_to_image":image_to_image})
+        server.launch(*arg,**kwargs)
+        return server
