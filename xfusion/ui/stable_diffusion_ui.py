@@ -2,10 +2,23 @@ import gradio as gr
 
 
 def load_stable_diffusion_ui(fns):
+    model_selection_fn = fns["model_selection"]
     text_to_image_fn = fns["text_to_image"]
     image_to_image_fn = fns["image_to_image"]
 
     with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
+
+        gr.Markdown("**Model Selection**")
+        with gr.Row():
+            model_selection_inputs = []
+            model_selection_outputs = []
+            with gr.Column():
+                model_selection_inputs.append(gr.Textbox(placeholder="Give me a url of model!",label="Model"))
+                model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
+            with gr.Column():
+                model_selection_outputs.append(gr.Textbox(label="Result"))
+                model_selection_btn = gr.Button("Select")
+                model_selection_btn.click(fn=model_selection_fn,inputs=model_selection_inputs,outputs=model_selection_outputs)
 
         gr.Markdown("**Text To Image**")
         with gr.Row():
