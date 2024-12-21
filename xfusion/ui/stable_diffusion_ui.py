@@ -6,6 +6,7 @@ def load_stable_diffusion_ui(fns):
     image_to_image_fn = fns["image_to_image"]
 
     with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
+
         gr.Markdown("**Text To Image**")
         with gr.Row():
             t2i_inputs = []
@@ -22,14 +23,14 @@ def load_stable_diffusion_ui(fns):
             with gr.Column():
                 t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                 t2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
-                t2i_outputs.append(gr.Textbox())
+                t2i_outputs.append(gr.Textbox(label="Result"))
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=text_to_image_fn, inputs=t2i_inputs, outputs=t2i_outputs)
 
         gr.Markdown("**Image To Image**")
-        i2i_inputs = []
-        i2i_outputs = []
         with gr.Row():
+            i2i_inputs = []
+            i2i_outputs = []
             with gr.Column():
                 i2i_inputs.append(gr.Image())
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt"))
@@ -42,7 +43,7 @@ def load_stable_diffusion_ui(fns):
             with gr.Column():
                 i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                 i2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
-                i2i_outputs.append(gr.Textbox())
+                i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
 
