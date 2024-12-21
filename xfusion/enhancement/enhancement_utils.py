@@ -49,7 +49,7 @@ class FromURLMixin:
     overrides = ["from_url"]
 
     @classmethod
-    def from_url(cls,url,**kwargs):
+    def from_url(cls,url,init_sub_pipelines=True,**kwargs):
         raise NotImplementedError(f"{cls} not implement 'from_url'")
 
 
@@ -99,7 +99,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                  "image_to_image_pipeline","inpainting_pipeline",
                  "check_original_pipeline","set_scheduler","reset_scheduler",
                  "to",
-                 "clear"]
+                 "clear","reload"]
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
@@ -170,3 +170,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
     def clear(self):
         for component in self.components.values():
             delete(component)
+
+    def reload(self,url,**kwargs):
+        self.clear()
+        object.__getattribute__(self,"__init__")(self.from_url(url,init_sub_pipelines=False,**kwargs).__oins__)
