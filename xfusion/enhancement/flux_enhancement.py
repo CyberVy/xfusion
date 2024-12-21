@@ -54,8 +54,8 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                                                    use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
-    def from_url(cls,url=None,**kwargs):
-        return load_flux_pipeline(url,**kwargs)
+    def from_url(cls,url=None,init_sub_pipelines=True,**kwargs):
+        return cls(load_flux_pipeline(url,**kwargs),init_sub_pipelines=init_sub_pipelines)
 
     def load_ui(self,*arg,**kwargs):
 
