@@ -42,7 +42,6 @@ def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
                     "pooled_prompt_embeds":pooled,"negative_pooled_prompt_embeds":negative_pooled}
     # compel only supports sd1 sd2 sdxl now
     return {}
-
 class SDCLIPEnhancerMixin:
     # __oins__ here is the pipeline instance to implement.
     __oins__ = None
@@ -93,7 +92,6 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
         caption = f"Prompt: {prompt[:384]}\n\nNegative Prompt: {negative_prompt[:384]}\n\nStep: {kwargs.get('num_inference_steps')}, CFG: {kwargs.get('guidance_scale')}, CLIP Skip: {kwargs.get('clip_skip')}\nSampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSeed: {item}\n\nModel:{pipeline.model_name}"
         threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
     return images
-
 class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     overrides = []
 
@@ -158,8 +156,9 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                use_enhancer=use_enhancer,**kwargs)
 
     @classmethod
-    def from_url(cls,url=None,model_version=None,**kwargs):
-        return load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs)
+    def from_url(cls,url=None,model_version=None,init_sub_pipelines=True,**kwargs):
+        return cls(load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs),
+                   init_sub_pipelines=init_sub_pipelines)
 
     def load_ui(self,*args,**kwargs):
 
