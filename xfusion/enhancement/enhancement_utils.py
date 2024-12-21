@@ -99,7 +99,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                  "image_to_image_pipeline","inpainting_pipeline",
                  "check_original_pipeline","set_scheduler","reset_scheduler",
                  "to",
-                 "image_normalize","clear"]
+                 "clear"]
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
@@ -166,10 +166,6 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
     def to(self, *args, **kwargs):
         self.__oins__ = self.__oins__.to(*args, **kwargs)
         return self
-
-    # todo:
-    def image_normalize(self,image):
-        ...
 
     def clear(self):
         for component in self.components.values():
