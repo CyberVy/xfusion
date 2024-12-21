@@ -173,5 +173,6 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
 
     def reload(self,url,**kwargs):
         self.clear()
+        device = self.device
         object.__getattribute__(self,"__init__")(self.from_url(url,init_sub_pipelines=False,**kwargs).__oins__)
-        self.to(self.device)
+        self.to(device)
