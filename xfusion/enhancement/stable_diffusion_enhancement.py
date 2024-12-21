@@ -162,6 +162,9 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
     def load_ui(self,*args,**kwargs):
 
+        def model_selection(model,model_version):
+            self.reload(model,model_version=model_version)
+
         def text_to_image(
                    prompt, negative_prompt="",
                    guidance_scale=2, num_inference_steps=28, clip_skip=0,
@@ -187,6 +190,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                    guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
                    seed=int(seed),num=int(num))
 
-        server = load_stable_diffusion_ui(fns={"text_to_image":text_to_image,"image_to_image":image_to_image})
+        server = load_stable_diffusion_ui(fns={"model_selection":model_selection,"text_to_image":text_to_image,"image_to_image":image_to_image})
         server.launch(*args,**kwargs)
         return server
