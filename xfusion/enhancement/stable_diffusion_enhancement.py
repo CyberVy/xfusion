@@ -163,8 +163,11 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     def load_ui(self,*args,**kwargs):
 
         def model_selection(model,model_version):
-            self.reload(model,model_version=model_version)
-            return f"{model}, {model_version}"
+            url = self.reload(model,model_version=model_version)
+            if url:
+                return f"{model}, {model_version}"
+            else:
+                return f"Please input a valid url."
 
         def text_to_image(
                    prompt, negative_prompt="",
