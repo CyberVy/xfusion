@@ -1,4 +1,6 @@
-import threading,os,shutil,gc
+import os,shutil,gc
+import threading
+from PIL.Image import Image,Resampling
 
 
 class EasyInitSubclass:
@@ -138,31 +140,6 @@ def delete(obj):
 
     return i, referrers, _i, _referrers
 
-class EditableImage(list):
-
-    def __init__(self,image):
-        list.__init__(self,[image])
-
-    def edit(self,image):
-        self.append(image)
-        return self
-
-    @property
-    def now(self):
-        return self[-1]
-
-    def back(self,n=1):
-        if n > len(self) - 1:
-            n = len(self) - 1
-        for item in range(n):
-            self.pop(-1)
-        return self
-
-    def reset(self):
-        for _ in range(len(self) - 1):
-            self.pop(-1)
-        return self
-
 def threads_execute(f,args,_await=True):
     threads = []
     if _await:
@@ -188,3 +165,37 @@ def delete_all_contents_of_path(folder_path):
                 os.remove(full_path)
             elif os.path.isdir(full_path):
                 shutil.rmtree(full_path)
+
+def image_normalize(image:Image,max_pixels):
+    width,height = image.size
+    if max_pixels >= width * height:
+        return image
+    scale = (max_pixels / width / height)**0.5
+    width = int(width * scale)
+    height = int(height * scale)
+    return image.resize((width,height),Resampling.LANCZOS)
+
+class EditableImage(list):
+
+    def __init__(self,image):
+        list.__init__(self,[image])
+
+    def edit(self,image):
+        self.append(image)
+        return self
+
+    @property
+    def now(self):
+        return self[-1]
+
+    def back(self,n=1):
+        if n > len(self) - 1:
+            n = len(self) - 1
+        for item in range(n):
+            self.pop(-1)
+        return self
+
+    def reset(self):
+        for _ in range(len(self) - 1):
+            self.pop(-1)
+        return self
