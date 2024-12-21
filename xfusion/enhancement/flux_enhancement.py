@@ -57,7 +57,7 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                    prompt=prompt,
                    guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
                    width=width,height=height,
-                   seed=seed,num=num)
+                   seed=int(seed),num=int(num))
 
         def image_to_image(image,
                            prompt,
@@ -70,7 +70,7 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                    prompt=prompt,
                    strength=strength,
                    guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
-                   seed=seed,num=num)
+                   seed=int(seed),num=int(num))
 
         server = load_flux_ui({"text_to_image":text_to_image,"image_to_image":image_to_image})
         server.launch(*arg,**kwargs)
