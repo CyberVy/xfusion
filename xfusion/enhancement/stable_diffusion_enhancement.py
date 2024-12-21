@@ -164,6 +164,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         def model_selection(model,model_version):
             self.reload(model,model_version=model_version)
+            return f"{model}, {model_version}"
 
         def text_to_image(
                    prompt, negative_prompt="",
