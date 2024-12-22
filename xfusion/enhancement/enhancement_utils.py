@@ -172,9 +172,11 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
             delete(component)
 
     def reload(self,url,**kwargs):
-
         if not (url.startswith("http") or url.startswith(".") or url.startswith("/") or url.startswith("~")):
             raise ValueError("A url is required.")
+        supported_model_version_list = [None,"","sdxl","xl","pony","1.5","2","3","3.5"]
+        if kwargs.get("model_version") not in supported_model_version_list:
+            raise ValueError(f"Model version: {kwargs.get("model_version")} is not supported, ${supported_model_version_list[2:]} is expected.")
 
         device = self.device
         self.clear()
