@@ -4,6 +4,7 @@ from ..utils import allow_return_error
 
 def load_stable_diffusion_ui(fns,_globals=None):
     model_selection_fn = fns["model_selection"]
+    lora_fn = fns["lora"]
     text_to_image_fn = fns["text_to_image"]
     image_to_image_fn = fns["image_to_image"]
 
@@ -26,6 +27,20 @@ def load_stable_diffusion_ui(fns,_globals=None):
                 model_selection_outputs.append(gr.Textbox(label="Result"))
                 model_selection_btn = gr.Button("Select")
                 model_selection_btn.click(fn=model_selection_fn,inputs=model_selection_inputs,outputs=model_selection_outputs)
+
+        gr.Markdown("**LoRA**")
+        with gr.Row():
+            lora_inputs = []
+            lora_outputs = []
+            with gr.Column():
+                lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!",label="LoRA"))
+                with gr.Row():
+                    lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!",label="LoRA name"))
+                    lora_inputs.append(gr.Slider(0,1,0.4,step=0.05,label="LoRA strength"))
+            with gr.Column():
+                lora_outputs.append(gr.Textbox(label="Result"))
+                lora_btn = gr.Button("Set")
+                lora_btn.click(fn=lora_fn,inputs=lora_inputs,outputs=lora_outputs)
 
         gr.Markdown("**Text To Image**")
         with gr.Row():
