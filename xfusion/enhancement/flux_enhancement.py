@@ -57,7 +57,7 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
     def from_url(cls,url=None,init_sub_pipelines=True,**kwargs):
         return cls(load_flux_pipeline(url,**kwargs),init_sub_pipelines=init_sub_pipelines)
 
-    def load_ui(self,*arg,**kwargs):
+    def load_ui(self,_globals=None,**kwargs):
 
         @allow_return_error
         def text_to_image(prompt,
@@ -86,5 +86,5 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                    seed=int(seed),num=int(num))
 
         server = load_flux_ui({"text_to_image":text_to_image,"image_to_image":image_to_image})
-        server.launch(*arg,**kwargs)
+        server.launch(**kwargs)
         return server
