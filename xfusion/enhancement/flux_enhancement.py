@@ -1,7 +1,7 @@
 from .enhancement_utils import PipelineEnhancerBase
 from ..components.flux_components import load_flux_pipeline
 from ..ui.flux_ui import load_flux_ui
-from ..utils import image_normalize
+from ..utils import image_normalize,allow_return_error
 from PIL import Image
 import torch
 import threading
@@ -59,6 +59,7 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
 
     def load_ui(self,*arg,**kwargs):
 
+        @allow_return_error
         def text_to_image(prompt,
                           guidance_scale=2, num_inference_steps=28,
                           width=None, height=None,
@@ -70,6 +71,7 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                    width=width,height=height,
                    seed=int(seed),num=int(num))
 
+        @allow_return_error
         def image_to_image(image,
                            prompt,
                            strength,
