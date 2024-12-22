@@ -19,14 +19,10 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 ```python
 from xfusion.enhancement import load_enhancer
 import torch
-```
 
-```python
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model,"xl").to("cuda")
-```
 
-```python
 prompt = """
 young white woman with dramatic makeup resembling a melted clown, deep black smokey eyes, smeared red lipstick, and white face paint streaks, wet hair falling over shoulders, dark and intense aesthetic, fashion editorial style, aged around 20 years, inspired by rick genest's zombie boy look, best quality
 """
@@ -42,9 +38,7 @@ seed = 13743883683399229202
 
 width = None
 height = None
-```
 
-```python
 images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.Generator(pipeline.device).manual_seed(seed),width=width,height=height,num_inference_steps=num_inference_steps,guidance_scale=guidance_scale,clip_skip=clip_skip).images
 ```
 
