@@ -9,6 +9,8 @@ def load_flux_ui(fns,_globals=None):
     @allow_return_error
     def run_code_fn(code):
         exec(code,_globals)
+        if _globals:
+            return _globals.pop("_cout", None)
 
     with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
 
