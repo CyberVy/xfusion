@@ -56,7 +56,7 @@ def load_flux_ui(fns,_globals=None):
             code_outputs = []
             with gr.Column():
                 code_inputs.append(
-                    gr.Code(value="globals()['_cout'] = None", language="python", lines=5, label="Python"))
+                    gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
             with gr.Column():
                 code_outputs.append(gr.Textbox(label="Code Result"))
                 code_btn = gr.Button("Run Code")
