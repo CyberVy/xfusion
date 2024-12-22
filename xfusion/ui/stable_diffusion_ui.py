@@ -2,15 +2,14 @@ import gradio as gr
 from ..utils import allow_return_error
 
 
-def load_stable_diffusion_ui(fns):
+def load_stable_diffusion_ui(fns,_globals=None):
     model_selection_fn = fns["model_selection"]
     text_to_image_fn = fns["text_to_image"]
     image_to_image_fn = fns["image_to_image"]
-    
+
     @allow_return_error
     def run_code_fn(code):
-        exec(code)
-        return globals().get("_cout")
+        exec(code,_globals)
 
     with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
 
@@ -68,6 +67,7 @@ def load_stable_diffusion_ui(fns):
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
+
         gr.Markdown("**Code**")
         with gr.Row():
             code_inputs = []
