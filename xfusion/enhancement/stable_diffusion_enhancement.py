@@ -174,6 +174,10 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             return f"{model}, {model_version}"
 
         @allow_return_error
+        def lora(url, lora_name, strength):
+            self.set_lora(url,lora_name,strength)
+
+        @allow_return_error
         def text_to_image(
                    prompt, negative_prompt="",
                    guidance_scale=2, num_inference_steps=28, clip_skip=0,
@@ -200,6 +204,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                    guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
                    seed=int(seed),num=int(num))
 
-        server = load_stable_diffusion_ui(fns={"model_selection":model_selection,"text_to_image":text_to_image,"image_to_image":image_to_image},_globals=_globals)
+        server = load_stable_diffusion_ui(fns={"model_selection":model_selection,"lora":lora,"text_to_image":text_to_image,"image_to_image":image_to_image},_globals=_globals)
         server.launch(**kwargs)
         return server
