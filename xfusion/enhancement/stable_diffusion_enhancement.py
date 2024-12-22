@@ -176,6 +176,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         @allow_return_error
         def lora(url, lora_name, strength):
             self.set_lora(url,lora_name,strength)
+            return f"{lora_name}, {strength}"
 
         @allow_return_error
         def text_to_image(
