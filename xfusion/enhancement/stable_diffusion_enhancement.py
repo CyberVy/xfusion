@@ -4,7 +4,7 @@ from .enhancement_utils import PipelineEnhancerBase,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..utils import image_normalize
+from ..utils import image_normalize,allow_return_error
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -161,14 +161,12 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                    init_sub_pipelines=init_sub_pipelines)
 
     def load_ui(self,*args,**kwargs):
-
+        @allow_return_error
         def model_selection(model,model_version):
-            url = self.reload(model,model_version=model_version)
-            if url:
-                return f"{model}, {model_version}"
-            else:
-                return f"Please input a valid url."
+            self.reload(model,model_version=model_version)
+            return f"{model}, {model_version}"
 
+        @allow_return_error
         def text_to_image(
                    prompt, negative_prompt="",
                    guidance_scale=2, num_inference_steps=28, clip_skip=0,
@@ -180,6 +178,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                    width=width,height=height,
                    seed=int(seed),num=int(num))
 
+        @allow_return_error
         def image_to_image(
                    image,
                    prompt,negative_prompt="",
