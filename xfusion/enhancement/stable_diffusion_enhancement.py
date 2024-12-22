@@ -164,7 +164,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         supported_model_version_list = [None, "", "sdxl", "xl", "pony", "1.5", "2", "3", "3.5"]
         if kwargs.get("model_version") not in supported_model_version_list:
             raise ValueError(
-                f"Model version: {kwargs.get('model_version')} is not supported, ${supported_model_version_list[2:]} is expected.")
+                f"Model version: {kwargs.get('model_version')} is not supported, {supported_model_version_list[2:]} is expected.")
         PipelineEnhancerBase.reload(self,url,**kwargs)
 
     def load_ui(self,*args,**kwargs):
