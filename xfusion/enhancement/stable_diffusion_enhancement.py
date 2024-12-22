@@ -167,7 +167,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 f"Model version: {kwargs.get('model_version')} is not supported, {supported_model_version_list[2:]} is expected.")
         PipelineEnhancerBase.reload(self,url,**kwargs)
 
-    def load_ui(self,*args,**kwargs):
+    def load_ui(self,_globals=None,**kwargs):
         @allow_return_error
         def model_selection(model,model_version):
             self.reload(model,model_version=model_version)
@@ -200,6 +200,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                    guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
                    seed=int(seed),num=int(num))
 
-        server = load_stable_diffusion_ui(fns={"model_selection":model_selection,"text_to_image":text_to_image,"image_to_image":image_to_image})
-        server.launch(*args,**kwargs)
+        server = load_stable_diffusion_ui(fns={"model_selection":model_selection,"text_to_image":text_to_image,"image_to_image":image_to_image},_globals=_globals)
+        server.launch(**kwargs)
         return server
