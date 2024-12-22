@@ -160,6 +160,13 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         return cls(load_stable_diffusion_pipeline(model=url,model_version=model_version,**kwargs),
                    init_sub_pipelines=init_sub_pipelines)
 
+    def reload(self,url,**kwargs):
+        supported_model_version_list = [None, "", "sdxl", "xl", "pony", "1.5", "2", "3", "3.5"]
+        if kwargs.get("model_version") not in supported_model_version_list:
+            raise ValueError(
+                f"Model version: {kwargs.get("model_version")} is not supported, ${supported_model_version_list[2:]} is expected.")
+        PipelineEnhancerBase.reload(self,url,**kwargs)
+
     def load_ui(self,*args,**kwargs):
         @allow_return_error
         def model_selection(model,model_version):
