@@ -1,5 +1,6 @@
 import os,shutil,gc
 import threading
+from functools import wraps
 from PIL.Image import Image,Resampling
 
 
@@ -157,6 +158,15 @@ def threads_execute(f,args,_await=True):
             thread.start()
     return threads
 
+def allow_return_error(f):
+    @wraps(f)
+    def wrapper(*args,**kwargs):
+        try:
+            return f(*args,**kwargs)
+        except Exception as e:
+            return f"{e}"
+    return wrapper
+
 def delete_all_contents_of_path(folder_path):
     if os.path.exists(folder_path):
         for file_or_dir in os.listdir(folder_path):
@@ -174,28 +184,3 @@ def image_normalize(image:Image,max_pixels):
     width = int(width * scale)
     height = int(height * scale)
     return image.resize((width,height),Resampling.LANCZOS)
-
-class EditableImage(list):
-
-    def __init__(self,image):
-        list.__init__(self,[image])
-
-    def edit(self,image):
-        self.append(image)
-        return self
-
-    @property
-    def now(self):
-        return self[-1]
-
-    def back(self,n=1):
-        if n > len(self) - 1:
-            n = len(self) - 1
-        for item in range(n):
-            self.pop(-1)
-        return self
-
-    def reset(self):
-        for _ in range(len(self) - 1):
-            self.pop(-1)
-        return self
