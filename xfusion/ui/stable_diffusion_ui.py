@@ -16,7 +16,7 @@ def load_stable_diffusion_ui(fns,_globals=None):
 
     with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
 
-        gr.Markdown("**Model Selection**")
+        gr.Markdown("# Model Selection")
         with gr.Row():
             model_selection_inputs = []
             model_selection_outputs = []
@@ -27,8 +27,9 @@ def load_stable_diffusion_ui(fns,_globals=None):
                 model_selection_outputs.append(gr.Textbox(label="Result"))
                 model_selection_btn = gr.Button("Select")
                 model_selection_btn.click(fn=model_selection_fn,inputs=model_selection_inputs,outputs=model_selection_outputs)
+        gr.Markdown("---")
 
-        gr.Markdown("**LoRA**")
+        gr.Markdown("# LoRA")
         with gr.Row():
             lora_inputs = []
             lora_outputs = []
@@ -41,8 +42,9 @@ def load_stable_diffusion_ui(fns,_globals=None):
                 lora_outputs.append(gr.Textbox(label="Result"))
                 lora_btn = gr.Button("Set")
                 lora_btn.click(fn=lora_fn,inputs=lora_inputs,outputs=lora_outputs)
+        gr.Markdown("---")
 
-        gr.Markdown("**Text To Image**")
+        gr.Markdown("# Text To Image")
         with gr.Row():
             t2i_inputs = []
             t2i_outputs = []
@@ -63,8 +65,9 @@ def load_stable_diffusion_ui(fns,_globals=None):
                 t2i_outputs.append(gr.Textbox(label="Result"))
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=text_to_image_fn, inputs=t2i_inputs, outputs=t2i_outputs)
+        gr.Markdown("---")
 
-        gr.Markdown("**Image To Image**")
+        gr.Markdown("# Image To Image")
         with gr.Row():
             i2i_inputs = []
             i2i_outputs = []
@@ -84,8 +87,9 @@ def load_stable_diffusion_ui(fns,_globals=None):
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
+        gr.Markdown("---")
 
-        gr.Markdown("**Code**")
+        gr.Markdown("# Code")
         with gr.Row():
             code_inputs = []
             code_outputs = []
