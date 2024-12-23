@@ -14,7 +14,7 @@ def load_flux_ui(fns,_globals=None):
 
     with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
 
-        gr.Markdown("**Text To Image**")
+        gr.Markdown("# Text To Image ")
         with gr.Row():
             t2i_inputs = []
             t2i_outputs = []
@@ -31,8 +31,9 @@ def load_flux_ui(fns,_globals=None):
                 t2i_outputs.append(gr.Textbox(label="Result"))
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=text_to_image_fn, inputs=t2i_inputs, outputs=t2i_outputs)
+        gr.Markdown("---")
 
-        gr.Markdown("**Image To Image**")
+        gr.Markdown("# Image To Image")
         with gr.Row():
             i2i_inputs = []
             i2i_outputs = []
@@ -49,8 +50,9 @@ def load_flux_ui(fns,_globals=None):
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
+        gr.Markdown("---")
 
-        gr.Markdown("**Code**")
+        gr.Markdown("# Code")
         with gr.Row():
             code_inputs = []
             code_outputs = []
