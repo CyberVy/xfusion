@@ -69,10 +69,10 @@ def load_stable_diffusion_pipeline(model=None,
     else:
         # from local single file
         if model.endswith(".safetensors") or model.endswith(".bin") or model.endswith(".ckpt"):
-            if model_version == "":
-                print("Warning: model version is not set, the pipeline may not work.")
-                if "xl" in model.split("/")[-1].lower():
+            if not model_version:
+                if "xl" in model.lower():
                     model_version = "xl"
+                print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
             # the same reason above
             if model_version == "xl":
                 return StableDiffusionXLPipeline.from_single_file(model,**kwargs)
