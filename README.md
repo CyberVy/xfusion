@@ -12,7 +12,7 @@ Xfusion is a Python library built on top of [Diffusers](https://github.com/huggi
 
 # Installation
 ```bash
-pip install -q git+https://github.com/huggingface/diffusers.git
+pip install -q git+https://github.com/CyberVy/diffusers.git
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
 # Code Example
