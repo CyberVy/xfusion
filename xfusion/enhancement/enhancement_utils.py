@@ -172,8 +172,8 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
             delete(component)
 
     def reload(self,url,**kwargs):
-        if not (url.startswith("http") or url.startswith(".") or url.startswith("/") or url.startswith("~")):
-            raise ValueError("A url is required.")
+        if "/" not in url:
+            raise ValueError("A URL or Hugging Face Repo ID is required.")
 
         device = self.device
         self.clear()
