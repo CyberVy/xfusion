@@ -4,7 +4,7 @@ from .enhancement_utils import PipelineEnhancerBase,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..utils import image_normalize,allow_return_error
+from ..utils import image_normalize
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -168,43 +168,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         PipelineEnhancerBase.reload(self,url,**kwargs)
 
     def load_ui(self,_globals=None,**kwargs):
-        @allow_return_error
-        def model_selection(model,model_version):
-            self.reload(model,model_version=model_version)
-            return f"{model}, {model_version}"
-
-        @allow_return_error
-        def lora(url, lora_name, strength):
-            self.set_lora(url,lora_name,strength)
-            return f"{lora_name}, {strength}"
-
-        @allow_return_error
-        def text_to_image(
-                   prompt, negative_prompt="",
-                   guidance_scale=2, num_inference_steps=28, clip_skip=0,
-                   width=None, height=None,
-                   seed=None, num=1):
-            return self.text_to_image_pipeline.generate_image_and_send_to_telegram(
-                   prompt=prompt,negative_prompt=negative_prompt,
-                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
-                   width=width,height=height,
-                   seed=int(seed),num=int(num))
-
-        @allow_return_error
-        def image_to_image(
-                   image,
-                   prompt,negative_prompt="",
-                   strength=0.3,
-                   guidance_scale=2,num_inference_steps=28,clip_skip=0,
-                   seed=None,num=1):
-            image = Image.fromarray(image)
-            return self.image_to_image_pipeline.generate_image_and_send_to_telegram(
-                   image=image,
-                   prompt=prompt,negative_prompt=negative_prompt,
-                   strength=strength,
-                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,clip_skip=clip_skip,
-                   seed=int(seed),num=int(num))
-
-        server = load_stable_diffusion_ui(fns={"model_selection":model_selection,"lora":lora,"text_to_image":text_to_image,"image_to_image":image_to_image},_globals=_globals)
+        server = load_stable_diffusion_ui(self,_globals)
         server.launch(**kwargs)
         return server
