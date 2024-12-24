@@ -1,16 +1,41 @@
 import gradio as gr
 from ..utils import allow_return_error
+from PIL import Image
 
 
-def load_flux_ui(fns,_globals=None):
-    text_to_image_fn = fns["text_to_image"]
-    image_to_image_fn = fns["image_to_image"]
+def load_flux_ui(pipeline, _globals=None):
+
+    @allow_return_error
+    def text_to_image_fn(prompt,
+                      guidance_scale=2, num_inference_steps=28,
+                      width=None, height=None,
+                      seed=None, num=1):
+        return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
+            prompt=prompt,
+            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+            width=width, height=height,
+            seed=int(seed), num=int(num))
+
+    @allow_return_error
+    def image_to_image_fn(image,
+                       prompt,
+                       strength,
+                       guidance_scale=2, num_inference_steps=28,
+                       seed=None, num=1):
+        image = Image.fromarray(image)
+        return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
+            image=image,
+            prompt=prompt,
+            strength=strength,
+            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+            seed=int(seed), num=int(num))
 
     @allow_return_error
     def run_code_fn(code):
         exec(code,_globals)
         if _globals:
             return _globals.pop("_cout", None)
+
 
     with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
 
