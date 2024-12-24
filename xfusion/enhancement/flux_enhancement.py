@@ -1,90 +1,92 @@
-from .enhancement_utils import PipelineEnhancerBase
-from ..components.flux_components import load_flux_pipeline
-from ..ui.flux_ui import load_flux_ui
-from ..utils import image_normalize,allow_return_error
+import gradio as gr
+from ..utils import allow_return_error
 from PIL import Image
-import torch
-import threading
-from random import randint
 
 
-def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhancer=True,**kwargs):
-    kwargs.update(prompt=prompt)
-    seeds = []
-    images = []
-    if seed:
-        seeds.append(seed)
-    else:
-        for i in range(num):
-            seeds.append(randint(-2 ** 63, 2 ** 64 - 1))
-    for item in seeds:
-        kwargs.update(generator=torch.Generator(pipeline.device).manual_seed(item))
-        image = pipeline(**kwargs).images[0] if use_enhancer else pipeline.__oins__(**kwargs).images[0]
-        images.append(image)
-        caption = f"Prompt: {prompt[:768]}\n\nStep: {kwargs.get('num_inference_steps')}, CFG: {kwargs.get('guidance_scale')}, CLIP Skip: {kwargs.get('clip_skip')}\nSampler: {pipeline.scheduler.config._class_name}\nSeed: {item}\n\nModel:{pipeline.model_name}"
-        threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
-    return images
+def load_flux_ui(pipeline, _globals=None):
+
+    @allow_return_error
+    def text_to_image_fn(prompt,
+                      guidance_scale=2, num_inference_steps=28,
+                      width=None, height=None,
+                      seed=None, num=1):
+        return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
+            prompt=prompt,
+            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+            width=width, height=height,
+            seed=int(seed), num=int(num))
+
+    @allow_return_error
+    def image_to_image_fn(image,
+                       prompt,
+                       strength,
+                       guidance_scale=2, num_inference_steps=28,
+                       seed=None, num=1):
+        image = Image.fromarray(image)
+        return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
+            image=image,
+            prompt=prompt,
+            strength=strength,
+            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+            seed=int(seed), num=int(num))
+
+    @allow_return_error
+    def run_code_fn(code):
+        exec(code,_globals)
+        if _globals:
+            return _globals.pop("_cout", None)
 
 
-class FluxPipelineEnhancer(PipelineEnhancerBase):
-    overrides = []
+    with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
 
-    def __init__(self,__oins__,init_sub_pipelines=True):
-        PipelineEnhancerBase.__init__(self,__oins__,init_sub_pipelines=init_sub_pipelines)
+        gr.Markdown("# Text To Image ")
+        with gr.Row():
+            t2i_inputs = []
+            t2i_outputs = []
+            with gr.Column():
+                t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt"))
+            with gr.Column():
+                t2i_inputs.append(gr.Slider(0,10,2.5,step=0.1,label="Guidance Scale"))
+                t2i_inputs.append(gr.Slider(0,50,28,step=1,label="Step"))
+                t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+            with gr.Column():
+                t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                t2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                t2i_outputs.append(gr.Textbox(label="Result"))
+                t2i_btn = gr.Button("Run")
+                t2i_btn.click(fn=text_to_image_fn, inputs=t2i_inputs, outputs=t2i_outputs)
+        gr.Markdown("---")
 
-    def __call__(self, *args, **kwargs):
-        image = kwargs.get("image")
-        if image and isinstance(image, Image.Image):
-            kwargs.update(image=image_normalize(image, 1024 * 1536))
+        gr.Markdown("# Image To Image")
+        with gr.Row():
+            i2i_inputs = []
+            i2i_outputs = []
+            with gr.Column():
+                i2i_inputs.append(gr.Image())
+                i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt"))
+            with gr.Column():
+                i2i_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
+                i2i_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
+                i2i_inputs.append(gr.Slider(0, 50, 28, step=1, label="Step"))
+            with gr.Column():
+                i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                i2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                i2i_outputs.append(gr.Textbox(label="Result"))
+                i2i_btn = gr.Button("Run")
+                i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
+        gr.Markdown("---")
 
-        mask_image = kwargs.get("mask_image")
-        if mask_image and isinstance(mask_image, Image.Image):
-            kwargs.update(mask_image=image_normalize(image, 1024 * 1536))
-        return self.__oins__.__call__(*args,**kwargs)
+        gr.Markdown("# Code")
+        with gr.Row():
+            code_inputs = []
+            code_outputs = []
+            with gr.Column():
+                code_inputs.append(
+                    gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
+            with gr.Column():
+                code_outputs.append(gr.Textbox(label="Code Result"))
+                code_btn = gr.Button("Run Code")
+                code_btn.click(fn=run_code_fn, inputs=code_inputs, outputs=code_outputs)
 
-    def generate_image_and_send_to_telegram(self,
-                                            prompt,
-                                            guidance_scale,num_inference_steps,
-                                            width,height,
-                                            num=1,seed=None,use_enhancer=True,**kwargs):
-        return generate_image_and_send_to_telegram(self,prompt,
-                                                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
-                                                   width=width, height=height,
-                                                   num=num,seed=seed,
-                                                   use_enhancer=use_enhancer,**kwargs)
-
-    @classmethod
-    def from_url(cls,url=None,init_sub_pipelines=True,**kwargs):
-        return cls(load_flux_pipeline(url,**kwargs),init_sub_pipelines=init_sub_pipelines)
-
-    def load_ui(self,_globals=None,**kwargs):
-
-        @allow_return_error
-        def text_to_image(prompt,
-                          guidance_scale=2, num_inference_steps=28,
-                          width=None, height=None,
-                          seed=None, num=1):
-
-            return self.text_to_image_pipeline.generate_image_and_send_to_telegram(
-                   prompt=prompt,
-                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
-                   width=width,height=height,
-                   seed=int(seed),num=int(num))
-
-        @allow_return_error
-        def image_to_image(image,
-                           prompt,
-                           strength,
-                           guidance_scale=2, num_inference_steps=28,
-                           seed=None, num=1):
-            image = Image.fromarray(image)
-            return self.image_to_image_pipeline.generate_image_and_send_to_telegram(
-                   image=image,
-                   prompt=prompt,
-                   strength=strength,
-                   guidance_scale=guidance_scale,num_inference_steps=num_inference_steps,
-                   seed=int(seed),num=int(num))
-
-        server = load_flux_ui({"text_to_image":text_to_image,"image_to_image":image_to_image})
-        server.launch(**kwargs)
-        return server
+    return server
