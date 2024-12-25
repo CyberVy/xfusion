@@ -177,6 +177,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
 
         device = self.device
         self.clear()
-        object.__getattribute__(self,"__init__")(self.from_url(url,init_sub_pipelines=False,**kwargs).__oins__)
+        object.__getattribute__(self,"__init__")(
+            self.from_url(url,init_sub_pipelines=False,download_kwargs=self.download_kwargs,**kwargs).__oins__)
         self.model_name = url
         self.to(device)
