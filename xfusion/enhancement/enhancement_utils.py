@@ -13,7 +13,6 @@ from diffusers import FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline
 from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline
 from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline
 from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
-import gc
 
 # from https://huggingface.co/docs/diffusers/api/schedulers/overview
 scheduler_map = {
