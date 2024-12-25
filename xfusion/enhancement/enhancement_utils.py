@@ -73,11 +73,12 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
     def __init__(self):
         DownloadArgumentsMixin.__init__(self)
         self.lora_dict = {}
-        self.download_kwargs.update(directory="./lora")
 
     def set_lora(self,lora_uri,lora_name,weight=0.4):
         if lora_name not in self.lora_dict:
-            load_lora(self,lora_uri,lora_name,self.download_kwargs)
+            download_kwargs = self.download_kwargs.copy()
+            download_kwargs.update(directory="./lora")
+            load_lora(self,lora_uri,lora_name,download_kwargs)
 
         self.set_lora_strength(lora_name,weight)
 
