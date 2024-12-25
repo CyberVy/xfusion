@@ -159,7 +159,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
             if scheduler_type.upper() in self.scheduler_map:
                 self.scheduler = self.scheduler_map[scheduler_type.upper()][0].from_config(self.scheduler.config,**self.scheduler_map[scheduler_type.upper()][1])
             else:
-                print(f"{scheduler_type} is not supported yet.")
+                raise BaseException(f"{scheduler_type} is not supported yet.")
 
     def reset_scheduler(self):
         self.scheduler = self._scheduler
@@ -175,7 +175,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
     def reload(self,url,**kwargs):
         if "/" not in url:
             raise ValueError("A URL or Hugging Face Repo ID is required.")
-        
+
         download_kwargs = self.download_kwargs
         telegram_kwargs = self.telegram_kwargs
         device = self.device
