@@ -138,7 +138,7 @@ def delete(obj):
                 i += 1
         for target_key in target_keys:
             __dict__.update({target_key: None})
-
+    gc.collect()
     return i, referrers, _i, _referrers
 
 def threads_execute(f,args,_await=True):
