@@ -169,10 +169,10 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         return self
 
     def clear(self):
-        for name,component in self.components.items():
+        for component in self.components.value():
             uncleared = delete(component)[-1]
             if uncleared:
-                print(f"Warning: {name}: {uncleared} is not cleared.")
+                print(f"Warning: {uncleared}")
 
     def reload(self,url,**kwargs):
         if "/" not in url:
