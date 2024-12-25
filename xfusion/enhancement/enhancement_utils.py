@@ -175,10 +175,14 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
     def reload(self,url,**kwargs):
         if "/" not in url:
             raise ValueError("A URL or Hugging Face Repo ID is required.")
-
+        
+        download_kwargs = self.download_kwargs
+        telegram_kwargs = self.telegram_kwargs
         device = self.device
         self.clear()
         object.__getattribute__(self,"__init__")(
-            self.from_url(url,init_sub_pipelines=False,download_kwargs=self.download_kwargs,**kwargs).__oins__)
+            self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
+        self.download_kwargs = download_kwargs
+        self.telegram_kwargs = telegram_kwargs
         self.model_name = url
         self.to(device)
