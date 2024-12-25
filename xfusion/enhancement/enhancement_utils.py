@@ -13,6 +13,7 @@ from diffusers import FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline
 from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline
 from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline
 from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
+import gc
 
 # from https://huggingface.co/docs/diffusers/api/schedulers/overview
 scheduler_map = {
@@ -170,7 +171,10 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
 
     def clear(self):
         for component in self.components.values():
-            delete(component)
+            uncleared = delete(component)[-1]
+            if uncleared:
+                print(uncleared[0])
+        gc.collect()
 
     def reload(self,url,**kwargs):
         if "/" not in url:
