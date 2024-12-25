@@ -11,9 +11,28 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         return f"{model}, {model_version}"
 
     @allow_return_error
-    def lora_fn(url, lora_name, strength):
+    def set_lora_fn(url, lora_name, strength):
         pipeline.set_lora(url, lora_name, strength)
         return f"{lora_name}, {strength}"
+
+    @allow_return_error
+    def delete_lora_fn(_,lora_name,__):
+        pipeline.delete_adapters(lora_name)
+        return f"{lora_name} is deleted."
+
+    @allow_return_error
+    def show_lora_fn():
+        return f"{pipeline.lora_dict}"
+
+    @allow_return_error
+    def enable_lora_fn():
+        pipeline.enable_lora()
+        return f"LoRA Enabled."
+
+    @allow_return_error
+    def disable_lora_fn():
+        pipeline.disable_lora()
+        return f"LoRA disabled."
 
     @allow_return_error
     def text_to_image_fn(
@@ -66,17 +85,29 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
 
         gr.Markdown("# LoRA")
         with gr.Row():
-            lora_inputs = []
+            set_lora_inputs = []
             lora_outputs = []
             with gr.Column():
-                lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!",label="LoRA"))
+                set_lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!",label="LoRA"))
                 with gr.Row():
-                    lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!",label="LoRA name"))
-                    lora_inputs.append(gr.Slider(0,1,0.4,step=0.05,label="LoRA strength"))
+                    set_lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!",label="LoRA name"))
+                    set_lora_inputs.append(gr.Slider(0,1,0.4,step=0.05,label="LoRA strength"))
+                with gr.Row():
+                    delete_lora_btn = gr.Button("Delete LoRA")
+                    set_lora_btn = gr.Button("Set LoRA")
             with gr.Column():
                 lora_outputs.append(gr.Textbox(label="Result"))
-                lora_btn = gr.Button("Set")
-                lora_btn.click(fn=lora_fn,inputs=lora_inputs,outputs=lora_outputs)
+                delete_lora_btn.click(fn=delete_lora_fn,inputs=set_lora_inputs,outputs=lora_outputs)
+                set_lora_btn.click(fn=set_lora_fn,inputs=set_lora_inputs,outputs=lora_outputs)
+                with gr.Row():
+                    show_lora_btn = gr.Button("Show all LoRA")
+                    show_lora_btn.click(fn=show_lora_fn,outputs=lora_outputs)
+                with gr.Row():
+                    enable_lora_btn = gr.Button("Enable all LoRA")
+                    enable_lora_btn.click(fn=enable_lora_fn,outputs=lora_outputs)
+                    disable_lora_btn = gr.Button("Disable all LoRA")
+                    disable_lora_btn.click(fn=disable_lora_fn, outputs=lora_outputs)
+
         gr.Markdown("---")
 
         gr.Markdown("# Text To Image")
