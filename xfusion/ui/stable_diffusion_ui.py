@@ -68,8 +68,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         if _globals:
             return _globals.pop("_cout", None)
 
-   
-     theme = gr.themes.Ocean()
+    theme = gr.themes.Ocean()
 
     with gr.Blocks(title="Xfusion",theme=theme) as server:
 
