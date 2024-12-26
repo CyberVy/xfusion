@@ -68,7 +68,10 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         if _globals:
             return _globals.pop("_cout", None)
 
-    with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
+   
+     theme = gr.themes.Ocean()
+
+    with gr.Blocks(title="Xfusion",theme=theme) as server:
 
         gr.Markdown("# Model Selection")
         with gr.Row():
