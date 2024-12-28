@@ -120,7 +120,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt",lines=5))
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt",lines=4))
             with gr.Column():
-                t2i_inputs.append(gr.Slider(0,10,3,step=0.1,label="Guidance Scale"))
+                t2i_inputs.append(gr.Slider(0,10,2,5,step=0.1,label="Guidance Scale"))
                 t2i_inputs.append(gr.Slider(0,50,20,step=1,label="Step"))
                 t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
                 with gr.Row():
