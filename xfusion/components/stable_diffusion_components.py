@@ -19,7 +19,7 @@ def load_stable_diffusion_pipeline(model=None,
     :return:
     """
     use_internet = True
-    model = default_stable_diffusion_model_url if model is None else model
+    model = default_stable_diffusion_model_url if not model else model
     model_version = "" if model_version is None else model_version
     model_version = str(model_version).lower()
     if download_kwargs is None:
