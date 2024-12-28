@@ -3,6 +3,28 @@ from ..utils import allow_return_error
 from PIL import Image
 
 
+scheduler_list = [
+            "DPM++ 2M",
+            "DPM++ 2M KARRAS",
+            "DPM++ 2M SDE",
+            "DPM++ 2M SDE KARRAS",
+            "DPM++ 2S A",
+            "DPM++ 2S A KARRAS",
+            "DPM++ SDE",
+            "DPM++ SDE KARRAS",
+            "DPM2",
+            "DPM2 KARRAS",
+            "DPM2 A",
+            "DPM2 A KARRAS",
+            "EULER",
+            "EULER A",
+            "HEUN",
+            "LMS",
+            "LMS KARRAS",
+            "DEIS",
+            "UNIPC"
+        ]
+
 def load_stable_diffusion_ui(pipeline, _globals=None):
 
     @allow_return_error
@@ -35,6 +57,11 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         return f"LoRA disabled."
 
     @allow_return_error
+    def text_to_image_scheduler_fn(scheduler):
+        pipeline.text_to_image_pipeline.set_scheduler(scheduler)
+        return f"{scheduler} is set for text to image pipeline."
+
+    @allow_return_error
     def text_to_image_fn(
             prompt, negative_prompt="",
             guidance_scale=2, num_inference_steps=20, clip_skip=0,
@@ -45,6 +72,11 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width, height=height,
             seed=int(seed), num=int(num))
+
+    @allow_return_error
+    def image_to_image_scheduler_fn(scheduler):
+        pipeline.image_to_image_pipeline.set_scheduler(scheduler)
+        return f"{scheduler} is set for image to image pipeline."
 
     @allow_return_error
     def image_to_image_fn(
@@ -73,9 +105,9 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     with gr.Blocks(title="Xfusion",theme=theme) as server:
 
         gr.Markdown("# Model Selection")
+        model_selection_inputs = []
+        model_selection_outputs = []
         with gr.Row():
-            model_selection_inputs = []
-            model_selection_outputs = []
             with gr.Column():
                 model_selection_inputs.append(gr.Textbox(placeholder="Give me a url of the model!",label="Model"))
                 model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
@@ -83,12 +115,12 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 model_selection_outputs.append(gr.Textbox(label="Result"))
                 model_selection_btn = gr.Button("Select")
                 model_selection_btn.click(fn=model_selection_fn,inputs=model_selection_inputs,outputs=model_selection_outputs)
-        gr.Markdown("---")
 
+        gr.Markdown("---")
         gr.Markdown("# LoRA")
+        set_lora_inputs = []
+        lora_outputs = []
         with gr.Row():
-            set_lora_inputs = []
-            lora_outputs = []
             with gr.Column():
                 set_lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!",label="LoRA"))
                 with gr.Row():
@@ -111,11 +143,19 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                     disable_lora_btn.click(fn=disable_lora_fn, outputs=lora_outputs)
 
         gr.Markdown("---")
-
         gr.Markdown("# Text To Image")
+        t2i_inputs = []
+        t2i_outputs = []
+        t2i_scheduler_inputs = []
+        t2i_scheduler_outputs = []
         with gr.Row():
-            t2i_inputs = []
-            t2i_outputs = []
+            t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+            with gr.Column():
+                t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                t2i_scheduler_btn = gr.Button("Set Scheduler")
+                t2i_scheduler_btn.click(fn=text_to_image_scheduler_fn,inputs=t2i_scheduler_inputs,outputs=t2i_scheduler_outputs)
+
+        with gr.Row():
             with gr.Column():
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt",lines=5))
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt",lines=4))
@@ -133,12 +173,20 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 t2i_outputs.append(gr.Textbox(label="Result"))
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=text_to_image_fn, inputs=t2i_inputs, outputs=t2i_outputs)
-        gr.Markdown("---")
 
+        gr.Markdown("---")
         gr.Markdown("# Image To Image")
+        i2i_inputs = []
+        i2i_outputs = []
+        i2i_scheduler_inputs = []
+        i2i_scheduler_outputs = []
         with gr.Row():
-            i2i_inputs = []
-            i2i_outputs = []
+            i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+            with gr.Column():
+                i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                i2i_scheduler_btn = gr.Button("Set Scheduler")
+                i2i_scheduler_btn.click(fn=image_to_image_scheduler_fn,inputs=i2i_scheduler_inputs,outputs=i2i_scheduler_outputs)
+        with gr.Row():
             with gr.Column():
                 i2i_inputs.append(gr.Image())
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt",lines=5))
@@ -155,12 +203,12 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
-        gr.Markdown("---")
 
+        gr.Markdown("---")
         gr.Markdown("# Code")
+        code_inputs = []
+        code_outputs = []
         with gr.Row():
-            code_inputs = []
-            code_outputs = []
             with gr.Column():
                 code_inputs.append(gr.Code(value="_cout = 'Hello world.'",language="python",lines=5,label="Python"))
             with gr.Column():
