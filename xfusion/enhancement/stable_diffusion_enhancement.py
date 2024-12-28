@@ -141,7 +141,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             raise e
         finally:
             if skipped_lora_dict:
-                for lora,weight in skipped_lora_dict:
+                for lora,weight in skipped_lora_dict.items():
                     self.set_lora_strength(lora,weight)
             gc.collect()
         return r
