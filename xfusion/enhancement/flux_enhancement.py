@@ -59,5 +59,5 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
 
     def load_ui(self,_globals=None,**kwargs):
         server = load_flux_ui(self,_globals)
-        server.launch(**kwargs)
+        server.launch(quiet=True,**kwargs)
         return server
