@@ -143,7 +143,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
     def generate_image_and_send_to_telegram(self,
                                             prompt,negative_prompt="",
-                                            guidance_scale=2,num_inference_steps=28,clip_skip=0,
+                                            guidance_scale=2,num_inference_steps=20,clip_skip=0,
                                             width=None,height=None,
                                             seed=None,num=1,
                                             use_enhancer=True,**kwargs):
