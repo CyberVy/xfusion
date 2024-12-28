@@ -37,7 +37,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     @allow_return_error
     def text_to_image_fn(
             prompt, negative_prompt="",
-            guidance_scale=2, num_inference_steps=28, clip_skip=0,
+            guidance_scale=2, num_inference_steps=20, clip_skip=0,
             width=None, height=None,
             seed=None, num=1):
         return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
@@ -51,7 +51,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             image,
             prompt, negative_prompt="",
             strength=0.3,
-            guidance_scale=2, num_inference_steps=28, clip_skip=0,
+            guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
         image = Image.fromarray(image)
         return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
@@ -120,8 +120,8 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt",lines=5))
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt",lines=4))
             with gr.Column():
-                t2i_inputs.append(gr.Slider(0,10,2.5,step=0.1,label="Guidance Scale"))
-                t2i_inputs.append(gr.Slider(0,50,28,step=1,label="Step"))
+                t2i_inputs.append(gr.Slider(0,10,3,step=0.1,label="Guidance Scale"))
+                t2i_inputs.append(gr.Slider(0,50,20,step=1,label="Step"))
                 t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
                 with gr.Row():
                     t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
@@ -146,7 +146,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             with gr.Column():
                 i2i_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
                 i2i_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
-                i2i_inputs.append(gr.Slider(0, 50, 28, step=1, label="Step"))
+                i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
             with gr.Column():
                 with gr.Row():
