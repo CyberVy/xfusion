@@ -10,6 +10,7 @@ import torch
 from PIL import Image
 import threading
 from random import randint
+import gc
 
 
 def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
@@ -126,10 +127,12 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             kwargs.update(mask_image=image_normalize(image, 1024 * 1536))
 
         prompt_str = f"{prompt} {negative_prompt}" if prompt_type == str else f"{' '.join(prompt)} {' '.join(negative_prompt)}"
-        saved_lora_dict = self.lora_dict.copy()
+
+        skipped_lora_dict = {}
 
         for lora,weight in self.lora_dict.items():
             if lora not in prompt_str:
+                skipped_lora_dict.update({lora:weight})
                 self.set_lora_strength(lora, 0)
                 print(f"LoRA {lora}:{weight} is disable due to {lora} is not in prompts.")
         try:
@@ -137,8 +140,10 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         except Exception as e:
             raise e
         finally:
-            for lora,weight in saved_lora_dict.items():
-                self.set_lora_strength(lora,weight)
+            if skipped_lora_dict:
+                for lora,weight in skipped_lora_dict:
+                    self.set_lora_strength(lora,weight)
+            gc.collect()
         return r
 
     def generate_image_and_send_to_telegram(self,
