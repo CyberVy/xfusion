@@ -275,8 +275,11 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width, height=height,
             seed=int(seed), num=int(num))
-        threads_execute(f,pipelines)
-        return num * len(pipelines)
+        if num == 1:
+            return f(pipelines[0])
+        else:
+            threads_execute(f, pipelines)
+            return f"{num} * {len(pipelines)}"
 
     @allow_return_error
     def image_to_image_scheduler_fn(scheduler):
@@ -298,9 +301,11 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             seed=int(seed), num=int(num))
-        threads_execute(f,pipelines)
-        return num * len(pipelines)
-
+        if num == 1:
+            return f(pipelines[0])
+        else:
+            threads_execute(f, pipelines)
+            return f"{num} * {len(pipelines)}"
 
     @allow_return_error
     def run_code_fn(code):
