@@ -236,7 +236,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     @allow_return_error
     def delete_lora_fn(_,lora_name,__):
         f = lambda pipeline: pipeline.delete_adapters(lora_name)
-        threads_execute(f,pipelines)
+        for item in pipelines:
+            f(item)
         return f"{lora_name} is deleted."
 
     @allow_return_error
@@ -249,19 +250,22 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     @allow_return_error
     def enable_lora_fn():
         f = lambda pipeline: pipeline.enable_lora()
-        threads_execute(f,pipelines)
+        for item in pipelines:
+            f(item)
         return f"LoRA Enabled."
 
     @allow_return_error
     def disable_lora_fn():
         f = lambda pipeline: pipeline.disable_lora()
-        threads_execute(f,pipelines)
+        for item in pipelines:
+            f(item)
         return f"LoRA disabled."
 
     @allow_return_error
     def text_to_image_scheduler_fn(scheduler):
         f = lambda pipeline: pipeline.text_to_image_pipeline.set_scheduler(scheduler)
-        threads_execute(f,pipelines)
+        for item in pipelines:
+            f(item)
         return f"{scheduler} is set for text to image pipeline."
 
     @allow_return_error
@@ -284,7 +288,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     @allow_return_error
     def image_to_image_scheduler_fn(scheduler):
         f = lambda pipeline: pipeline.image_to_image_pipeline.set_scheduler(scheduler)
-        threads_execute(f,pipelines)
+        for item in pipelines:
+            f(item)
         return f"{scheduler} is set for image to image pipeline."
 
     @allow_return_error
