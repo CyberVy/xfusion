@@ -275,7 +275,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width, height=height,
             seed=int(seed), num=int(num))
-        if int(num) == 1:
+        if int(seed) != 0:
             return f(pipelines[0])
         else:
             threads_execute(f, pipelines)
@@ -301,7 +301,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             seed=int(seed), num=int(num))
-        if int(num) == 1:
+        if int(seed) != 0:
             return f(pipelines[0])
         else:
             threads_execute(f, pipelines)
