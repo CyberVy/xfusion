@@ -229,7 +229,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     @allow_return_error
     def set_lora_fn(url, lora_name, strength):
         f = lambda pipeline: pipeline.set_lora(url,lora_name,strength)
-        threads_execute(f,pipelines)
+        for item in pipelines:
+            f(item)
         return f"{lora_name}, {strength}"
 
     @allow_return_error
