@@ -5,7 +5,6 @@ from ..components.component_utils import get_tokenizers_and_text_encoders_from_p
 from ..components import load_stable_diffusion_pipeline
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
 from ..utils import image_normalize
-from diffusers import StableDiffusionXLPipeline
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -98,12 +97,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     overrides = []
 
     def __init__(self,__oins__,init_sub_pipelines=True):
-        if __oins__ is None:
-            __oins__ = StableDiffusionXLPipeline(vae=None,
-                                                 text_encoder=None,text_encoder_2=None,
-                                                 tokenizer=None,tokenizer_2=None,
-                                                 unet=None,scheduler=None)
-            
         PipelineEnhancerBase.__init__(self, __oins__,init_sub_pipelines=init_sub_pipelines)
         SDCLIPEnhancerMixin.__init__(self)
 
