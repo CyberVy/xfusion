@@ -74,7 +74,7 @@ class SDCLIPEnhancerMixin:
     def __call__(self,**kwargs):
         kwargs.update(self.get_embeds_from_pipeline(kwargs.get("prompt"),kwargs.get("negative_prompt"),kwargs.get("clip_skip")))
         if kwargs.get("prompt_embeds") is not None:
-            kwargs.update(prompt=None,negative_prompt=None,clip_skip=None)
+            kwargs.update(prompt=None,negative_prompt=None)
         return self.__oins__.__call__(**kwargs)
 
 def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed=None,use_enhancer=True,**kwargs):
