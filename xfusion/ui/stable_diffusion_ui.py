@@ -85,7 +85,6 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             strength=0.3,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
-        image = Image.fromarray(image)
         return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
             prompt=prompt, negative_prompt=negative_prompt,
@@ -188,7 +187,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 i2i_scheduler_btn.click(fn=image_to_image_scheduler_fn,inputs=i2i_scheduler_inputs,outputs=i2i_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                i2i_inputs.append(gr.Image())
+                i2i_inputs.append(gr.Image(type="pil"))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt",lines=5))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt",lines=4))
             with gr.Column():
