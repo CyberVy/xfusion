@@ -103,6 +103,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             strength=0.3,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
+        print(image["background"].size,image["layers"][0].size)
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"],
             mask_image=image["layers"][0],
@@ -171,7 +172,6 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
                 t2i_scheduler_btn = gr.Button("Set Scheduler")
                 t2i_scheduler_btn.click(fn=text_to_image_scheduler_fn,inputs=t2i_scheduler_inputs,outputs=t2i_scheduler_outputs)
-
         with gr.Row():
             with gr.Column():
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt",lines=5))
@@ -439,7 +439,6 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
                 t2i_scheduler_btn = gr.Button("Set Scheduler")
                 t2i_scheduler_btn.click(fn=text_to_image_scheduler_fn,inputs=t2i_scheduler_inputs,outputs=t2i_scheduler_outputs)
-
         with gr.Row():
             with gr.Column():
                 t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt",lines=5))
