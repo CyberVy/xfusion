@@ -1,6 +1,5 @@
 import gradio as gr
 from ..utils import allow_return_error,threads_execute
-from PIL import Image
 
 
 scheduler_list = [
@@ -92,6 +91,25 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             seed=int(seed), num=int(num))
 
+    @allow_return_error
+    def inpainting_scheduler_fn(scheduler):
+        pipeline.inpainting_pipeline.set_scheduler(scheduler)
+        return f"{scheduler} is set for inpainting pipeline."
+
+    @allow_return_error
+    def inpainting_fn(
+            image,
+            prompt, negative_prompt="",
+            strength=0.3,
+            guidance_scale=3, num_inference_steps=20, clip_skip=0,
+            seed=None, num=1):
+        return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
+            image=image["background"],
+            mask_image=image["layers"][0],
+            prompt=prompt, negative_prompt=negative_prompt,
+            strength=strength,
+            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+            seed=int(seed), num=int(num))
 
     @allow_return_error
     def run_code_fn(code):
@@ -204,6 +222,38 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
 
         gr.Markdown("---")
+        gr.Markdown("# Inpainting")
+        inpainting_inputs = []
+        inpainting_outputs = []
+        inpainting_scheduler_inputs = []
+        inpainting_scheduler_outputs = []
+        with gr.Row():
+            inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+            with gr.Column():
+                inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
+                inpainting_scheduler_btn = gr.Button("Set Scheduler")
+                inpainting_scheduler_btn.click(fn=inpainting_scheduler_fn, inputs=inpainting_scheduler_inputs,
+                                        outputs=inpainting_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                inpainting_inputs.append(gr.ImageMask(type="pil"))
+                inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                inpainting_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                inpainting_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
+                inpainting_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
+                inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+            with gr.Column():
+                with gr.Row():
+                    inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    inpainting_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                inpainting_outputs.append(gr.Textbox(label="Result"))
+                inpainting_btn = gr.Button("Run")
+                inpainting_btn.click(fn=inpainting_fn, inputs=inpainting_inputs, outputs=inpainting_outputs)
+
+        gr.Markdown("---")
         gr.Markdown("# Code")
         code_inputs = []
         code_outputs = []
@@ -291,9 +341,34 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             strength=0.3,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
-        image = Image.fromarray(image)
         f = lambda pipeline: pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
+            prompt=prompt, negative_prompt=negative_prompt,
+            strength=strength,
+            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+            seed=int(seed), num=int(num))
+        if int(seed) != 0:
+            return f(pipelines[0])
+        else:
+            threads_execute(f, pipelines)
+            return f"{num} * {len(pipelines)}"
+
+    @allow_return_error
+    def inpainting_scheduler_fn(scheduler):
+        for pipeline in pipelines:
+            pipeline.inpainting_pipeline.set_scheduler(scheduler)
+        return f"{scheduler} is set for inpainting pipeline."
+
+    @allow_return_error
+    def inpainting_fn(
+            image,
+            prompt, negative_prompt="",
+            strength=0.3,
+            guidance_scale=3, num_inference_steps=20, clip_skip=0,
+            seed=None, num=1):
+        f = lambda pipeline: pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
+            image=image["background"],
+            mask_image=image["layers"][0],
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -413,6 +488,38 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
+
+        gr.Markdown("---")
+        gr.Markdown("# Inpainting")
+        inpainting_inputs = []
+        inpainting_outputs = []
+        inpainting_scheduler_inputs = []
+        inpainting_scheduler_outputs = []
+        with gr.Row():
+            inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+            with gr.Column():
+                inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
+                inpainting_scheduler_btn = gr.Button("Set Scheduler")
+                inpainting_scheduler_btn.click(fn=inpainting_scheduler_fn, inputs=inpainting_scheduler_inputs,
+                                               outputs=inpainting_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                inpainting_inputs.append(gr.ImageMask(type="pil"))
+                inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                inpainting_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                inpainting_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
+                inpainting_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
+                inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+            with gr.Column():
+                with gr.Row():
+                    inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    inpainting_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                inpainting_outputs.append(gr.Textbox(label="Result"))
+                inpainting_btn = gr.Button("Run")
+                inpainting_btn.click(fn=inpainting_fn, inputs=inpainting_inputs, outputs=inpainting_outputs)
 
         gr.Markdown("---")
         gr.Markdown("# Code")
