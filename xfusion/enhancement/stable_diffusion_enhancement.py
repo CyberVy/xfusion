@@ -26,21 +26,24 @@ def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     tokenizers,text_encoders = get_tokenizers_and_text_encoders_from_pipeline(pipeline)
     tokenizers = [tokenizer for tokenizer in tokenizers if tokenizer]
     text_encoders = [text_encoder for text_encoder in text_encoders if text_encoder]
-    for cls in pipeline_map["1.5"]:
-        if isinstance(pipeline,cls):
-            compel = Compel(tokenizers,text_encoders,truncate_long_prompts=False)
-            conditioning = compel(prompt)
-            negative_conditioning = compel(negative_prompt)
-            [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
-            return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning}
-    for cls in pipeline_map["xl"]:
-        if isinstance(pipeline, cls):
-            compel = Compel(tokenizers,text_encoders,returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,requires_pooled=[False,True],truncate_long_prompts=False)
-            conditioning,pooled = compel(prompt)
-            negative_conditioning, negative_pooled = compel(negative_prompt)
-            [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
-            return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning,
-                    "pooled_prompt_embeds":pooled,"negative_pooled_prompt_embeds":negative_pooled}
+    try:
+        for cls in pipeline_map["1.5"]:
+            if isinstance(pipeline,cls):
+                compel = Compel(tokenizers,text_encoders,truncate_long_prompts=False)
+                conditioning = compel(prompt)
+                negative_conditioning = compel(negative_prompt)
+                [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
+                return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning}
+        for cls in pipeline_map["xl"]:
+            if isinstance(pipeline, cls):
+                compel = Compel(tokenizers,text_encoders,returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,requires_pooled=[False,True],truncate_long_prompts=False)
+                conditioning,pooled = compel(prompt)
+                negative_conditioning, negative_pooled = compel(negative_prompt)
+                [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
+                return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning,
+                        "pooled_prompt_embeds":pooled,"negative_pooled_prompt_embeds":negative_pooled}
+    except KeyError:
+        pass
     # compel only supports sd1 sd2 sdxl now
     return {}
 class SDCLIPEnhancerMixin:
