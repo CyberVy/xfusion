@@ -1,6 +1,6 @@
 import gradio as gr
 from ..utils import allow_return_error,threads_execute
-
+from ..utils import convert_to_mask_image
 
 scheduler_list = [
             "DPM++ 2M",
@@ -105,7 +105,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             seed=None, num=1):
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
-            mask_image=image["layers"][0].convert("RGB"),
+            mask_image=convert_to_mask_image(image["layers"][0]),
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -367,7 +367,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             seed=None, num=1):
         f = lambda pipeline: pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
-            mask_image=image["layers"][0].convert("RGB"),
+            mask_image=convert_to_mask_image(image["layers"][0]),
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
