@@ -22,10 +22,23 @@ from xfusion.utils import delete
 import torch
 import sys,os,gc
 
-if "pipeline" not in dir():
-    model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-    pipeline = load_enhancer(model).to("cuda")
-    server = pipeline.load_ui(globals(),debug=True,inline=False)
+model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+pipeline = load_enhancer(model).to("cuda")
+server = pipeline.load_ui(globals(),debug=True,inline=False)
+
+```
+**UI with multiple GPU**
+```python
+from xfusion.enhancement import load_enhancer
+from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
+import os,sys,gc
+import torch
+
+model = "https://civitai.com/api/download/models/577919?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cuda:0")
+_pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cuda:1")
+server = load_stable_diffusion_ui_for_multiple_pipelines([pipeline,_pipeline],_globals=globals())
+server.launch(debug=True,inline=False,quiet=True)
 ```
 **Use with the backend pipeline**
 ```python
