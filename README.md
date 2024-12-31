@@ -16,7 +16,7 @@ pip install -q git+https://github.com/CyberVy/diffusers.git
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
 # Code Example
-UI
+**Use with UI**
 ```python
 from xfusion.enhancement import load_enhancer
 from xfusion.utils import delete
@@ -28,7 +28,7 @@ if "pipeline" not in dir():
     pipeline = load_enhancer(model).to("cuda")
     server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
-Backend
+**Use with the backend pipeline**
 ```python
 from xfusion.enhancement import load_enhancer
 import torch
