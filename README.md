@@ -24,7 +24,7 @@ import torch
 import sys,os,gc
 
 if "pipeline" not in dir():
-    model = ""
+    model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
     pipeline = load_enhancer(model).to("cuda")
     server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
