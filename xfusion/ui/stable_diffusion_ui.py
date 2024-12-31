@@ -1,6 +1,6 @@
 import gradio as gr
 from ..utils import allow_return_error,threads_execute
-from ..utils import convert_to_mask_image
+from ..utils import convert_mask_image_to_rgb
 
 scheduler_list = [
             "DPM++ 2M",
@@ -105,7 +105,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             seed=None, num=1):
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
-            mask_image=convert_to_mask_image(image["layers"][0]),
+            mask_image=convert_mask_image_to_rgb(image["layers"][0]),
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -204,7 +204,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                 i2i_scheduler_btn.click(fn=image_to_image_scheduler_fn,inputs=i2i_scheduler_inputs,outputs=i2i_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                i2i_inputs.append(gr.Image(type="pil"))
+                i2i_inputs.append(gr.Image(type="pil",label="Image"))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt",lines=5))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt",lines=4))
             with gr.Column():
@@ -235,7 +235,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                                         outputs=inpainting_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                inpainting_inputs.append(gr.ImageMask(type="pil",crop_size=(1024,1024)))
+                inpainting_inputs.append(gr.ImageMask(type="pil",crop_size=(1024,1024),label="Inpainting Image"))
                 inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                 inpainting_inputs.append(
                     gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
@@ -367,7 +367,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             seed=None, num=1):
         f = lambda pipeline: pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
-            mask_image=convert_to_mask_image(image["layers"][0]),
+            mask_image=convert_mask_image_to_rgb(image["layers"][0]),
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -471,7 +471,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 i2i_scheduler_btn.click(fn=image_to_image_scheduler_fn,inputs=i2i_scheduler_inputs,outputs=i2i_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                i2i_inputs.append(gr.Image(type="pil"))
+                i2i_inputs.append(gr.Image(type="pil",label="Image"))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt",lines=5))
                 i2i_inputs.append(gr.Textbox(placeholder="Give me a negative prompt!",label="Negative Prompt",lines=4))
             with gr.Column():
@@ -502,7 +502,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                                                outputs=inpainting_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                inpainting_inputs.append(gr.ImageMask(type="pil",crop_size=(1024,1024)))
+                inpainting_inputs.append(gr.ImageMask(type="pil",crop_size=(1024,1024),label="Inpainting Image"))
                 inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                 inpainting_inputs.append(
                     gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
