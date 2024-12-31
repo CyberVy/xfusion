@@ -1,7 +1,7 @@
 import os,shutil,gc
 import threading
 from functools import wraps
-from PIL.Image import Image,Resampling
+from PIL.Image import Image,Resampling,merge
 
 
 class EasyInitSubclass:
@@ -184,3 +184,7 @@ def image_normalize(image:Image,max_pixels):
     width = int(width * scale)
     height = int(height * scale)
     return image.resize((width,height),Resampling.LANCZOS)
+
+def convert_to_mask_image(mask_image):
+    r, g, b, a = mask_image.split()
+    return merge("L", [a]).convert("RGB")
