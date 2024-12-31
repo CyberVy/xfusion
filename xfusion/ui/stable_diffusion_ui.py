@@ -332,7 +332,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale=2, num_inference_steps=20, clip_skip=0,
             width=None, height=None,
             seed=None, num=1):
-        f = lambda pipeline: pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
+        def f(pipeline): 
+            return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
             prompt=prompt, negative_prompt=negative_prompt,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width, height=height,
@@ -356,7 +357,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             strength=0.3,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
-        f = lambda pipeline: pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
+        def f(pipeline):
+            return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
@@ -381,7 +383,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             strength=0.3,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
-        f = lambda pipeline: pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
+        def f(pipeline): 
+            return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
             mask_image=convert_mask_image_to_rgb(image["layers"][0]),
             prompt=prompt, negative_prompt=negative_prompt,
