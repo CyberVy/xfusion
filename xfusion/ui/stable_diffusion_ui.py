@@ -103,10 +103,9 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             strength=0.3,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
-        print(image["background"].size,image["layers"][0].size)
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
-            image=image["background"],
-            mask_image=image["layers"][0],
+            image=image["background"].convert("RGB"),
+            mask_image=image["layers"][0].convert("RGB"),
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -236,12 +235,12 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
                                         outputs=inpainting_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                inpainting_inputs.append(gr.ImageMask(type="pil"))
+                inpainting_inputs.append(gr.ImageMask(type="pil",crop_size=(1024,1024)))
                 inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                 inpainting_inputs.append(
                     gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
             with gr.Column():
-                inpainting_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
+                inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
                 inpainting_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
                 inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
@@ -367,8 +366,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
         f = lambda pipeline: pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
-            image=image["background"],
-            mask_image=image["layers"][0],
+            image=image["background"].convert("RGB"),
+            mask_image=image["layers"][0].convert("RGB"),
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -503,12 +502,12 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                                                outputs=inpainting_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                inpainting_inputs.append(gr.ImageMask(type="pil"))
+                inpainting_inputs.append(gr.ImageMask(type="pil",crop_size=(1024,1024)))
                 inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                 inpainting_inputs.append(
                     gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
             with gr.Column():
-                inpainting_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
+                inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
                 inpainting_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
                 inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
