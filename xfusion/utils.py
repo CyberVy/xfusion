@@ -185,6 +185,9 @@ def image_normalize(image:Image,max_pixels):
     height = int(height * scale)
     return image.resize((width,height),Resampling.LANCZOS)
 
-def convert_to_mask_image(mask_image):
+def convert_mask_image_to_rgb(mask_image):
+    """
+    convert rgba mask image to rgb image
+    """
     r, g, b, a = mask_image.split()
     return merge("L", [a]).convert("RGB")
