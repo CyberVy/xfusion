@@ -31,7 +31,7 @@ from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
 import torch
 
-model = "https://civitai.com/api/download/models/577919?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cuda:0")
 _pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cuda:1")
 server = load_stable_diffusion_ui_for_multiple_pipelines([pipeline,_pipeline],_globals=globals())
