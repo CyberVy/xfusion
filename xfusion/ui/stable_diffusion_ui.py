@@ -1,6 +1,8 @@
 import gradio as gr
 from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb
+from ..const import GPU_Count
+
 
 scheduler_list = [
             "DPM++ 2M",
@@ -282,11 +284,18 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     return stable_diffusion_ui_template(fns)
 
 def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
+    """
+    load pipelines to multiple GPUs for acceleration
+    """
 
+    pipelines = pipelines[:GPU_Count]
     @allow_return_error
     def model_selection_fn(model,model_version):
-        for pipeline in pipelines:
+
+        for i,pipeline in enumerate(pipelines):
             pipeline.reload(model,model_version=model_version)
+            pipeline.to(f"cuda:{i}")
+
         return f"{model}, {model_version}"
 
     @allow_return_error
@@ -332,7 +341,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale=2, num_inference_steps=20, clip_skip=0,
             width=None, height=None,
             seed=None, num=1):
-        def f(pipeline): 
+        def f(pipeline):
             return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
             prompt=prompt, negative_prompt=negative_prompt,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -383,7 +392,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             strength=0.3,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
-        def f(pipeline): 
+        def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
             mask_image=convert_mask_image_to_rgb(image["layers"][0]),
