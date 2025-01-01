@@ -186,7 +186,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
 
         if self.is_empty_pipeline:
             self.load(url,**kwargs)
-            return 
+            return
 
         if "/" not in url:
             raise ValueError("A URL or Hugging Face Repo ID is required.")
@@ -209,11 +209,11 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         if "/" not in url:
             raise ValueError("A URL or Hugging Face Repo ID is required.")
 
-        self.is_empty_pipeline = False
         download_kwargs = self.download_kwargs
         telegram_kwargs = self.telegram_kwargs
         object.__getattribute__(self,"__init__")(
             self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
+        self.is_empty_pipeline = False
         self.download_kwargs = download_kwargs
         self.telegram_kwargs = telegram_kwargs
         self.model_name = url
