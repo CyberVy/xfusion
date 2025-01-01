@@ -173,7 +173,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         self.scheduler = self._scheduler
 
     def to(self, *args, **kwargs):
-        self.__oins__ = self.__oins__.to(*args, **kwargs)
+        self.__oins__.to(*args, **kwargs)
         return self
 
     def clear(self):
