@@ -26,7 +26,6 @@ scheduler_list = [
             "UNIPC"
         ]
 
-
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
@@ -173,7 +172,7 @@ def stable_diffusion_ui_template(fns):
         code_outputs = []
         with gr.Row():
             with gr.Column():
-                code_inputs.append(gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
+                code_inputs.append(gr.Code(value="import os,sys,gc,torch\n_cout = 'Hello world.'", language="python", lines=5, label="Python"))
             with gr.Column():
                 code_outputs.append(gr.Textbox(label="Code Result"))
                 code_btn = gr.Button("Run Code")
