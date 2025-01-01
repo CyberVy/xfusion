@@ -100,7 +100,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                  "image_to_image_pipeline","inpainting_pipeline",
                  "check_original_pipeline","set_scheduler","reset_scheduler",
                  "to",
-                 "clear","reload"]
+                 "clear","reload","load"]
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
