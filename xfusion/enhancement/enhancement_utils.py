@@ -183,6 +183,11 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 print(f"Warning: {uncleared}")
 
     def reload(self,url,**kwargs):
+
+        if self.is_empty_pipeline:
+            self.load(url,**kwargs)
+            return 
+
         if "/" not in url:
             raise ValueError("A URL or Hugging Face Repo ID is required.")
 
@@ -204,6 +209,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         if "/" not in url:
             raise ValueError("A URL or Hugging Face Repo ID is required.")
 
+        self.is_empty_pipeline = False
         download_kwargs = self.download_kwargs
         telegram_kwargs = self.telegram_kwargs
         object.__getattribute__(self,"__init__")(
