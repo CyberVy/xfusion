@@ -1,4 +1,4 @@
-from .const import cookie,HF_HUB_TOKEN,Civitai_TOKEN
+from .const import Cookie,HF_HUB_TOKEN,Civitai_TOKEN
 import requests
 from tqdm import tqdm
 from urllib.parse import urlparse
@@ -13,7 +13,7 @@ def download_file(url,filename=None,directory=None,mute=False,**kwargs):
     headers = kwargs.pop("headers",{})
 
     if headers.get("cookie") is None:
-        headers.update(cookie=cookie)
+        headers.update(cookie=Cookie)
 
     if url.hostname == "huggingface.co":
         if headers.get("authorization") is None:
