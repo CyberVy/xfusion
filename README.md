@@ -15,7 +15,7 @@ Xfusion is a Python library built on top of [Diffusers](https://github.com/huggi
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
 # Code Example
-**Load the initial model in UI**
+**Load the initial pipeline in UI**
 ```python
 from xfusion.enhancement import SDPipelineEnhancer
 pipeline = SDPipelineEnhancer(None)
