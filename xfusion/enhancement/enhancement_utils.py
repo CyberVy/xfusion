@@ -95,7 +95,7 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
 
 
 class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
-    overrides = ["enhancer_class","model_version","pipeline_type","pipeline_class",
+    overrides = ["enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
                  "model_name","_scheduler","scheduler_map","sub_pipelines",
                  "image_to_image_pipeline","inpainting_pipeline",
                  "check_original_pipeline","set_scheduler","reset_scheduler",
@@ -107,7 +107,15 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         TGBotMixin.__init__(self)
         LoraEnhancerMixin.__init__(self)
         self.enhancer_class = object.__getattribute__(self,"__class__")
-        # pipeline_type 0,1,2 -> text_to_image, image_to_image, inpainting
+
+        # support empty pipeline
+        if __oins__ is None:
+            self.is_empty_pipeline = True
+            return
+        else:
+            self.is_empty_pipeline = False
+
+        # pipeline_type: 0,1,2 -> text_to_image, image_to_image, inpainting
         self.model_version,self.pipeline_type,self.pipeline_class = self.check_original_pipeline()
         self.model_name = self.name_or_path
         self._scheduler = self.scheduler
@@ -188,3 +196,18 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         self.telegram_kwargs = telegram_kwargs
         self.model_name = url
         self.to(device)
+
+    def load(self,url,**kwargs):
+        if not self.is_empty_pipeline:
+            raise RuntimeError("This is not an empty pipeline, use 'reload' instead.")
+
+        if "/" not in url:
+            raise ValueError("A URL or Hugging Face Repo ID is required.")
+
+        download_kwargs = self.download_kwargs
+        telegram_kwargs = self.telegram_kwargs
+        object.__getattribute__(self,"__init__")(
+            self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
+        self.download_kwargs = download_kwargs
+        self.telegram_kwargs = telegram_kwargs
+        self.model_name = url
