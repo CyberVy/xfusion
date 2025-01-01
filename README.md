@@ -15,6 +15,13 @@ Xfusion is a Python library built on top of [Diffusers](https://github.com/huggi
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
 # Code Example
+**Load the initial model in UI**
+```python
+from xfusion.enhancement import SDPipelineEnhancer
+pipeline = SDPipelineEnhancer(None)
+server = pipeline.load_ui(globals(),debug=True,inline=False)
+```
+
 **Use with UI**
 ```python
 from xfusion.enhancement import load_enhancer
@@ -23,8 +30,8 @@ import torch
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model).to("cuda")
 server = pipeline.load_ui(globals(),debug=True,inline=False)
-
 ```
+
 **UI with multiple GPUs**
 ```python
 from xfusion.enhancement import load_enhancer
@@ -37,6 +44,7 @@ _pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cu
 server = load_stable_diffusion_ui_for_multiple_pipelines([pipeline,_pipeline],_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
+
 **Use with the backend pipeline**
 ```python
 from xfusion.enhancement import load_enhancer
