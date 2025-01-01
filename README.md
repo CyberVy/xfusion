@@ -37,7 +37,6 @@ server.launch(debug=True,inline=False,quiet=True)
 **Use with UI**
 ```python
 from xfusion.enhancement import load_enhancer
-import torch
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model).to("cuda")
@@ -48,7 +47,6 @@ server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```python
 from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
-import torch
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cuda:0")
@@ -63,7 +61,7 @@ from xfusion.enhancement import load_enhancer
 import torch
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model,"xl").to("cuda")
+pipeline = load_enhancer(model,model_version="xl").to("cuda")
 
 prompt = """
 young white woman with dramatic makeup resembling a melted clown, deep black smokey eyes, smeared red lipstick, and white face paint streaks, wet hair falling over shoulders, dark and intense aesthetic, fashion editorial style, aged around 20 years, inspired by rick genest's zombie boy look, best quality
