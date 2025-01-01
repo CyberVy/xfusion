@@ -40,11 +40,12 @@ class EasyInitSubclass:
             - `overrides` (list): A list of attribute and method names that should not be delegated to `__oins__`.
 
         """
-    overrides = ["__oins__"]
+    overrides = ["__oins__","__oinstype__"]
 
     def __init__(self,__oins__):
         self.__oins__ = __oins__
         self.__oinstype__ = __oins__.__class__
+        self.test = "test"
 
     def __init_subclass__(cls):
         for item in cls.__bases__:
