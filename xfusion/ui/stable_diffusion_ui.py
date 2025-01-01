@@ -294,7 +294,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
 
         for i,pipeline in enumerate(pipelines):
             pipeline.reload(model,model_version=model_version)
-            pipeline.to(f"cuda:{i}")
+            if pipeline.is_empty_pipeline:
+                pipeline.to(f"cuda:{i}")
 
         return f"{model}, {model_version}"
 
