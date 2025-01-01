@@ -10,7 +10,6 @@ import torch
 from PIL import Image
 import threading
 from random import randint
-import gc
 
 
 def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
@@ -146,7 +145,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             if skipped_lora_dict:
                 for lora,weight in skipped_lora_dict.items():
                     self.set_lora_strength(lora,weight)
-            gc.collect()
         return r
 
     def generate_image_and_send_to_telegram(self,
