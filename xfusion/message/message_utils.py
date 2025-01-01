@@ -63,13 +63,7 @@ class TGBotMixin:
     overrides = ["telegram_kwargs","send_PIL_photo","set_telegram_kwargs","generate_image_and_send_to_telegram"]
 
     def __init__(self):
-        self.telegram_kwargs = {
-            "caption":"",
-            "file_name":"file.PNG",
-            "file_type":"PNG",
-            "token":"8001790084:AAFNqWprWz7WUnco5fob6U0CMHwockkZY8M",
-            "chat_id":"5143886367"
-        }
+        self.telegram_kwargs = {}
 
     def generate_image_and_send_to_telegram(self, **kwargs):
         raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'generate_image_and_send_to_telegram'")
