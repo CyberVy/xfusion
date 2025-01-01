@@ -45,8 +45,7 @@ class EasyInitSubclass:
     def __init__(self,__oins__):
         self.__oins__ = __oins__
         self.__oinstype__ = __oins__.__class__
-        self.test = "test"
-
+        
     def __init_subclass__(cls):
         for item in cls.__bases__:
             if hasattr(item, "overrides"):
