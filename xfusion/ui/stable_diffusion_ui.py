@@ -2,6 +2,7 @@ import gradio as gr
 from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb
 from ..const import GPU_Count
+from ..components.component_const import default_stable_diffusion_model_url
 
 
 scheduler_list = [
@@ -35,7 +36,7 @@ def stable_diffusion_ui_template(fns):
         model_selection_outputs = []
         with gr.Row():
             with gr.Column():
-                model_selection_inputs.append(gr.Textbox(placeholder="Give me a url of the model!", label="Model"))
+                model_selection_inputs.append(gr.Textbox(value=default_stable_diffusion_model_url,placeholder="Give me a url of the model!", label="Model"))
                 model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
             with gr.Column():
                 model_selection_outputs.append(gr.Textbox(label="Result"))
