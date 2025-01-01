@@ -16,13 +16,13 @@ Xfusion is a Python library built on top of [Diffusers](https://github.com/huggi
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
 # Code Example
-**Load the initial pipeline in UI**
+**Load the initial pipeline a UI**
 ```python
 from xfusion.enhancement import SDPipelineEnhancer
 pipeline = SDPipelineEnhancer(None)
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
-**Load the initial pipelines with multiple GPUs in UI**
+**Load the initial pipelines with multiple GPUs a UI**
 
 ```python
 from xfusion import SDPipelineEnhancer
@@ -34,7 +34,7 @@ server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=glob
 server.launch(debug=True,inline=False,quiet=True)
 ```
 ---
-**Use with UI**
+**Use pipeline in a UI**
 ```python
 from xfusion.enhancement import load_enhancer
 
@@ -43,7 +43,7 @@ pipeline = load_enhancer(model).to("cuda")
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
 
-**UI with multiple GPUs**
+**Use pipelines with multiple GPUs in a UI**
 ```python
 from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
@@ -55,7 +55,7 @@ server = load_stable_diffusion_ui_for_multiple_pipelines([pipeline,_pipeline],_g
 server.launch(debug=True,inline=False,quiet=True)
 ```
 ---
-**Use with the backend pipeline**
+**Directly use the pipeline in the backend**
 ```python
 from xfusion.enhancement import load_enhancer
 import torch
