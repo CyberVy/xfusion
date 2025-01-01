@@ -21,7 +21,18 @@ from xfusion.enhancement import SDPipelineEnhancer
 pipeline = SDPipelineEnhancer(None)
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
+**Load the initial pipelines with multiple GPUs in UI**
 
+```python
+from xfusion import SDPipelineEnhancer
+from xfusion import load_stable_diffusion_ui_for_multiple_pipelines
+from xfusion.const import GPU_Count
+
+pipelines = [SDPipelineEnhancer(None) for i in range(GPU_Count)]
+server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
+server.launch(debug=True,inline=False,quiet=True)
+```
+---
 **Use with UI**
 ```python
 from xfusion.enhancement import load_enhancer
@@ -44,7 +55,7 @@ _pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cu
 server = load_stable_diffusion_ui_for_multiple_pipelines([pipeline,_pipeline],_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
-
+---
 **Use with the backend pipeline**
 ```python
 from xfusion.enhancement import load_enhancer
@@ -71,6 +82,6 @@ height = None
 
 images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.Generator(pipeline.device).manual_seed(seed),width=width,height=height,num_inference_steps=num_inference_steps,guidance_scale=guidance_scale,clip_skip=clip_skip).images
 ```
-
+---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
