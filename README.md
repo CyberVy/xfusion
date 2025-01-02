@@ -22,7 +22,7 @@ from xfusion.enhancement import SDPipelineEnhancer
 pipeline = SDPipelineEnhancer(None)
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
-**Load an initial pipelines with multiple GPUs in a UI**
+**Load initial pipelines with multiple GPUs in a UI**
 
 ```python
 from xfusion import SDPipelineEnhancer
