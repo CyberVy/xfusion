@@ -120,19 +120,27 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         else:
             raise ValueError("The type of prompt and negative_prompt need to be str or list.")
 
+        width = kwargs.get("width")
+        height = kwargs.get("height")
+
+        if self.model_version in ["xl", "3"]:
+            if width is None:
+                width = 1024
+            if height is None:
+                height = 1024
+        else:
+            if width is None:
+                width = 512
+            if height is None:
+                height = 512
+
         image = kwargs.get("image")
         if image and isinstance(image,Image.Image):
-            if self.model_version in ["xl","3"]:
-                kwargs.update(image=image_normalize(image,1024 * 1536))
-            else:
-                kwargs.update(image=image_normalize(image, 512 * 768))
-
+            kwargs.update(image=image_normalize(image,width * height))
         mask_image = kwargs.get("mask_image")
+
         if mask_image and isinstance(mask_image, Image.Image):
-            if self.model_version in ["xl", "3"]:
-                kwargs.update(image=image_normalize(image, 1024 * 1536))
-            else:
-                kwargs.update(image=image_normalize(image, 512 * 768))
+            kwargs.update(image=image_normalize(image,width * height))
 
         prompt_str = f"{prompt} {negative_prompt}" if prompt_type == str else f"{' '.join(prompt)} {' '.join(negative_prompt)}"
 
