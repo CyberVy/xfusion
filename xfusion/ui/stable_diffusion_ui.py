@@ -150,7 +150,7 @@ def stable_diffusion_ui_template(fns):
                                                outputs=inpainting_scheduler_outputs)
         with gr.Row():
             with gr.Column():
-                inpainting_inputs.append(gr.ImageMask(type="pil", crop_size=(1024, 1024), label="Inpainting Image"))
+                inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
                 inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                 inpainting_inputs.append(
                     gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
