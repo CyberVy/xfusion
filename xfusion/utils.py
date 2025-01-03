@@ -45,7 +45,7 @@ class EasyInitSubclass:
     def __init__(self,__oins__):
         self.__oins__ = __oins__
         self.__oinstype__ = __oins__.__class__
-        
+
     def __init_subclass__(cls):
         for item in cls.__bases__:
             if hasattr(item, "overrides"):
@@ -176,11 +176,9 @@ def delete_all_contents_of_path(folder_path):
             elif os.path.isdir(full_path):
                 shutil.rmtree(full_path)
 
-def image_normalize(image:Image,max_pixels):
+def image_normalize(image:Image,target_pixels):
     width,height = image.size
-    if max_pixels >= width * height:
-        return image
-    scale = (max_pixels / width / height)**0.5
+    scale = (target_pixels / width / height)**0.5
     width = int(width * scale)
     height = int(height * scale)
     return image.resize((width,height),Resampling.LANCZOS)
