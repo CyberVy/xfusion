@@ -9,6 +9,8 @@ def load_enhancer(pipeline_or_model=None,**kwargs):
         if isinstance(pipeline_or_model,str):
             if model_version in ["sdxl","pony"]:
                 model_version = "xl"
+            if model_version == "3.5":
+                model_version = "3"
             enhancer = SDPipelineEnhancer.from_url(pipeline_or_model,model_version=model_version,**kwargs)
         else:
             pipeline = pipeline_or_model
