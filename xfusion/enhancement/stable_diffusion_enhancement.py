@@ -4,7 +4,7 @@ from .enhancement_utils import PipelineEnhancerBase,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..utils import image_normalize
+from ..utils import image_normalize,dict_to_str
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -92,7 +92,13 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
         kwargs.update(generator=torch.Generator(pipeline.device).manual_seed(item))
         image = pipeline(**kwargs).images[0] if use_enhancer else pipeline.__oins__(**kwargs).images[0]
         images.append(image)
-        caption = f"Prompt:\n{prompt[:384]}\n\nNegative Prompt:\n{negative_prompt[:384]}\n\nStep: {kwargs.get('num_inference_steps')}, CFG: {kwargs.get('guidance_scale')}, CLIP Skip: {kwargs.get('clip_skip')}\nSampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSeed: {item}\n\nModel:{pipeline.model_name}"
+
+        kwargs_for_telegram = kwargs.copy()
+        kwargs_for_telegram.update(prompt=kwargs["prompt"][:384])
+        kwargs_for_telegram.update(negative_prompt=kwargs["negative_prompt"][:384])
+        caption = dict_to_str(kwargs_for_telegram)
+        caption += f"Sampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSeed: {item}\n\nModel:{pipeline.model_name}"
+
         threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
     return images
 class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
@@ -194,4 +200,3 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         server = load_stable_diffusion_ui(self,_globals)
         server.launch(quiet=True,**kwargs)
         return server
-
