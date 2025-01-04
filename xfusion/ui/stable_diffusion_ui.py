@@ -186,6 +186,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     def model_selection_fn(model,model_version):
         pipeline.reload(model, model_version=model_version)
         if str(pipeline.device) == "cpu":
+            print("Loading the model into cuda...")
             pipeline.to("cuda")
         return f"{model}, {model_version}"
 
@@ -297,7 +298,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         for i,pipeline in enumerate(pipelines):
             pipeline.reload(model,model_version=model_version)
             if str(pipeline.device) == "cpu":
-                print(f"Loading cuda:{i}...")
+                print(f"Loading the model into cuda:{i}...")
                 pipeline.to(f"cuda:{i}")
 
         return f"{model}, {model_version}"
