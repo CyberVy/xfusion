@@ -123,8 +123,8 @@ def stable_diffusion_ui_template(fns):
                 i2i_inputs.append(
                     gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
             with gr.Column():
-                i2i_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
-                i2i_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
+                i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
+                i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                 i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
             with gr.Column():
@@ -237,7 +237,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     def image_to_image_fn(
             image,
             prompt, negative_prompt="",
-            strength=0.3,
+            strength=0.4,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
         return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
@@ -256,7 +256,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     def inpainting_fn(
             image,
             prompt, negative_prompt="",
-            strength=0.3,
+            strength=0.8,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
@@ -365,7 +365,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     def image_to_image_fn(
             image,
             prompt, negative_prompt="",
-            strength=0.3,
+            strength=0.4,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
         def f(pipeline):
@@ -391,8 +391,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     def inpainting_fn(
             image,
             prompt, negative_prompt="",
-            strength=0.3,
-            guidance_scale=3, num_inference_steps=20, clip_skip=0,
+            strength=0.8,
+            guidance_scale=2.5, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
