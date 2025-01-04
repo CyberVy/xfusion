@@ -140,7 +140,10 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
-            kwargs.update(mask_image=image_normalize(mask_image,width * height))
+            mask_image = image_normalize(mask_image, width * height)
+            kwargs.update(mask_image=mask_image)
+            kwargs.update(width=mask_image.width)
+            kwargs.update(height=mask_image.height)
 
         prompt_str = f"{prompt} {negative_prompt}" if prompt_type == str else f"{' '.join(prompt)} {' '.join(negative_prompt)}"
 
