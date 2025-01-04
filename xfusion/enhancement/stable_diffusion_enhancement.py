@@ -137,8 +137,8 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         image = kwargs.get("image")
         if image and isinstance(image,Image.Image):
             kwargs.update(image=image_normalize(image,width * height))
-        mask_image = kwargs.get("mask_image")
 
+        mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
             kwargs.update(image=image_normalize(image,width * height))
 
@@ -163,7 +163,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
     def generate_image_and_send_to_telegram(self,
                                             prompt,negative_prompt="",
-                                            guidance_scale=2,num_inference_steps=20,clip_skip=0,
+                                            guidance_scale=2.5,num_inference_steps=20,clip_skip=0,
                                             width=None,height=None,
                                             seed=None,num=1,
                                             use_enhancer=True,**kwargs):
