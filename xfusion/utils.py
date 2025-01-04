@@ -181,6 +181,8 @@ def image_normalize(image:Image,target_pixels):
     scale = (target_pixels / width / height)**0.5
     width = int(width * scale)
     height = int(height * scale)
+    width = width - width % 8
+    height = height - height % 8
     return image.resize((width,height),Resampling.LANCZOS)
 
 def convert_mask_image_to_rgb(mask_image):
