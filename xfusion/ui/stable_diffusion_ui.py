@@ -185,6 +185,8 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     @allow_return_error
     def model_selection_fn(model,model_version):
         pipeline.reload(model, model_version=model_version)
+        if str(pipeline.device) == "cpu":
+            pipeline.to("cuda")
         return f"{model}, {model_version}"
 
     @allow_return_error
