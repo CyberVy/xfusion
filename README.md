@@ -16,13 +16,13 @@ Xfusion is a Python library built on top of [Diffusers](https://github.com/huggi
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
 # Code Example
-**Load an initial pipeline in a UI**
+**Use UI with a single GPU**
 ```python
 from xfusion.enhancement import SDPipelineEnhancer
 pipeline = SDPipelineEnhancer(None)
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
-**Load initial pipelines with multiple GPUs in a UI**
+**Use UI with multiple GPUs**
 
 ```python
 from xfusion import SDPipelineEnhancer
@@ -34,7 +34,7 @@ server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=glob
 server.launch(debug=True,inline=False,quiet=True)
 ```
 ---
-**Use a pipeline in a UI**
+**Use a pipeline with a single GPU in UI**
 ```python
 from xfusion.enhancement import load_enhancer
 
@@ -43,7 +43,7 @@ pipeline = load_enhancer(model).to("cuda")
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
 
-**Use pipelines with multiple GPUs in a UI**
+**Use pipelines with multiple GPUs in UI**
 ```python
 from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
