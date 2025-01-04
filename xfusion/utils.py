@@ -191,3 +191,9 @@ def convert_mask_image_to_rgb(mask_image):
     """
     r, g, b, a = mask_image.split()
     return merge("L", [a]).convert("RGB")
+
+def dict_to_str(_dict:dict):
+    r = ""
+    for key,value in _dict.items():
+        r += f"{key}: {value}\n\n"
+    return r
