@@ -35,11 +35,15 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
     def __call__(self, *args, **kwargs):
         image = kwargs.get("image")
         if image and isinstance(image, Image.Image):
-            kwargs.update(image=image_normalize(image, 1024 * 1536))
+            kwargs.update(image=image_normalize(image, 1024 * 1024))
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
-            kwargs.update(mask_image=image_normalize(image, 1024 * 1536))
+            mask_image = image_normalize(mask_image, 1024 * 1024)
+            kwargs.update(mask_image=mask_image)
+            kwargs.update(width=mask_image.width)
+            kwargs.update(height=mask_image.height)
+            
         return self.__oins__.__call__(*args,**kwargs)
 
     def generate_image_and_send_to_telegram(self,
