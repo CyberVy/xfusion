@@ -176,13 +176,24 @@ def delete_all_contents_of_path(folder_path):
             elif os.path.isdir(full_path):
                 shutil.rmtree(full_path)
 
-def image_normalize(image:Image,target_pixels):
-    width,height = image.size
-    scale = (target_pixels / width / height)**0.5
+def normalize_image_size(image_size,target_pixels):
+    """
+    upscale or downscale the image size with the same aspect ratio to the target pixels
+    """
+    width, height = image_size
+    scale = (target_pixels / width / height) ** 0.5
     width = int(width * scale)
     height = int(height * scale)
     width = width - width % 8
     height = height - height % 8
+    return width,height
+
+def normalize_image(image:Image, target_pixels):
+    """
+    upscale or downscale the image with the same aspect ratio to the target pixels
+    """
+    width,height = image.size
+    width,height = normalize_image_size((width,height),target_pixels)
     return image.resize((width,height),Resampling.LANCZOS)
 
 def convert_mask_image_to_rgb(mask_image):
