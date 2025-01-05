@@ -125,7 +125,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
             if not (width == 1024 and height == 1024):
                 width,height = normalize_image_size((width,height),1024 * 1024)
-
         else:
             if width is None:
                 width = 512
@@ -134,6 +133,9 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
             if not (width == 512 and height == 512):
                 width, height = normalize_image_size((width, height), 512 * 512)
+
+        kwargs.update(width=width)
+        kwargs.update(height=height)
 
         image = kwargs.get("image")
         if image and isinstance(image, Image.Image):
