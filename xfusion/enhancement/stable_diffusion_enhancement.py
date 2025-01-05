@@ -110,7 +110,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         SDCLIPEnhancerMixin.__init__(self)
 
     def check_inference_kwargs(self,kwargs):
-        
+
         if kwargs.get("negative_prompt") is None:
             kwargs.update(negative_prompt="")
 
@@ -123,7 +123,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             if height is None:
                 height = 1024
 
-            if width != 1024 and height != 1024:
+            if not (width == 1024 and height == 1024):
                 width,height = normalize_image_size((width,height),1024 * 1024)
 
         else:
@@ -132,7 +132,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             if height is None:
                 height = 512
 
-            if width != 512 and height != 512:
+            if not (width == 512 and height == 512):
                 width, height = normalize_image_size((width, height), 512 * 512)
 
         image = kwargs.get("image")
