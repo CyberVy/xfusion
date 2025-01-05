@@ -4,7 +4,7 @@ from .enhancement_utils import PipelineEnhancerBase,pipeline_map
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..utils import image_normalize,dict_to_str
+from ..utils import normalize_image_size,normalize_image,dict_to_str
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -109,9 +109,48 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         PipelineEnhancerBase.__init__(self, __oins__,init_sub_pipelines=init_sub_pipelines)
         SDCLIPEnhancerMixin.__init__(self)
 
-    def __call__(self,**kwargs):
+    def check_inference_kwargs(self,kwargs):
+        
         if kwargs.get("negative_prompt") is None:
             kwargs.update(negative_prompt="")
+
+        width = kwargs.get("width")
+        height = kwargs.get("height")
+
+        if self.model_version in ["xl", "3"]:
+            if width is None:
+                width = 1024
+            if height is None:
+                height = 1024
+
+            if width != 1024 and height != 1024:
+                width,height = normalize_image_size((width,height),1024 * 1024)
+
+        else:
+            if width is None:
+                width = 512
+            if height is None:
+                height = 512
+
+            if width != 512 and height != 512:
+                width, height = normalize_image_size((width, height), 512 * 512)
+
+        image = kwargs.get("image")
+        if image and isinstance(image, Image.Image):
+            kwargs.update(image=normalize_image(image, width * height))
+
+        mask_image = kwargs.get("mask_image")
+        if mask_image and isinstance(mask_image, Image.Image):
+            mask_image = normalize_image(mask_image, width * height)
+            kwargs.update(mask_image=mask_image)
+            kwargs.update(width=mask_image.width)
+            kwargs.update(height=mask_image.height)
+
+        return kwargs
+
+    def __call__(self,**kwargs):
+        kwargs = self.check_inference_kwargs(kwargs)
+
         prompt = kwargs.get("prompt")
         negative_prompt = kwargs.get("negative_prompt")
         if isinstance(prompt,list) and isinstance(negative_prompt,list):
@@ -127,45 +166,31 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         else:
             raise ValueError("The type of prompt and negative_prompt need to be str or list.")
 
-        width = kwargs.get("width")
-        height = kwargs.get("height")
-
-        if self.model_version in ["xl", "3"]:
-            if width is None:
-                width = 1024
-            if height is None:
-                height = 1024
-        else:
-            if width is None:
-                width = 512
-            if height is None:
-                height = 512
-
-        image = kwargs.get("image")
-        if image and isinstance(image,Image.Image):
-            kwargs.update(image=image_normalize(image,width * height))
-
-        mask_image = kwargs.get("mask_image")
-        if mask_image and isinstance(mask_image, Image.Image):
-            mask_image = image_normalize(mask_image, width * height)
-            kwargs.update(mask_image=mask_image)
-            kwargs.update(width=mask_image.width)
-            kwargs.update(height=mask_image.height)
-
         prompt_str = f"{prompt} {negative_prompt}" if prompt_type == str else f"{' '.join(prompt)} {' '.join(negative_prompt)}"
 
         skipped_lora_dict = {}
 
         for lora,weight in self.lora_dict.items():
+            # set LoRA strength to 0, if the trigger word (lora name) is not in the prompt or negative prompt
             if lora not in prompt_str:
                 skipped_lora_dict.update({lora:weight})
                 self.set_lora_strength(lora, 0)
                 print(f"LoRA {lora}:{weight} is disable due to {lora} is not in prompts.")
+
+        # if all LoRAs are not triggered, disable LoRAs for acceleration
+        if len(skipped_lora_dict) == len(self.lora_dict):
+            self.disable_lora()
+
         try:
             r = SDCLIPEnhancerMixin.__call__(self,**kwargs)
         except Exception as e:
             raise e
+
         finally:
+            # enable disabled LoRAs
+            if len(skipped_lora_dict) == len(self.lora_dict):
+                self.enable_lora()
+            # recover the LoRAs' strength
             if skipped_lora_dict:
                 for lora,weight in skipped_lora_dict.items():
                     self.set_lora_strength(lora,weight)
