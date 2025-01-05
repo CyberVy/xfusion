@@ -98,7 +98,7 @@ def stable_diffusion_ui_template(fns):
             with gr.Column():
                 with gr.Row():
                     t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                    t2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                    t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                 t2i_outputs.append(gr.Textbox(label="Result"))
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
@@ -133,7 +133,7 @@ def stable_diffusion_ui_template(fns):
             with gr.Column():
                 with gr.Row():
                     i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                    i2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                    i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
@@ -168,7 +168,7 @@ def stable_diffusion_ui_template(fns):
             with gr.Column():
                 with gr.Row():
                     inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                    inpainting_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                    inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                 inpainting_outputs.append(gr.Textbox(label="Result"))
                 inpainting_btn = gr.Button("Run")
                 inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
