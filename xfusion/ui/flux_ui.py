@@ -7,9 +7,9 @@ def load_flux_ui(pipeline, _globals=None):
 
     @allow_return_error
     def text_to_image_fn(prompt,
-                      guidance_scale=2, num_inference_steps=28,
-                      width=None, height=None,
-                      seed=None, num=1):
+                      guidance_scale, num_inference_steps,
+                      width, height,
+                      seed, num):
         return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
             prompt=prompt,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
@@ -20,8 +20,8 @@ def load_flux_ui(pipeline, _globals=None):
     def image_to_image_fn(image,
                        prompt,
                        strength,
-                       guidance_scale=2, num_inference_steps=28,
-                       seed=None, num=1):
+                       guidance_scale, num_inference_steps,
+                       seed, num):
         image = Image.fromarray(image)
         return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
@@ -52,7 +52,7 @@ def load_flux_ui(pipeline, _globals=None):
                 t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
             with gr.Column():
                 t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                t2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                 t2i_outputs.append(gr.Textbox(label="Result"))
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=text_to_image_fn, inputs=t2i_inputs, outputs=t2i_outputs)
@@ -71,7 +71,7 @@ def load_flux_ui(pipeline, _globals=None):
                 i2i_inputs.append(gr.Slider(0, 50, 28, step=1, label="Step"))
             with gr.Column():
                 i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                i2i_inputs.append(gr.Textbox(value="1", placeholder="Amount of the pictures.", label="Num"))
+                i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
