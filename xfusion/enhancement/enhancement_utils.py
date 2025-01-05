@@ -98,7 +98,8 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
     overrides = ["enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
                  "model_name","_scheduler","scheduler_map","sub_pipelines",
                  "image_to_image_pipeline","inpainting_pipeline",
-                 "check_original_pipeline","set_scheduler","reset_scheduler",
+                 "check_original_pipeline","check_inference_kwargs",
+                 "set_scheduler","reset_scheduler",
                  "to",
                  "clear","reload","load"]
 
@@ -159,6 +160,9 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 if pipeline_class == self.__oinstype__:
                     return model_version,pipeline_type,pipeline_class
         raise TypeError(f"{self.__oinstype__} is not supported yet.")
+
+    def check_inference_kwargs(self,kwargs):
+        raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'check_inference_kwargs'")
 
     def set_scheduler(self,scheduler_type,**kwargs):
         if not isinstance(scheduler_type,str):
