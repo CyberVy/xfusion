@@ -127,6 +127,9 @@ def stable_diffusion_ui_template(fns):
                 i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                 i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
+                    i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Height"))
             with gr.Column():
                 with gr.Row():
                     i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
@@ -159,6 +162,9 @@ def stable_diffusion_ui_template(fns):
                 inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                 inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    inpainting_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
+                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
             with gr.Column():
                 with gr.Row():
                     inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
@@ -225,7 +231,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
-        
+
         return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
             prompt=prompt, negative_prompt=negative_prompt,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -243,16 +249,18 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             prompt, negative_prompt,
             strength,
             guidance_scale, num_inference_steps, clip_skip,
+            width,height,
             seed, num):
-        
+
         if not image:
             raise ValueError("Please input an image.")
-            
+
         return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+            width=width,height=height,
             seed=int(seed), num=int(num))
 
     @allow_return_error
@@ -266,6 +274,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             prompt, negative_prompt,
             strength,
             guidance_scale, num_inference_steps, clip_skip,
+            width,height,
             seed, num):
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
@@ -273,6 +282,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+            width=width,height=height,
             seed=int(seed), num=int(num))
 
     @allow_return_error
@@ -371,20 +381,22 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     @allow_return_error
     def image_to_image_fn(
             image,
-            prompt, negative_prompt="",
-            strength=0.4,
-            guidance_scale=3, num_inference_steps=20, clip_skip=0,
-            seed=None, num=1):
-        
+            prompt, negative_prompt,
+            strength,
+            guidance_scale, num_inference_steps, clip_skip,
+            width,height,
+            seed, num):
+
         if not image:
             raise ValueError("Please input an image.")
-        
+
         def f(pipeline):
             return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+            width=width,height=height,
             seed=int(seed), num=int(num))
         if int(seed) != 0:
             return f(pipelines[0])
@@ -404,6 +416,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             prompt, negative_prompt,
             strength,
             guidance_scale, num_inference_steps, clip_skip,
+            width, height,
             seed, num):
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
@@ -412,6 +425,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+            width=width, height=height,
             seed=int(seed), num=int(num))
         if int(seed) != 0:
             return f(pipelines[0])
