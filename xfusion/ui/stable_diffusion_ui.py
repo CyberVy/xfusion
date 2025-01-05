@@ -221,10 +221,11 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
 
     @allow_return_error
     def text_to_image_fn(
-            prompt, negative_prompt="",
-            guidance_scale=2, num_inference_steps=20, clip_skip=0,
-            width=None, height=None,
-            seed=None, num=1):
+            prompt, negative_prompt,
+            guidance_scale, num_inference_steps, clip_skip,
+            width, height,
+            seed, num):
+        
         return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
             prompt=prompt, negative_prompt=negative_prompt,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -239,10 +240,14 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     @allow_return_error
     def image_to_image_fn(
             image,
-            prompt, negative_prompt="",
-            strength=0.4,
-            guidance_scale=3, num_inference_steps=20, clip_skip=0,
-            seed=None, num=1):
+            prompt, negative_prompt,
+            strength,
+            guidance_scale, num_inference_steps, clip_skip,
+            seed, num):
+        
+        if not image:
+            raise ValueError("Please input an image.")
+            
         return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
             prompt=prompt, negative_prompt=negative_prompt,
@@ -258,10 +263,10 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     @allow_return_error
     def inpainting_fn(
             image,
-            prompt, negative_prompt="",
-            strength=0.8,
-            guidance_scale=3, num_inference_steps=20, clip_skip=0,
-            seed=None, num=1):
+            prompt, negative_prompt,
+            strength,
+            guidance_scale, num_inference_steps, clip_skip,
+            seed, num):
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
             mask_image=convert_mask_image_to_rgb(image["layers"][0]),
@@ -341,10 +346,10 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
 
     @allow_return_error
     def text_to_image_fn(
-            prompt, negative_prompt="",
-            guidance_scale=2, num_inference_steps=20, clip_skip=0,
-            width=None, height=None,
-            seed=None, num=1):
+            prompt, negative_prompt,
+            guidance_scale, num_inference_steps, clip_skip,
+            width, height,
+            seed, num):
         def f(pipeline):
             return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
             prompt=prompt, negative_prompt=negative_prompt,
@@ -370,6 +375,10 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             strength=0.4,
             guidance_scale=3, num_inference_steps=20, clip_skip=0,
             seed=None, num=1):
+        
+        if not image:
+            raise ValueError("Please input an image.")
+        
         def f(pipeline):
             return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
             image=image,
@@ -392,10 +401,10 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     @allow_return_error
     def inpainting_fn(
             image,
-            prompt, negative_prompt="",
-            strength=0.8,
-            guidance_scale=2.5, num_inference_steps=20, clip_skip=0,
-            seed=None, num=1):
+            prompt, negative_prompt,
+            strength,
+            guidance_scale, num_inference_steps, clip_skip,
+            seed, num):
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
