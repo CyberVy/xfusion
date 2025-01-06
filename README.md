@@ -84,4 +84,4 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ```
 ---
 # Acknowledgments
-Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
+Xfusion leverages the Diffusers and Gradio library and is inspired by the incredible work of the open-source community.
