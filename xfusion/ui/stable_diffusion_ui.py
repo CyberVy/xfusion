@@ -105,7 +105,7 @@ def stable_diffusion_ui_template(fns):
                     t2i_btn = gr.Button("Run")
                     t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
 
-        with gr.Accordion("Image To Image", open=True):
+        with gr.Accordion("Image To Image", open=False):
             gr.Markdown("# Image To Image")
             i2i_inputs = []
             i2i_outputs = []
