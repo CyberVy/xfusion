@@ -79,12 +79,13 @@ def stable_diffusion_ui_template(fns):
             t2i_scheduler_outputs = []
             with gr.Row():
                 with gr.Accordion("Scheduler", open=False):
-                    t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                with gr.Column():
-                    t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                    t2i_scheduler_btn = gr.Button("Set Scheduler")
-                    t2i_scheduler_btn.click(fn=fns["text_to_image_scheduler_fn"], inputs=t2i_scheduler_inputs,
-                                            outputs=t2i_scheduler_outputs)
+                    with gr.Row():
+                        t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                        with gr.Column():
+                            t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                            t2i_scheduler_btn = gr.Button("Set Scheduler")
+                            t2i_scheduler_btn.click(fn=fns["text_to_image_scheduler_fn"], inputs=t2i_scheduler_inputs,
+                                                    outputs=t2i_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
                     t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
@@ -113,12 +114,13 @@ def stable_diffusion_ui_template(fns):
             i2i_scheduler_outputs = []
             with gr.Row():
                 with gr.Accordion("Scheduler", open=False):
-                    i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                with gr.Column():
-                    i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                    i2i_scheduler_btn = gr.Button("Set Scheduler")
-                    i2i_scheduler_btn.click(fn=fns["image_to_image_scheduler_fn"], inputs=i2i_scheduler_inputs,
-                                            outputs=i2i_scheduler_outputs)
+                    with gr.Row():
+                        i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                        with gr.Column():
+                            i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                            i2i_scheduler_btn = gr.Button("Set Scheduler")
+                            i2i_scheduler_btn.click(fn=fns["image_to_image_scheduler_fn"], inputs=i2i_scheduler_inputs,
+                                                    outputs=i2i_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
                     i2i_inputs.append(gr.Image(type="pil", label="Image"))
@@ -149,12 +151,13 @@ def stable_diffusion_ui_template(fns):
             inpainting_scheduler_outputs = []
             with gr.Row():
                 with gr.Accordion("Scheduler", open=False):
-                    inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                with gr.Column():
-                    inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
-                    inpainting_scheduler_btn = gr.Button("Set Scheduler")
-                    inpainting_scheduler_btn.click(fn=fns["inpainting_scheduler_fn"], inputs=inpainting_scheduler_inputs,
-                                                   outputs=inpainting_scheduler_outputs)
+                    with gr.Row():
+                        inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                        with gr.Column():
+                            inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
+                            inpainting_scheduler_btn = gr.Button("Set Scheduler")
+                            inpainting_scheduler_btn.click(fn=fns["inpainting_scheduler_fn"], inputs=inpainting_scheduler_inputs,
+                                                           outputs=inpainting_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
                     inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
