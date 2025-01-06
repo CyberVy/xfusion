@@ -31,159 +31,160 @@ def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
     with gr.Blocks(title="Xfusion", theme=theme) as server:
-        gr.Markdown("# Model Selection")
-        model_selection_inputs = []
-        model_selection_outputs = []
-        with gr.Row():
-            with gr.Column():
-                model_selection_inputs.append(gr.Textbox(value=default_stable_diffusion_model_url,placeholder="Give me a url of the model!", label="Model"))
-                model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
-            with gr.Column():
-                model_selection_outputs.append(gr.Textbox(label="Result"))
-                model_selection_btn = gr.Button("Select")
-                model_selection_btn.click(fn=fns["model_selection_fn"], inputs=model_selection_inputs,
-                                          outputs=model_selection_outputs)
+        with gr.Accordion("Model Selection", open=True):
+            gr.Markdown("# Model Selection")
+            model_selection_inputs = []
+            model_selection_outputs = []
+            with gr.Row():
+                with gr.Column():
+                    model_selection_inputs.append(gr.Textbox(value=default_stable_diffusion_model_url,placeholder="Give me a url of the model!", label="Model"))
+                    model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
+                with gr.Column():
+                    model_selection_outputs.append(gr.Textbox(label="Result"))
+                    model_selection_btn = gr.Button("Select")
+                    model_selection_btn.click(fn=fns["model_selection_fn"], inputs=model_selection_inputs,
+                                              outputs=model_selection_outputs)
 
-        gr.Markdown("---")
-        gr.Markdown("# LoRA")
-        set_lora_inputs = []
-        lora_outputs = []
-        with gr.Row():
-            with gr.Column():
-                set_lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!", label="LoRA"))
-                with gr.Row():
-                    set_lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!", label="LoRA name"))
-                    set_lora_inputs.append(gr.Slider(0, 1, 0.4, step=0.05, label="LoRA strength"))
-                with gr.Row():
-                    delete_lora_btn = gr.Button("Delete LoRA")
-                    set_lora_btn = gr.Button("Set LoRA")
-            with gr.Column():
-                lora_outputs.append(gr.Textbox(label="Result"))
-                delete_lora_btn.click(fn=fns["delete_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
-                set_lora_btn.click(fn=fns["set_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
-                with gr.Row():
-                    show_lora_btn = gr.Button("Show all LoRA")
-                    show_lora_btn.click(fn=fns["show_lora_fn"], outputs=lora_outputs)
-                with gr.Row():
-                    enable_lora_btn = gr.Button("Enable all LoRA")
-                    enable_lora_btn.click(fn=fns["enable_lora_fn"], outputs=lora_outputs)
-                    disable_lora_btn = gr.Button("Disable all LoRA")
-                    disable_lora_btn.click(fn=fns["disable_lora_fn"], outputs=lora_outputs)
+        with gr.Accordion("LoRA",open=False):
+            gr.Markdown("# LoRA")
+            set_lora_inputs = []
+            lora_outputs = []
+            with gr.Row():
+                with gr.Column():
+                    set_lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!", label="LoRA"))
+                    with gr.Row():
+                        set_lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!", label="LoRA name"))
+                        set_lora_inputs.append(gr.Slider(0, 1, 0.4, step=0.05, label="LoRA strength"))
+                    with gr.Row():
+                        delete_lora_btn = gr.Button("Delete LoRA")
+                        set_lora_btn = gr.Button("Set LoRA")
+                with gr.Column():
+                    lora_outputs.append(gr.Textbox(label="Result"))
+                    delete_lora_btn.click(fn=fns["delete_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
+                    set_lora_btn.click(fn=fns["set_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
+                    with gr.Row():
+                        show_lora_btn = gr.Button("Show all LoRA")
+                        show_lora_btn.click(fn=fns["show_lora_fn"], outputs=lora_outputs)
+                    with gr.Row():
+                        enable_lora_btn = gr.Button("Enable all LoRA")
+                        enable_lora_btn.click(fn=fns["enable_lora_fn"], outputs=lora_outputs)
+                        disable_lora_btn = gr.Button("Disable all LoRA")
+                        disable_lora_btn.click(fn=fns["disable_lora_fn"], outputs=lora_outputs)
 
-        gr.Markdown("---")
-        gr.Markdown("# Text To Image")
-        t2i_inputs = []
-        t2i_outputs = []
-        t2i_scheduler_inputs = []
-        t2i_scheduler_outputs = []
-        with gr.Row():
-            t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-            with gr.Column():
-                t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                t2i_scheduler_btn = gr.Button("Set Scheduler")
-                t2i_scheduler_btn.click(fn=fns["text_to_image_scheduler_fn"], inputs=t2i_scheduler_inputs,
-                                        outputs=t2i_scheduler_outputs)
-        with gr.Row():
-            with gr.Column():
-                t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                t2i_inputs.append(
-                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-            with gr.Column():
-                t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                with gr.Row():
-                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-            with gr.Column():
-                with gr.Row():
-                    t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                    t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                t2i_outputs.append(gr.Textbox(label="Result"))
-                t2i_btn = gr.Button("Run")
-                t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
+        with gr.Accordion("Text To Image", open=True):
+            gr.Markdown("# Text To Image")
+            t2i_inputs = []
+            t2i_outputs = []
+            t2i_scheduler_inputs = []
+            t2i_scheduler_outputs = []
+            with gr.Row():
+                t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                with gr.Column():
+                    t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                    t2i_scheduler_btn = gr.Button("Set Scheduler")
+                    t2i_scheduler_btn.click(fn=fns["text_to_image_scheduler_fn"], inputs=t2i_scheduler_inputs,
+                                            outputs=t2i_scheduler_outputs)
+            with gr.Row():
+                with gr.Column():
+                    t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                    t2i_inputs.append(
+                        gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+                with gr.Column():
+                    t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                    t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                    t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                    with gr.Row():
+                        t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                        t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Column():
+                    with gr.Row():
+                        t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                        t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                    t2i_outputs.append(gr.Textbox(label="Result"))
+                    t2i_btn = gr.Button("Run")
+                    t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
 
-        gr.Markdown("---")
-        gr.Markdown("# Image To Image")
-        i2i_inputs = []
-        i2i_outputs = []
-        i2i_scheduler_inputs = []
-        i2i_scheduler_outputs = []
-        with gr.Row():
-            i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-            with gr.Column():
-                i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                i2i_scheduler_btn = gr.Button("Set Scheduler")
-                i2i_scheduler_btn.click(fn=fns["image_to_image_scheduler_fn"], inputs=i2i_scheduler_inputs,
-                                        outputs=i2i_scheduler_outputs)
-        with gr.Row():
-            with gr.Column():
-                i2i_inputs.append(gr.Image(type="pil", label="Image"))
-                i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                i2i_inputs.append(
-                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-            with gr.Column():
-                i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
-                i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                with gr.Row():
-                    i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
-                    i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Height"))
-            with gr.Column():
-                with gr.Row():
-                    i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                    i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                i2i_outputs.append(gr.Textbox(label="Result"))
-                i2i_btn = gr.Button("Run")
-                i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
+        with gr.Accordion("Image To Image", open=True):
+            gr.Markdown("# Image To Image")
+            i2i_inputs = []
+            i2i_outputs = []
+            i2i_scheduler_inputs = []
+            i2i_scheduler_outputs = []
+            with gr.Row():
+                i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                with gr.Column():
+                    i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                    i2i_scheduler_btn = gr.Button("Set Scheduler")
+                    i2i_scheduler_btn.click(fn=fns["image_to_image_scheduler_fn"], inputs=i2i_scheduler_inputs,
+                                            outputs=i2i_scheduler_outputs)
+            with gr.Row():
+                with gr.Column():
+                    i2i_inputs.append(gr.Image(type="pil", label="Image"))
+                    i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                    i2i_inputs.append(
+                        gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+                with gr.Column():
+                    i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
+                    i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                    i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                    i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                    with gr.Row():
+                        i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
+                        i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Height"))
+                with gr.Column():
+                    with gr.Row():
+                        i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                        i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                    i2i_outputs.append(gr.Textbox(label="Result"))
+                    i2i_btn = gr.Button("Run")
+                    i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
 
-        gr.Markdown("---")
-        gr.Markdown("# Inpainting")
-        inpainting_inputs = []
-        inpainting_outputs = []
-        inpainting_scheduler_inputs = []
-        inpainting_scheduler_outputs = []
-        with gr.Row():
-            inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-            with gr.Column():
-                inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
-                inpainting_scheduler_btn = gr.Button("Set Scheduler")
-                inpainting_scheduler_btn.click(fn=fns["inpainting_scheduler_fn"], inputs=inpainting_scheduler_inputs,
-                                               outputs=inpainting_scheduler_outputs)
-        with gr.Row():
-            with gr.Column():
-                inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
-                inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                inpainting_inputs.append(
-                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-            with gr.Column():
-                inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
-                inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                with gr.Row():
-                    inpainting_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
-                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-            with gr.Column():
-                with gr.Row():
-                    inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                    inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                inpainting_outputs.append(gr.Textbox(label="Result"))
-                inpainting_btn = gr.Button("Run")
-                inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
+        with gr.Accordion("Inpainting",open=False):
+            gr.Markdown("# Inpainting")
+            inpainting_inputs = []
+            inpainting_outputs = []
+            inpainting_scheduler_inputs = []
+            inpainting_scheduler_outputs = []
+            with gr.Row():
+                inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                with gr.Column():
+                    inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
+                    inpainting_scheduler_btn = gr.Button("Set Scheduler")
+                    inpainting_scheduler_btn.click(fn=fns["inpainting_scheduler_fn"], inputs=inpainting_scheduler_inputs,
+                                                   outputs=inpainting_scheduler_outputs)
+            with gr.Row():
+                with gr.Column():
+                    inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
+                    inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                    inpainting_inputs.append(
+                        gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+                with gr.Column():
+                    inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
+                    inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                    inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                    inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                    with gr.Row():
+                        inpainting_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
+                        inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Column():
+                    with gr.Row():
+                        inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                        inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                    inpainting_outputs.append(gr.Textbox(label="Result"))
+                    inpainting_btn = gr.Button("Run")
+                    inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
-        gr.Markdown("---")
-        gr.Markdown("# Code")
-        code_inputs = []
-        code_outputs = []
-        with gr.Row():
-            with gr.Column():
-                code_inputs.append(gr.Code(value="import os,sys,gc,torch\n_cout = 'Hello world.'", language="python", lines=5, label="Python"))
-            with gr.Column():
-                code_outputs.append(gr.Textbox(label="Code Result"))
-                code_btn = gr.Button("Run Code")
-                code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
+        with gr.Accordion("Code",open=False):
+            gr.Markdown("# Code")
+            code_inputs = []
+            code_outputs = []
+            with gr.Row():
+                with gr.Column():
+                    code_inputs.append(gr.Code(value="import os,sys,gc,torch\n_cout = 'Hello world.'", language="python", lines=5, label="Python"))
+                with gr.Column():
+                    code_outputs.append(gr.Textbox(label="Code Result"))
+                    code_btn = gr.Button("Run Code")
+                    code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
     return server
 
 def load_stable_diffusion_ui(pipeline, _globals=None):
