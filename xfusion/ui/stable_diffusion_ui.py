@@ -78,7 +78,8 @@ def stable_diffusion_ui_template(fns):
             t2i_scheduler_inputs = []
             t2i_scheduler_outputs = []
             with gr.Row():
-                t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                with gr.Accordion("Scheduler", open=False):
+                    t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
                 with gr.Column():
                     t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
                     t2i_scheduler_btn = gr.Button("Set Scheduler")
@@ -111,7 +112,8 @@ def stable_diffusion_ui_template(fns):
             i2i_scheduler_inputs = []
             i2i_scheduler_outputs = []
             with gr.Row():
-                i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                with gr.Accordion("Scheduler", open=False):
+                    i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
                 with gr.Column():
                     i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
                     i2i_scheduler_btn = gr.Button("Set Scheduler")
@@ -146,7 +148,8 @@ def stable_diffusion_ui_template(fns):
             inpainting_scheduler_inputs = []
             inpainting_scheduler_outputs = []
             with gr.Row():
-                inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                with gr.Accordion("Scheduler", open=False):
+                    inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
                 with gr.Column():
                     inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
                     inpainting_scheduler_btn = gr.Button("Set Scheduler")
