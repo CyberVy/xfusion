@@ -3,6 +3,8 @@ from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb
 from ..const import GPU_Count
 from ..components.component_const import default_stable_diffusion_model_url
+import numpy as np
+from PIL import Image
 
 
 scheduler_list = [
@@ -283,9 +285,12 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             guidance_scale, num_inference_steps, clip_skip,
             width,height,
             seed, num):
+        image_mask_array = np.array(image["composite"].convert("RGB")) - np.array(image["background"].convert("RGB"))
+        image_mask_array[image_mask_array != 0] = 255
+        image_mask = Image.fromarray(image_mask_array)
         return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
-            mask_image=convert_mask_image_to_rgb(image["layers"][0]),
+            mask_image=image_mask,
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -426,9 +431,12 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             width, height,
             seed, num):
         def f(pipeline):
+            image_mask_array = np.array(image["composite"].convert("RGB")) - np.array(image["background"].convert("RGB"))
+            image_mask_array[image_mask_array != 0] = 255
+            image_mask = Image.fromarray(image_mask_array)
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
             image=image["background"].convert("RGB"),
-            mask_image=convert_mask_image_to_rgb(image["layers"][0]),
+            mask_image=image_mask,
             prompt=prompt, negative_prompt=negative_prompt,
             strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
