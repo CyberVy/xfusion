@@ -8,13 +8,12 @@ setup(
         "requests",
         'peft',
         'torch',
-        'gradio',
+        'gradio==5.9.1',
         'diffusers',
         'optimum-quanto',
         'transformers',
         'compel',
         'tqdm',
-        'flask'
     ],
     author='Eramth Ru',
     author_email='contanct@xsolutiontech.com',
@@ -27,5 +26,5 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.10',
 )
