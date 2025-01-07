@@ -374,10 +374,10 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             seed, num):
         def f(pipeline):
             return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
-            prompt=prompt, negative_prompt=negative_prompt,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width, height=height,
-            seed=int(seed), num=int(num))
+                prompt=prompt, negative_prompt=negative_prompt,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+                width=width, height=height,
+                seed=int(seed), num=int(num))
         if int(seed) != 0:
             return f(pipelines[0])
         else:
@@ -404,12 +404,12 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
 
         def f(pipeline):
             return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
-            image=image,
-            prompt=prompt, negative_prompt=negative_prompt,
-            strength=strength,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width,height=height,
-            seed=int(seed), num=int(num))
+                image=image,
+                prompt=prompt, negative_prompt=negative_prompt,
+                strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+                width=width,height=height,
+                seed=int(seed), num=int(num))
         if int(seed) != 0:
             return f(pipelines[0])
         else:
@@ -435,13 +435,13 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             image_mask_array[image_mask_array != 0] = 255
             image_mask = Image.fromarray(image_mask_array)
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
-            image=image["background"].convert("RGB"),
-            mask_image=image_mask,
-            prompt=prompt, negative_prompt=negative_prompt,
-            strength=strength,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width, height=height,
-            seed=int(seed), num=int(num))
+                image=image["background"].convert("RGB"),
+                mask_image=image_mask,
+                prompt=prompt, negative_prompt=negative_prompt,
+                strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+                width=width, height=height,
+                seed=int(seed), num=int(num))
         if int(seed) != 0:
             return f(pipelines[0])
         else:
