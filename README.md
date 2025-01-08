@@ -1,12 +1,11 @@
 # Hello Xfusion!
-Xfusion is a Python library which specializes in assembling open-source AI models, with a particular focus on models like Stable Diffusion, Flux, and others.
+Xfusion is a Python library built on top of [Diffusers](https://github.com/huggingface/diffusers). It specializes in assembling open-source AI models, with a particular focus on models like Stable Diffusion, Flux, and others.
 
 # Features
 - Enhanced support for models from sources outside Hugging Face.
 - Simple and efficient model loading using just a model URL.
 - Extension for models.
 - Multiple GPUs support.
-- Friendly for both beginners and developers.
 
 # Supported Models
 - Stable Diffusion 1.5/2/3/3.5/XL
@@ -19,18 +18,18 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 # Code Example
 **Use UI with a single GPU**
 ```python
-from xfusion.enhancement import load_enhancer
-pipeline = load_enhancer(None)
+from xfusion.enhancement import SDPipelineEnhancer
+pipeline = SDPipelineEnhancer(None)
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
-**Use UI with multiple GPUs/A single GPU is also supported**
+**Use UI with multiple GPUs/single GPU is also supported**
 
 ```python
-from xfusion import load_enhancer
+from xfusion import SDPipelineEnhancer
 from xfusion import load_stable_diffusion_ui_for_multiple_pipelines
 from xfusion.const import GPU_Count
 
-pipelines = [load_enhancer(None) for i in range(GPU_Count)]
+pipelines = [SDPipelineEnhancer(None) for i in range(GPU_Count)]
 server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
@@ -84,4 +83,4 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ```
 ---
 # Acknowledgments
-Xfusion leverages the Diffusers and Gradio library and is inspired by the incredible work of the open-source community.
+Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
