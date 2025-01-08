@@ -30,7 +30,7 @@ scheduler_list = [
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
-    with gr.Blocks(title="Xfusion", theme=theme) as server:
+    with gr.Blocks(title=f"Xfusion{GPU_Name}", theme=theme) as server:
         with gr.Accordion("Model Selection", open=True):
             gr.Markdown("# Model Selection")
             model_selection_inputs = []
