@@ -1,8 +1,9 @@
 import gradio as gr
 from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb
-from ..const import GPU_Count
+from ..const import GPU_Count,GPU_Name
 from ..components.component_const import default_stable_diffusion_model_url
+import sys,platform
 
 scheduler_list = [
             "DPM++ 2M",
@@ -181,6 +182,9 @@ def stable_diffusion_ui_template(fns):
 
         with gr.Accordion("Code",open=False):
             gr.Markdown("# Code")
+            gr.Markdown(f"- GPUs: {GPU_Name}")
+            gr.Markdown(f"- Python: {sys.version}")
+            gr.Markdown(f"- OS: {platform.platform()}")
             code_inputs = []
             code_outputs = []
             with gr.Row():
