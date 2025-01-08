@@ -19,18 +19,18 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 # Code Example
 **Use UI with a single GPU**
 ```python
-from xfusion.enhancement import SDPipelineEnhancer
-pipeline = SDPipelineEnhancer(None)
+from xfusion.enhancement import load_enhancer
+pipeline = load_enhancer(None)
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
 **Use UI with multiple GPUs/A single GPU is also supported**
 
 ```python
-from xfusion import SDPipelineEnhancer
+from xfusion import load_enhancer
 from xfusion import load_stable_diffusion_ui_for_multiple_pipelines
 from xfusion.const import GPU_Count
 
-pipelines = [SDPipelineEnhancer(None) for i in range(GPU_Count)]
+pipelines = [load_enhancer(None) for i in range(GPU_Count)]
 server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
