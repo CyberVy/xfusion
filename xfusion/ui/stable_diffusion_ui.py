@@ -347,6 +347,10 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
+        
+        if not image:
+            raise ValueError("Please input an image.")
+        
         return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
             image=image,
             prompt=prompt, negative_prompt=negative_prompt,
@@ -523,6 +527,10 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
+        
+        if not image:
+            raise ValueError("Please input an image.")
+        
         def f(pipeline):
             return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
                 image=image,
