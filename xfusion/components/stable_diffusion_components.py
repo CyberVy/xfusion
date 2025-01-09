@@ -1,5 +1,6 @@
 from diffusers import DiffusionPipeline
 from diffusers import StableDiffusionPipeline,StableDiffusionXLPipeline,StableDiffusion3Pipeline
+from diffusers import ControlNetModel,SD3ControlNetModel
 from .component_const import default_stable_diffusion_model_url
 from ..download import download_file
 from ..const import HF_HUB_TOKEN
@@ -7,6 +8,13 @@ import requests
 import torch
 import os
 
+
+# "diffusers/controlnet-canny-sdxl-1.0"
+def load_stable_diffusion_controlnet(controlnet_model,model_version):
+    if model_version in ["1.5,2,xl","pony"]:
+        return ControlNetModel.from_pretrained(controlnet_model)
+    elif model_version in ["3","3.5"]:
+        return SD3ControlNetModel.from_pretrained(controlnet_model)
 
 def load_stable_diffusion_pipeline(model=None,
                                    model_version=None, file_format="safetensors", download_kwargs=None, **kwargs):
