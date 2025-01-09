@@ -2,10 +2,14 @@ from .enhancement_utils import PipelineEnhancerBase
 from ..components.flux_components import load_flux_pipeline
 from ..ui.flux_ui import load_flux_ui
 from ..utils import normalize_image,dict_to_str
+from diffusers import FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline
 from PIL import Image
 import torch
 import threading
 from random import randint
+
+
+pipeline_map = {"flux": (FluxPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline)}
 
 
 def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhancer=True,**kwargs):
@@ -31,6 +35,7 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
         threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
     return images
 class FluxPipelineEnhancer(PipelineEnhancerBase):
+    pipeline_map = pipeline_map
     overrides = []
 
     def __init__(self,__oins__,init_sub_pipelines=True):
