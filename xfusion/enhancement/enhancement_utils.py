@@ -9,10 +9,7 @@ from diffusers.schedulers import HeunDiscreteScheduler
 from diffusers.schedulers import LMSDiscreteScheduler
 from diffusers.schedulers import DEISMultistepScheduler
 from diffusers.schedulers import UniPCMultistepScheduler
-from diffusers import FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline
-from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline
-from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline
-from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
+
 
 # from https://huggingface.co/docs/diffusers/api/schedulers/overview
 scheduler_map = {
@@ -37,13 +34,6 @@ scheduler_map = {
             "UNIPC": (UniPCMultistepScheduler, {}),
         }
 
-# pipeline_type 0,1,2 -> text_to_image, image_to_image, inpainting
-pipeline_map = {
-    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline),
-    "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline),
-    "3":(StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline),
-    "flux": (FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline)
-}
 
 class FromURLMixin:
     overrides = ["from_url"]
@@ -94,8 +84,22 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
             self.lora_dict.pop(name)
 
 
-class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
-    overrides = ["enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
+class ControlnetEnhancerMixin:
+    overrides = ["text_to_image_controlnet_pipeline","image_to_image_controlnet_pipeline","inpainting_controlnet_pipeline",
+                 "load_controlnet","_controlnet"]
+    def __init__(self):
+        self._controlnet = None
+        self.text_to_image_controlnet_pipeline = None
+        self.image_to_image_controlnet_pipeline = None
+        self.inpainting_controlnet_pipeline = None
+
+    def load_controlnet(self):
+        raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'load_controlnet'")
+
+
+class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
+    pipeline_map = {}
+    overrides = ["pipeline_map","enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
                  "model_name","_scheduler","scheduler_map","sub_pipelines",
                  "image_to_image_pipeline","inpainting_pipeline",
                  "check_original_pipeline","check_inference_kwargs",
@@ -107,7 +111,8 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         EasyInitSubclass.__init__(self,__oins__)
         TGBotMixin.__init__(self)
         LoraEnhancerMixin.__init__(self)
-        self.enhancer_class = object.__getattribute__(self,"__class__")
+        ControlnetEnhancerMixin.__init__(self)
+        self.enhancer_class:"PipelineEnhancerBase" = object.__getattribute__(self,"__class__")
 
         # support empty pipeline
         if __oins__ is None:
@@ -125,7 +130,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
         self.sub_pipelines = []
         if init_sub_pipelines:
             if self.pipeline_type != 0:
-                self.text_to_image_pipeline = self.enhancer_class(pipeline_map[self.model_version][0](**self.components),
+                self.text_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][0](**self.components),
                                                                   init_sub_pipelines=False)
                 self.text_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
                 self.text_to_image_pipeline.lora_dict = self.lora_dict
@@ -135,7 +140,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 self.text_to_image_pipeline = self
 
             if self.pipeline_type != 1:
-                self.image_to_image_pipeline = self.enhancer_class(pipeline_map[self.model_version][1](**self.components),
+                self.image_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][1](**self.components),
                                                                    init_sub_pipelines=False)
                 self.image_to_image_pipeline.telegram_kwargs = self.telegram_kwargs
                 self.image_to_image_pipeline.lora_dict = self.lora_dict
@@ -145,7 +150,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 self.image_to_image_pipeline = self
 
             if self.pipeline_type != 2:
-                self.inpainting_pipeline =  self.enhancer_class(pipeline_map[self.model_version][2](**self.components),
+                self.inpainting_pipeline =  self.enhancer_class(self.pipeline_map[self.model_version][2](**self.components),
                                                                 init_sub_pipelines=False)
                 self.inpainting_pipeline.telegram_kwargs = self.telegram_kwargs
                 self.inpainting_pipeline.lora_dict = self.lora_dict
@@ -155,7 +160,7 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
                 self.inpainting_pipeline = self
 
     def check_original_pipeline(self):
-        for model_version, pipeline_class_tuple in pipeline_map.items():
+        for model_version, pipeline_class_tuple in self.pipeline_map.items():
             for pipeline_type,pipeline_class in enumerate(pipeline_class_tuple):
                 if pipeline_class == self.__oinstype__:
                     return model_version,pipeline_type,pipeline_class
@@ -185,6 +190,10 @@ class PipelineEnhancerBase(LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,Eas
             uncleared = delete(component)[-1]
             if uncleared:
                 print(f"Warning: {uncleared}")
+
+        uncleared = delete(self._controlnet)[-1]
+        if uncleared:
+            print(f"Warning: {uncleared}")
 
     def reload(self,url,**kwargs):
 
