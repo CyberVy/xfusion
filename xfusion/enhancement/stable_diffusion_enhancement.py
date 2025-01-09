@@ -9,9 +9,11 @@ from ..utils import normalize_image,dict_to_str
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
+import cv2
+import numpy as np
 import threading
 from random import randint
-from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline
+from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline
 from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline
 from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
 
@@ -145,7 +147,8 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         image = kwargs.get("image")
         if image and isinstance(image, Image.Image):
-            kwargs.update(image=normalize_image(image, width * height))
+            image = normalize_image(image, width * height)
+            kwargs.update(image=image)
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
@@ -154,7 +157,55 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             kwargs.update(width=mask_image.width)
             kwargs.update(height=mask_image.height)
 
+        if "controlnet" in self.__oinstype__.__name__.lower():
+            kwargs.update(self._check_controlnet_inference_kwargs(kwargs))
+
         return kwargs
+
+    def _check_controlnet_inference_kwargs(self,kwargs):
+        width = kwargs.get("width")
+        height = kwargs.get("height")
+        if self.model_version in ["xl", "3"]:
+            if width is None:
+                width = 1024
+            if height is None:
+                height = 1024
+        else:
+            if width is None:
+                width = 512
+            if height is None:
+                height = 512
+        kwargs.update(width=width)
+        kwargs.update(height=height)
+
+        image = kwargs.get("image")
+        control_image = kwargs.get("control_image")
+        if control_image and isinstance(control_image, Image.Image):
+            control_image = normalize_image(control_image, width * height)
+            kwargs.update(control_image=control_image)
+
+        # create text to image controlnet condition
+        if image is not None and control_image is None:
+            image = np.array(image)
+            image = cv2.Canny(image, 100, 200)
+            image = image[:, :, None]
+            image = np.concatenate([image, image, image], axis=2)
+            image = Image.fromarray(image)
+            kwargs.update(image=image)
+            return kwargs
+
+        # todo: create image to image controlnet condition
+        elif image is not None and control_image is not None:
+            control_image = np.array(control_image)
+            control_image = cv2.Canny(control_image, 100, 200)
+            control_image = control_image[:, :, None]
+            control_image = np.concatenate([control_image, control_image, control_image], axis=2)
+            control_image = Image.fromarray(control_image)
+            kwargs.update(control_image=control_image)
+            return kwargs
+
+        else:
+            return kwargs
 
     def __call__(self,**kwargs):
         kwargs = self.check_inference_kwargs(kwargs)
@@ -222,8 +273,9 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     def load_controlnet(self):
         if self._controlnet is None:
             if self.model_version == "1.5":
-                raise NotImplementedError
-                # self._controlnet = load_stable_diffusion_controlnet(...,self.model_version)
+                self._controlnet = load_stable_diffusion_controlnet("lllyasviel/sd-controlnet-canny",self.model_version)
+                self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+                self.text_to_image_controlnet_pipeline.to(self.device)
             elif self.model_version == "xl":
                 self._controlnet = load_stable_diffusion_controlnet("diffusers/controlnet-canny-sdxl-1.0",self.model_version)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
