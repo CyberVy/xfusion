@@ -182,6 +182,44 @@ def stable_diffusion_ui_template(fns):
                     inpainting_btn = gr.Button("Run")
                     inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
+        with gr.Accordion("Controlnet Text To Image", open=True):
+            gr.Markdown("# Controlnet Text To Image")
+            controlnet_t2i_inputs = []
+            controlnet_t2i_outputs = []
+            controlnet_t2i_scheduler_inputs = []
+            controlnet_t2i_scheduler_outputs = []
+            with gr.Row():
+                with gr.Accordion("Scheduler", open=False):
+                    with gr.Row():
+                        controlnet_t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                        with gr.Column():
+                            controlnet_t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                            controlnet_t2i_scheduler_btn = gr.Button("Set Scheduler")
+                            controlnet_t2i_scheduler_btn.click(fn=fns["text_to_image_scheduler_fn"], inputs=controlnet_t2i_scheduler_inputs,
+                                                    outputs=controlnet_t2i_scheduler_outputs)
+            with gr.Row():
+                with gr.Column():
+                    with gr.Accordion("Controlnet Image"):
+                        controlnet_t2i_inputs.append(gr.ImageMask(type="pil", label="Controlnet Image"))
+                    controlnet_t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                    controlnet_t2i_inputs.append(
+                        gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+                with gr.Column():
+                    controlnet_t2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                    controlnet_t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                    controlnet_t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                    controlnet_t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                    with gr.Row():
+                        controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                        controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Column():
+                    with gr.Row():
+                        controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                        controlnet_t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                    controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
+                    controlnet_t2i_btn = gr.Button("Run")
+                    controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"], inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
+
         with gr.Accordion("Code",open=False):
             gr.Markdown("# Code")
             gr.Markdown(f"- GPUs: {GPU_Name}")
@@ -296,6 +334,22 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width,height=height,
             seed=int(seed), num=int(num))
+
+    @allow_return_error
+    def controlnet_text_to_image_fn(
+            image,
+            prompt, negative_prompt,
+            controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
+            width, height,
+            seed, num):
+        return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
+            image=image,
+            prompt=prompt, negative_prompt=negative_prompt,
+            controlnet_conditioning_scale=controlnet_conditioning_scale,
+            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+            width=width, height=height,
+            seed=int(seed), num=int(num)
+        )
 
     @allow_return_error
     def run_code_fn(code):
@@ -436,6 +490,27 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 mask_image=convert_mask_image_to_rgb(image["layers"][0]),
                 prompt=prompt, negative_prompt=negative_prompt,
                 strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+                width=width, height=height,
+                seed=int(seed), num=int(num))
+        if int(seed) != 0:
+            return f(pipelines[0])
+        else:
+            threads_execute(f, pipelines)
+            return f"{num} * {len(pipelines)}"
+
+    @allow_return_error
+    def controlnet_text_to_image_fn(
+            image,
+            prompt, negative_prompt,
+            controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
+            width, height,
+            seed, num):
+        def f(pipeline):
+            return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
+                image=image,
+                prompt=prompt, negative_prompt=negative_prompt,
+                controlnet_conditioning_scale=controlnet_conditioning_scale,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
