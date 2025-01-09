@@ -1,15 +1,26 @@
 # limited support to sd3 now
 
-from .enhancement_utils import PipelineEnhancerBase,pipeline_map
+from .enhancement_utils import PipelineEnhancerBase
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
 from ..components import load_stable_diffusion_pipeline
+from ..components import load_stable_diffusion_controlnet
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..utils import normalize_image_size,normalize_image,dict_to_str
+from ..utils import normalize_image,dict_to_str
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
 import threading
 from random import randint
+from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline
+from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline
+from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
+
+# pipeline_type
+# 0-> text_to_image, 1 -> image_to_image, 2 -> inpainting
+pipeline_map = {
+    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline),
+    "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline),
+    "3":(StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline)}
 
 
 def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
@@ -103,6 +114,7 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
         threading.Thread(target=lambda: pipeline.send_PIL_photo(image,file_name=f"{pipeline.__class__.__name__}.PNG",file_type="PNG",caption=caption)).start()
     return images
 class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
+    pipeline_map = pipeline_map
     overrides = []
 
     def __init__(self,__oins__,init_sub_pipelines=True):
@@ -127,7 +139,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 width = 512
             if height is None:
                 height = 512
-                
+
         kwargs.update(width=width)
         kwargs.update(height=height)
 
@@ -205,6 +217,22 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                width=width,height=height,
                seed=seed,num=num,
                use_enhancer=use_enhancer,**kwargs)
+
+
+    def load_controlnet(self):
+        if self._controlnet is None:
+            if self.model_version == "1.5":
+                raise NotImplementedError
+                # self._controlnet = load_stable_diffusion_controlnet(...,self.model_version)
+            elif self.model_version == "xl":
+                self._controlnet = load_stable_diffusion_controlnet("diffusers/controlnet-canny-sdxl-1.0",self.model_version)
+                self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+
+            elif self.model_version == "3":
+                raise NotImplementedError
+                # self._controlnet = load_stable_diffusion_controlnet(...,self.model_version)
+        else:
+            print(f"Controlnet is already implemented.")
 
     @classmethod
     def from_url(cls,url=None,model_version=None,init_sub_pipelines=True,**kwargs):
