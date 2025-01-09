@@ -183,6 +183,14 @@ def stable_diffusion_ui_template(fns):
                     inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
         with gr.Accordion("Controlnet",open=False):
+            controlnet_outputs = []
+            with gr.Row():
+                with gr.Column():
+                    load_controlnet_button = gr.Button("Load controlnet")
+                    offload_controlnet_button = gr.Button("Offoad controlnet")
+                controlnet_outputs.append(gr.Textbox(label="Result"))
+                load_controlnet_button.click(fn=fns["load_controlnet_fn"],outputs=controlnet_outputs)
+                offload_controlnet_button.click(fn=fns["offload_controlnet_fn"],outputs=controlnet_outputs)
             with gr.Accordion("Controlnet Text To Image", open=False):
                 gr.Markdown("# Controlnet Text To Image")
                 controlnet_t2i_inputs = []
@@ -337,6 +345,16 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             seed=int(seed), num=int(num))
 
     @allow_return_error
+    def load_controlnet_fn():
+        pipeline.load_controlnet()
+        return f"Controlnet is loaded."
+
+    @allow_return_error
+    def offload_controlnet_fn():
+        pipeline.offload_controlnet()
+        return f"Controlnet is offloaded."
+
+    @allow_return_error
     def controlnet_text_to_image_scheduler_fn(scheduler):
         pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
         return f"{scheduler} is set for text to image controlnet pipeline."
@@ -377,6 +395,8 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
            "image_to_image_fn":image_to_image_fn,
            "inpainting_scheduler_fn":inpainting_scheduler_fn,
            "inpainting_fn":inpainting_fn,
+           "load_controlnet_fn":load_controlnet_fn,
+           "offload_controlnet_fn":offload_controlnet_fn,
            "controlnet_text_to_image_scheduler_fn": controlnet_text_to_image_scheduler_fn,
            "controlnet_text_to_image_fn":controlnet_text_to_image_fn,
            "run_code_fn":run_code_fn}
@@ -516,6 +536,18 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             return f"{num} * {len(pipelines)}"
 
     @allow_return_error
+    def load_controlnet_fn():
+        for pipeline in pipelines:
+            pipeline.load_controlnet()
+        return f"Controlnet is loaded."
+
+    @allow_return_error
+    def offload_controlnet_fn():
+        for pipeline in pipelines:
+            pipeline.offload_controlnet()
+        return f"Controlnet is offloaded."
+
+    @allow_return_error
     def controlnet_text_to_image_scheduler_fn(scheduler):
         for pipeline in pipelines:
             pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
@@ -562,6 +594,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
            "image_to_image_fn": image_to_image_fn,
            "inpainting_scheduler_fn": inpainting_scheduler_fn,
            "inpainting_fn": inpainting_fn,
+           "load_controlnet_fn":load_controlnet_fn,
+           "offload_controlnet_fn":offload_controlnet_fn,
            "controlnet_text_to_image_scheduler_fn":controlnet_text_to_image_scheduler_fn,
            "controlnet_text_to_image_fn":controlnet_text_to_image_fn,
            "run_code_fn": run_code_fn}
