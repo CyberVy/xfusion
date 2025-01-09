@@ -1,2 +1,2 @@
-from .stable_diffusion_components import load_stable_diffusion_pipeline
+from .stable_diffusion_components import load_stable_diffusion_pipeline,load_stable_diffusion_controlnet
 from .flux_components import load_flux_pipeline
