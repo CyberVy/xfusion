@@ -5,12 +5,10 @@ from ..components.component_utils import get_tokenizers_and_text_encoders_from_p
 from ..components import load_stable_diffusion_pipeline
 from ..components import load_stable_diffusion_controlnet
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..utils import normalize_image,dict_to_str
+from ..utils import normalize_image,dict_to_str,convert_image_to_canny
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
-import cv2
-import numpy as np
 import threading
 from random import randint
 from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline
@@ -20,7 +18,7 @@ from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,S
 # pipeline_type
 # 0-> text_to_image, 1 -> image_to_image, 2 -> inpainting
 pipeline_map = {
-    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline),
+    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline),
     "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline),
     "3":(StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline)}
 
@@ -167,6 +165,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     def _check_controlnet_inference_kwargs(self,kwargs):
         width = kwargs.get("width")
         height = kwargs.get("height")
+
         control_image = kwargs.get("control_image")
         if control_image and isinstance(control_image, Image.Image):
             control_image = normalize_image(control_image, width * height)
@@ -175,11 +174,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         image = kwargs.get("image")
         # create text to image controlnet condition
         if image is not None and control_image is None:
-            image = np.array(image)
-            image = cv2.Canny(image, 100, 200)
-            image = image[:, :, None]
-            image = np.concatenate([image, image, image], axis=2)
-            image = Image.fromarray(image)
+            image = convert_image_to_canny(image)
             kwargs.update(image=image)
             return kwargs
 
@@ -264,7 +259,9 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 self._controlnet = load_stable_diffusion_controlnet("diffusers/controlnet-canny-sdxl-1.0",self.model_version)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.text_to_image_controlnet_pipeline.to(self.device)
+            # todo: sd3 controlnet support
             elif self.model_version == "3":
+                ...
                 raise NotImplementedError
                 # self._controlnet = load_stable_diffusion_controlnet(...,self.model_version)
         else:
