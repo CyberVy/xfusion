@@ -3,6 +3,7 @@ import threading
 from functools import wraps
 from PIL.Image import Image,Resampling,merge,fromarray
 import cv2
+import torch
 import numpy as np
 
 
@@ -222,3 +223,7 @@ def dict_to_str(_dict:dict):
     for key,value in _dict.items():
         r += f"{key}: {value}\n\n"
     return r
+
+def free_memory_to_system():
+    gc.collect()
+    torch.cuda.empty_cache()
