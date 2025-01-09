@@ -182,7 +182,7 @@ def stable_diffusion_ui_template(fns):
                     inpainting_btn = gr.Button("Run")
                     inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
-        with gr.Accordion("Controlnet Text To Image", open=True):
+        with gr.Accordion("Controlnet Text To Image", open=False):
             gr.Markdown("# Controlnet Text To Image")
             controlnet_t2i_inputs = []
             controlnet_t2i_outputs = []
@@ -199,7 +199,7 @@ def stable_diffusion_ui_template(fns):
                                                     outputs=controlnet_t2i_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
-                    with gr.Accordion("Controlnet Image",open=False):
+                    with gr.Accordion("Controlnet Image"):
                         controlnet_t2i_inputs.append(gr.Image(type="pil", label="Controlnet Image"))
                     controlnet_t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                     controlnet_t2i_inputs.append(
