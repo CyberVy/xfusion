@@ -227,7 +227,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             elif self.model_version == "xl":
                 self._controlnet = load_stable_diffusion_controlnet("diffusers/controlnet-canny-sdxl-1.0",self.model_version)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
-
+                self.text_to_image_controlnet_pipeline.to(self.device)
             elif self.model_version == "3":
                 raise NotImplementedError
                 # self._controlnet = load_stable_diffusion_controlnet(...,self.model_version)
