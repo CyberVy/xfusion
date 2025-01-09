@@ -184,13 +184,14 @@ def stable_diffusion_ui_template(fns):
 
         with gr.Accordion("Controlnet",open=False):
             controlnet_outputs = []
-            with gr.Row():
-                with gr.Column():
-                    load_controlnet_button = gr.Button("Load controlnet")
-                    offload_controlnet_button = gr.Button("Offoad controlnet")
-                controlnet_outputs.append(gr.Textbox(label="Result"))
-                load_controlnet_button.click(fn=fns["load_controlnet_fn"],outputs=controlnet_outputs)
-                offload_controlnet_button.click(fn=fns["offload_controlnet_fn"],outputs=controlnet_outputs)
+            with gr.Accordion("Controlnet Switch"):
+                with gr.Row():
+                    with gr.Column():
+                        load_controlnet_button = gr.Button("Load controlnet")
+                        offload_controlnet_button = gr.Button("Offoad controlnet")
+                    controlnet_outputs.append(gr.Textbox(label="Result"))
+                    load_controlnet_button.click(fn=fns["load_controlnet_fn"],outputs=controlnet_outputs)
+                    offload_controlnet_button.click(fn=fns["offload_controlnet_fn"],outputs=controlnet_outputs)
             with gr.Accordion("Controlnet Text To Image", open=False):
                 gr.Markdown("# Controlnet Text To Image")
                 controlnet_t2i_inputs = []
