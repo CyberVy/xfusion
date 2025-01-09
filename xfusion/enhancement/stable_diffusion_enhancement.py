@@ -148,6 +148,8 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         image = kwargs.get("image")
         if image and isinstance(image, Image.Image):
             image = normalize_image(image, width * height)
+            kwargs.update(width=image.width)
+            kwargs.update(height=image.height)
             kwargs.update(image=image)
 
         mask_image = kwargs.get("mask_image")
@@ -165,25 +167,12 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     def _check_controlnet_inference_kwargs(self,kwargs):
         width = kwargs.get("width")
         height = kwargs.get("height")
-        if self.model_version in ["xl", "3"]:
-            if width is None:
-                width = 1024
-            if height is None:
-                height = 1024
-        else:
-            if width is None:
-                width = 512
-            if height is None:
-                height = 512
-        kwargs.update(width=width)
-        kwargs.update(height=height)
-
-        image = kwargs.get("image")
         control_image = kwargs.get("control_image")
         if control_image and isinstance(control_image, Image.Image):
             control_image = normalize_image(control_image, width * height)
             kwargs.update(control_image=control_image)
 
+        image = kwargs.get("image")
         # create text to image controlnet condition
         if image is not None and control_image is None:
             image = np.array(image)
@@ -196,12 +185,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         # todo: create image to image controlnet condition
         elif image is not None and control_image is not None:
-            control_image = np.array(control_image)
-            control_image = cv2.Canny(control_image, 100, 200)
-            control_image = control_image[:, :, None]
-            control_image = np.concatenate([control_image, control_image, control_image], axis=2)
-            control_image = Image.fromarray(control_image)
-            kwargs.update(control_image=control_image)
+            ...
             return kwargs
 
         else:
