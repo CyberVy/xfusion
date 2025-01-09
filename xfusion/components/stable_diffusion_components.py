@@ -11,7 +11,7 @@ import os
 
 # "diffusers/controlnet-canny-sdxl-1.0"
 def load_stable_diffusion_controlnet(controlnet_model,model_version):
-    if model_version in ["1.5,2,xl","pony"]:
+    if model_version in ["1.5","2","xl","pony"]:
         return ControlNetModel.from_pretrained(controlnet_model)
     elif model_version in ["3","3.5"]:
         return SD3ControlNetModel.from_pretrained(controlnet_model)
