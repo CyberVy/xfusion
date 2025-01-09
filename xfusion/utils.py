@@ -1,7 +1,9 @@
 import os,shutil,gc
 import threading
 from functools import wraps
-from PIL.Image import Image,Resampling,merge
+from PIL.Image import Image,Resampling,merge,fromarray
+import cv2
+import numpy as np
 
 
 class EasyInitSubclass:
@@ -202,6 +204,18 @@ def convert_mask_image_to_rgb(mask_image):
     """
     r, g, b, a = mask_image.split()
     return merge("L", [a]).convert("RGB")
+
+def convert_image_to_canny(image,low_threshold=None,high_threshold=None):
+
+    low_threshold = low_threshold if low_threshold is not None else 100
+    high_threshold = high_threshold if high_threshold is not None else 200
+
+    image = np.array(image)
+    image = cv2.Canny(image, low_threshold, high_threshold)
+    image = image[:, :, None]
+    image = np.concatenate([image, image, image], axis=2)
+    image = fromarray(image)
+    return image
 
 def dict_to_str(_dict:dict):
     r = ""
