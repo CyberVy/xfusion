@@ -85,8 +85,8 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
 
 
 class ControlnetEnhancerMixin:
-    overrides = ["text_to_image_controlnet_pipeline","image_to_image_controlnet_pipeline","inpainting_controlnet_pipeline",
-                 "load_controlnet","_controlnet"]
+    overrides = ["_controlnet","text_to_image_controlnet_pipeline","image_to_image_controlnet_pipeline","inpainting_controlnet_pipeline",
+                 "load_controlnet","offload_controlnet"]
     def __init__(self):
         self._controlnet = None
         self.text_to_image_controlnet_pipeline = None
@@ -96,6 +96,8 @@ class ControlnetEnhancerMixin:
     def load_controlnet(self):
         raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'load_controlnet'")
 
+    def offload_controlnet(self):
+        delete(self._controlnet)
 
 class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     pipeline_map = {}
