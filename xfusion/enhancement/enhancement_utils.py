@@ -10,7 +10,6 @@ from diffusers.schedulers import LMSDiscreteScheduler
 from diffusers.schedulers import DEISMultistepScheduler
 from diffusers.schedulers import UniPCMultistepScheduler
 
-
 # from https://huggingface.co/docs/diffusers/api/schedulers/overview
 scheduler_map = {
             "DPM++ 2M": (DPMSolverMultistepScheduler, {}),
@@ -85,13 +84,17 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
 
 
 class ControlnetEnhancerMixin:
-    overrides = ["_controlnet","text_to_image_controlnet_pipeline","image_to_image_controlnet_pipeline","inpainting_controlnet_pipeline",
-                 "load_controlnet","offload_controlnet"]
+    overrides = ["_controlnet",
+                 "text_to_image_controlnet_pipeline","image_to_image_controlnet_pipeline","inpainting_controlnet_pipeline",
+                 "load_controlnet","offload_controlnet","_check_controlnet_inference_kwargs"]
     def __init__(self):
         self._controlnet = None
         self.text_to_image_controlnet_pipeline = None
         self.image_to_image_controlnet_pipeline = None
         self.inpainting_controlnet_pipeline = None
+
+    def _check_controlnet_inference_kwargs(self,kwargs):
+        raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'check_controlnet_inference_kwargs'")
 
     def load_controlnet(self):
         raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'load_controlnet'")
