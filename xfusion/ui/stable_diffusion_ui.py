@@ -123,7 +123,8 @@ def stable_diffusion_ui_template(fns):
                                                     outputs=i2i_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
-                    i2i_inputs.append(gr.Image(type="pil", label="Image"))
+                    with gr.Accordion("Image"):
+                        i2i_inputs.append(gr.Image(type="pil", label="Image"))
                     i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                     i2i_inputs.append(
                         gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
@@ -160,7 +161,8 @@ def stable_diffusion_ui_template(fns):
                                                            outputs=inpainting_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
-                    inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
+                    with gr.Accordion("Inpainting Image"):
+                        inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
                     inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                     inpainting_inputs.append(
                         gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
