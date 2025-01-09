@@ -1,4 +1,4 @@
-from ..utils import EasyInitSubclass,delete
+from ..utils import EasyInitSubclass,delete,free_memory_to_system
 from ..ui.ui_utils import UIMixin
 from ..download import DownloadArgumentsMixin,download_file
 from ..message import TGBotMixin
@@ -9,6 +9,7 @@ from diffusers.schedulers import HeunDiscreteScheduler
 from diffusers.schedulers import LMSDiscreteScheduler
 from diffusers.schedulers import DEISMultistepScheduler
 from diffusers.schedulers import UniPCMultistepScheduler
+
 
 # from https://huggingface.co/docs/diffusers/api/schedulers/overview
 scheduler_map = {
@@ -101,6 +102,8 @@ class ControlnetEnhancerMixin:
 
     def offload_controlnet(self):
         delete(self._controlnet)
+        free_memory_to_system()
+        
 
 class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     pipeline_map = {}
@@ -199,6 +202,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         uncleared = delete(self._controlnet)[-1]
         if uncleared:
             print(f"Warning: {uncleared}")
+        free_memory_to_system()
 
     def reload(self,url,**kwargs):
 
