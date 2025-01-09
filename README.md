@@ -33,6 +33,16 @@ pipelines = [SDPipelineEnhancer(None) for i in range(GPU_Count)]
 server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
+Or
+```python
+from xfusion import load_enhancer
+from xfusion import load_stable_diffusion_ui_for_multiple_pipelines
+from xfusion.const import GPU_Count
+
+pipelines = [load_enhancer(None,download_kwargs={"directory":"./"}) for i in range(GPU_Count)]
+server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
+server.launch(debug=True,inline=False,quiet=True)
+```
 ---
 **Use a pipeline with a single GPU in UI**
 ```python
