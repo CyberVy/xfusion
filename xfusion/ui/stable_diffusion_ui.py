@@ -195,7 +195,7 @@ def stable_diffusion_ui_template(fns):
                         with gr.Column():
                             controlnet_t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
                             controlnet_t2i_scheduler_btn = gr.Button("Set Scheduler")
-                            controlnet_t2i_scheduler_btn.click(fn=fns["text_to_image_scheduler_fn"], inputs=controlnet_t2i_scheduler_inputs,
+                            controlnet_t2i_scheduler_btn.click(fn=fns["controlnet_text_to_image_scheduler_fn"], inputs=controlnet_t2i_scheduler_inputs,
                                                     outputs=controlnet_t2i_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
@@ -334,6 +334,11 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width,height=height,
             seed=int(seed), num=int(num))
+    
+    @allow_return_error
+    def controlnet_text_to_image_scheduler_fn(scheduler):
+        pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
+        return f"{scheduler} is set for text to image controlnet pipeline."
 
     @allow_return_error
     def controlnet_text_to_image_fn(
@@ -360,10 +365,16 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     fns = {"model_selection_fn":model_selection_fn,
            "set_lora_fn":set_lora_fn,"delete_lora_fn":delete_lora_fn,
            "show_lora_fn":show_lora_fn,"enable_lora_fn":enable_lora_fn,
-           "disable_lora_fn":disable_lora_fn,"text_to_image_scheduler_fn":text_to_image_scheduler_fn,
-           "text_to_image_fn":text_to_image_fn,"image_to_image_scheduler_fn":image_to_image_scheduler_fn,
-           "image_to_image_fn":image_to_image_fn,"inpainting_scheduler_fn":inpainting_scheduler_fn,
-           "inpainting_fn":inpainting_fn,"run_code_fn":run_code_fn}
+           "disable_lora_fn":disable_lora_fn,
+           "text_to_image_scheduler_fn":text_to_image_scheduler_fn,
+           "text_to_image_fn":text_to_image_fn,
+           "image_to_image_scheduler_fn":image_to_image_scheduler_fn,
+           "image_to_image_fn":image_to_image_fn,
+           "inpainting_scheduler_fn":inpainting_scheduler_fn,
+           "inpainting_fn":inpainting_fn,
+           "controlnet_text_to_image_scheduler_fn": controlnet_text_to_image_scheduler_fn,
+           "controlnet_text_to_image_fn":controlnet_text_to_image_fn,
+           "run_code_fn":run_code_fn}
 
     return stable_diffusion_ui_template(fns)
 
@@ -498,7 +509,13 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         else:
             threads_execute(f, pipelines)
             return f"{num} * {len(pipelines)}"
-
+        
+    @allow_return_error
+    def controlnet_text_to_image_scheduler_fn(scheduler):
+        for pipeline in pipelines:
+            pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
+        return f"{scheduler} is set for text to image controlnet pipeline."
+    
     @allow_return_error
     def controlnet_text_to_image_fn(
             image,
@@ -529,9 +546,15 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     fns = {"model_selection_fn": model_selection_fn,
            "set_lora_fn": set_lora_fn, "delete_lora_fn": delete_lora_fn,
            "show_lora_fn": show_lora_fn, "enable_lora_fn": enable_lora_fn,
-           "disable_lora_fn": disable_lora_fn, "text_to_image_scheduler_fn": text_to_image_scheduler_fn,
-           "text_to_image_fn": text_to_image_fn, "image_to_image_scheduler_fn": image_to_image_scheduler_fn,
-           "image_to_image_fn": image_to_image_fn, "inpainting_scheduler_fn": inpainting_scheduler_fn,
-           "inpainting_fn": inpainting_fn, "run_code_fn": run_code_fn}
+           "disable_lora_fn": disable_lora_fn, 
+           "text_to_image_scheduler_fn": text_to_image_scheduler_fn,
+           "text_to_image_fn": text_to_image_fn,
+           "image_to_image_scheduler_fn": image_to_image_scheduler_fn,
+           "image_to_image_fn": image_to_image_fn, 
+           "inpainting_scheduler_fn": inpainting_scheduler_fn,
+           "inpainting_fn": inpainting_fn,
+           "controlnet_text_to_image_scheduler_fn":controlnet_text_to_image_scheduler_fn,
+           "controlnet_text_to_image_fn":controlnet_text_to_image_fn,
+           "run_code_fn": run_code_fn}
 
     return stable_diffusion_ui_template(fns)
