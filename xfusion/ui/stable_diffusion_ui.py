@@ -199,8 +199,8 @@ def stable_diffusion_ui_template(fns):
                                                     outputs=controlnet_t2i_scheduler_outputs)
             with gr.Row():
                 with gr.Column():
-                    with gr.Accordion("Controlnet Image"):
-                        controlnet_t2i_inputs.append(gr.ImageMask(type="pil", label="Controlnet Image"))
+                    with gr.Accordion("Controlnet Image",open=False):
+                        controlnet_t2i_inputs.append(gr.Image(type="pil", label="Controlnet Image"))
                     controlnet_t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                     controlnet_t2i_inputs.append(
                         gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
@@ -334,7 +334,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width,height=height,
             seed=int(seed), num=int(num))
-    
+
     @allow_return_error
     def controlnet_text_to_image_scheduler_fn(scheduler):
         pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
@@ -509,13 +509,13 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         else:
             threads_execute(f, pipelines)
             return f"{num} * {len(pipelines)}"
-        
+
     @allow_return_error
     def controlnet_text_to_image_scheduler_fn(scheduler):
         for pipeline in pipelines:
             pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
         return f"{scheduler} is set for text to image controlnet pipeline."
-    
+
     @allow_return_error
     def controlnet_text_to_image_fn(
             image,
@@ -546,11 +546,11 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     fns = {"model_selection_fn": model_selection_fn,
            "set_lora_fn": set_lora_fn, "delete_lora_fn": delete_lora_fn,
            "show_lora_fn": show_lora_fn, "enable_lora_fn": enable_lora_fn,
-           "disable_lora_fn": disable_lora_fn, 
+           "disable_lora_fn": disable_lora_fn,
            "text_to_image_scheduler_fn": text_to_image_scheduler_fn,
            "text_to_image_fn": text_to_image_fn,
            "image_to_image_scheduler_fn": image_to_image_scheduler_fn,
-           "image_to_image_fn": image_to_image_fn, 
+           "image_to_image_fn": image_to_image_fn,
            "inpainting_scheduler_fn": inpainting_scheduler_fn,
            "inpainting_fn": inpainting_fn,
            "controlnet_text_to_image_scheduler_fn":controlnet_text_to_image_scheduler_fn,
