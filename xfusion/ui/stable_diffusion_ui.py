@@ -190,6 +190,7 @@ def stable_diffusion_ui_template(fns):
                 with gr.Row():
                     with gr.Column():
                         controlnet_inputs.append(gr.Textbox(placeholder="Give me a controlnet URL!",label="Controlnet Model"))
+                        controlnet_inputs[0].change(fn=fns["set_default_controlnet_for_auto_load_controlnet_fn"],inputs=controlnet_inputs[0])
                         with gr.Row():
                             load_controlnet_button = gr.Button("Load controlnet")
                             offload_controlnet_button = gr.Button("Offload controlnet")
@@ -370,6 +371,10 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             seed=int(seed), num=int(num))
 
     @allow_return_error
+    def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
+        pipeline.load_controlnet = functools.partial(pipeline.load_controlnet,controlnet_model=controlnet_model)
+
+    @allow_return_error
     def load_controlnet_fn(controlnet_model):
         pipeline.load_controlnet(controlnet_model)
         return f"Controlnet is loaded."
@@ -421,6 +426,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
            "image_to_image_fn":image_to_image_fn,
            "inpainting_scheduler_fn":inpainting_scheduler_fn,
            "inpainting_fn":inpainting_fn,
+           "set_default_controlnet_for_auto_load_controlnet_fn":set_default_controlnet_for_auto_load_controlnet_fn,
            "load_controlnet_fn":load_controlnet_fn,
            "offload_controlnet_fn":offload_controlnet_fn,
            "controlnet_text_to_image_scheduler_fn": controlnet_text_to_image_scheduler_fn,
@@ -582,6 +588,11 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             return f"{num} * {len(pipelines)}"
 
     @allow_return_error
+    def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
+        for pipeline in pipelines:
+            pipeline.load_controlnet = functools.partial(pipeline.load_controlnet, controlnet_model=controlnet_model)
+
+    @allow_return_error
     def load_controlnet_fn(controlnet_model):
         for pipeline in pipelines:
             pipeline.load_controlnet(controlnet_model)
@@ -641,6 +652,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
            "image_to_image_fn": image_to_image_fn,
            "inpainting_scheduler_fn": inpainting_scheduler_fn,
            "inpainting_fn": inpainting_fn,
+           "set_default_controlnet_for_auto_load_controlnet_fn": set_default_controlnet_for_auto_load_controlnet_fn,
            "load_controlnet_fn":load_controlnet_fn,
            "offload_controlnet_fn":offload_controlnet_fn,
            "controlnet_text_to_image_scheduler_fn":controlnet_text_to_image_scheduler_fn,
