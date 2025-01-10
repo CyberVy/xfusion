@@ -181,7 +181,7 @@ def stable_diffusion_ui_template(fns):
                 with gr.Row():
                     with gr.Column():
                         controlnet_inputs.append(gr.Textbox(placeholder="Give me a controlnet URL!",label="Controlnet Model"))
-                        controlnet_inputs[0].change(fn=fns["set_default_controlnet_for_auto_load_controlnet_fn"],inputs=controlnet_inputs[0])
+                        controlnet_inputs[0].change(fn=fns["set_default_controlnet_for_auto_load_controlnet_fn"],inputs=controlnet_inputs[0],outputs=controlnet_outputs)
                         with gr.Row():
                             load_controlnet_button = gr.Button("Load controlnet")
                             offload_controlnet_button = gr.Button("Offload controlnet")
@@ -361,6 +361,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     @allow_return_error
     def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
         pipeline.load_controlnet = functools.partial(pipeline.load_controlnet,controlnet_model=controlnet_model)
+        return f"{controlnet_model} is set as the default controlnet model."
 
     @allow_return_error
     def load_controlnet_fn(controlnet_model):
@@ -579,6 +580,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
         for pipeline in pipelines:
             pipeline.load_controlnet = functools.partial(pipeline.load_controlnet, controlnet_model=controlnet_model)
+        return f"{controlnet_model} is set as the default controlnet model."
 
     @allow_return_error
     def load_controlnet_fn(controlnet_model):
