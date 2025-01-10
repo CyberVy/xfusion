@@ -213,9 +213,9 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             kwargs.update(image=image)
             return kwargs
 
-        # todo: create image to image controlnet condition
         elif image is not None and control_image is not None:
-            ...
+            control_image = convert_image_to_canny(control_image)
+            kwargs.update(control_image=control_image)
             return kwargs
 
         else:
