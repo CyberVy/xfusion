@@ -19,6 +19,7 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 **Use UI with a single GPU**
 ```python
 from xfusion.enhancement import load_enhancer
+
 pipeline = load_enhancer(None,model_version="xl")
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
