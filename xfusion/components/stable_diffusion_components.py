@@ -9,12 +9,63 @@ import torch
 import os
 
 
-# "diffusers/controlnet-canny-sdxl-1.0"
-def load_stable_diffusion_controlnet(controlnet_model,model_version):
-    if model_version in ["1.5","2","xl","pony"]:
-        return ControlNetModel.from_pretrained(controlnet_model,torch_dtype=torch.float16,token=HF_HUB_TOKEN,variant="fp16")
-    elif model_version in ["3","3.5"]:
-        return SD3ControlNetModel.from_pretrained(controlnet_model,torch_dtype=torch.float16,token=HF_HUB_TOKEN)
+def load_stable_diffusion_controlnet(controlnet_model,
+                                     model_version,file_format="safetensors",download_kwargs=None,**kwargs):
+    use_internet = True
+    model_version = str(model_version).lower()
+    if kwargs.get("token") is None:
+        kwargs.update(token=HF_HUB_TOKEN)
+    if kwargs.get("torch_dtype") is None:
+        kwargs.update({"torch_dtype": torch.float16})
+    if download_kwargs is None:
+        download_kwargs = {}
+
+    if controlnet_model.startswith(".") or controlnet_model.startswith("/") or controlnet_model.startswith("~"):
+        use_internet = False
+
+    if use_internet:
+        # from Hugging face
+        if not (controlnet_model.startswith("http://") or controlnet_model.startswith("https://")):
+            if model_version in ["1.5","2","xl","pony"]:
+                return ControlNetModel.from_pretrained(controlnet_model,variant="fp16",**kwargs)
+            elif model_version in ["3","3.5"]:
+                return SD3ControlNetModel.from_pretrained(controlnet_model,**kwargs)
+            else:
+                raise ValueError(f"{model_version} is not supported yet.")
+        # from single file
+        else:
+            file_path = download_file(controlnet_model, **download_kwargs)
+
+            # bad file name from the url, 'filename.tensor/bin/ckpt' is wanted, but get 'filename'
+            if not (file_path.endswith(".safetensors") or file_path.endswith(".bin") or file_path.endswith(".ckpt")):
+                print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
+                os.rename(file_path, f"{file_path}.{file_format}")
+                file_path = f"{file_path}.{file_format}"
+
+            if model_version in ["1.5", "2", "xl", "pony"]:
+                return ControlNetModel.from_single_file(file_path,**kwargs)
+            elif model_version in ["3", "3.5"]:
+                return SD3ControlNetModel.from_single_file(file_path,**kwargs)
+            else:
+                raise ValueError(f"{model_version} is not supported yet.")
+    else:
+        # from local single file
+        if controlnet_model.endswith(".safetensors") or controlnet_model.endswith(".bin") or controlnet_model.endswith(".ckpt"):
+            if model_version in ["1.5", "2", "xl", "pony"]:
+                return ControlNetModel.from_single_file(controlnet_model, **kwargs)
+            elif model_version in ["3", "3.5"]:
+                return SD3ControlNetModel.from_single_file(controlnet_model, **kwargs)
+            else:
+                raise ValueError(f"{model_version} is not supported yet.")
+        # from local directory
+        else:
+            if model_version in ["1.5", "2", "xl", "pony"]:
+                return ControlNetModel.from_pretrained(controlnet_model,**kwargs)
+            elif model_version in ["3", "3.5"]:
+                return SD3ControlNetModel.from_pretrained(controlnet_model, **kwargs)
+            else:
+                raise ValueError(f"{model_version} is not supported yet.")
+
 
 def load_stable_diffusion_pipeline(model=None,
                                    model_version=None, file_format="safetensors", download_kwargs=None, **kwargs):
@@ -65,8 +116,6 @@ def load_stable_diffusion_pipeline(model=None,
                 print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
                 os.rename(file_path,f"{file_path}.{file_format}")
                 file_path = f"{file_path}.{file_format}"
-            # load XL model with StableDiffusionPipeline seems ok, but never works
-            # only StableDiffusionXLPipeline works
             print(f"Loading the model {model_version}...")
             if model_version == "xl":
                 return StableDiffusionXLPipeline.from_single_file(file_path,**kwargs)
@@ -81,13 +130,12 @@ def load_stable_diffusion_pipeline(model=None,
                 if "xl" in model.lower():
                     model_version = "xl"
                 print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
-            # the same reason above
             if model_version == "xl":
                 return StableDiffusionXLPipeline.from_single_file(model,**kwargs)
             elif model_version == "3":
                 return StableDiffusion3Pipeline.from_single_file(model,**kwargs)
             else:
                 return StableDiffusionPipeline.from_single_file(model,**kwargs)
-        # from standard model directory
+        # from local directory
         else:
             return DiffusionPipeline.from_pretrained(model, **kwargs)
