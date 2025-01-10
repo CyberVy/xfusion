@@ -290,7 +290,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             if self.model_version == "1.5":
                 controlnet_model = controlnet_model or "lllyasviel/sd-controlnet-canny"
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
-                                                                    download_kwargs=self.download_kwargs,**kwargs)
+                                                                    download_kwargs=self.download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
                     StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.image_to_image_controlnet_pipeline = self.enhancer_class(
@@ -315,8 +315,6 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             self.sub_pipelines.update(text_to_image_controlnet_pipeline=self.text_to_image_controlnet_pipeline)
             self.sub_pipelines.update(image_to_image_controlnet_pipeline=self.image_to_image_controlnet_pipeline)
             self.sync_sub_pipelines_mixin_kwargs()
-            self.text_to_image_controlnet_pipeline.to(self.device)
-            self.image_to_image_controlnet_pipeline.to(self.device)
         else:
             print(f"Controlnet is already implemented.")
 
