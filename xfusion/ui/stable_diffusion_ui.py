@@ -448,7 +448,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     @allow_return_error
     @auto_load_controlnet
     def controlnet_image_to_image_fn(
-            image,control_image,
+            control_image,image,
             prompt, negative_prompt,
             controlnet_conditioning_scale,strength,
             guidance_scale, num_inference_steps, clip_skip,
@@ -459,7 +459,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             raise ValueError("Please input the images.")
 
         return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-            image=image,control_image=control_image,
+            control_image=control_image,image=image,
             prompt=prompt, negative_prompt=negative_prompt,
             controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -707,7 +707,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
 
     @allow_return_error
     def controlnet_image_to_image_fn(
-            image, control_image,
+            control_image,image,
             prompt, negative_prompt,
             controlnet_conditioning_scale, strength,
             guidance_scale, num_inference_steps, clip_skip,
@@ -720,7 +720,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         @auto_load_controlnet
         def f(pipeline):
             return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-                image=image, control_image=control_image,
+                control_image=control_image,image=image,
                 prompt=prompt, negative_prompt=negative_prompt,
                 controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
