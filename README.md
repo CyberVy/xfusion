@@ -49,9 +49,8 @@ from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model,model_version="xl",download_kwargs={"directory":"/xfusion"}).to("cuda:0")
-_pipeline = load_enhancer(model,model_version="xl",download_kwargs={"directory":"/xfusion"}).to("cuda:1")
-server = load_stable_diffusion_ui_for_multiple_pipelines([pipeline,_pipeline],_globals=globals())
+pipelines = [load_enhancer(model,model_version="xl",download_kwargs={"directory":"./"}) for i in range(GPU_Count)]
+server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
 ---
