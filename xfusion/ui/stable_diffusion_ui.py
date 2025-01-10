@@ -376,7 +376,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
 
     @allow_return_error
     def load_controlnet_fn(controlnet_model):
-        pipeline.load_controlnet(controlnet_model)
+        pipeline.load_controlnet(controlnet_model=controlnet_model)
         return f"Controlnet is loaded."
 
     @allow_return_error
