@@ -14,6 +14,13 @@ from random import randint
 from diffusers import StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline
 from diffusers import StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline
 from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
+from diffusers.schedulers import DPMSolverMultistepScheduler,DPMSolverSinglestepScheduler
+from diffusers.schedulers import KDPM2DiscreteScheduler,KDPM2AncestralDiscreteScheduler
+from diffusers.schedulers import EulerDiscreteScheduler,EulerAncestralDiscreteScheduler
+from diffusers.schedulers import HeunDiscreteScheduler
+from diffusers.schedulers import LMSDiscreteScheduler
+from diffusers.schedulers import DEISMultistepScheduler
+from diffusers.schedulers import UniPCMultistepScheduler
 
 # pipeline_type
 # 0-> text_to_image, 1 -> image_to_image, 2 -> inpainting
@@ -22,6 +29,29 @@ pipeline_map = {
     "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline),
     "3":(StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline)}
 
+
+# from https://huggingface.co/docs/diffusers/api/schedulers/overview
+scheduler_map = {
+            "DPM++ 2M": (DPMSolverMultistepScheduler, {}),
+            "DPM++ 2M KARRAS": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True}),
+            "DPM++ 2M SDE": (DPMSolverMultistepScheduler, {"algorithm_type": "sde-dpmsolver++"}),
+            "DPM++ 2M SDE KARRAS": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True, "algorithm_type": "sde-dpmsolver++"}),
+            "DPM++ 2S A": (DPMSolverSinglestepScheduler, {}),
+            "DPM++ 2S A KARRAS": (DPMSolverSinglestepScheduler, {"use_karras_sigmas": True}),
+            "DPM++ SDE": (DPMSolverSinglestepScheduler, {}),
+            "DPM++ SDE KARRAS": (DPMSolverSinglestepScheduler, {"use_karras_sigmas": True}),
+            "DPM2": (KDPM2DiscreteScheduler, {}),
+            "DPM2 KARRAS": (KDPM2DiscreteScheduler, {"use_karras_sigmas": True}),
+            "DPM2 A": (KDPM2AncestralDiscreteScheduler, {}),
+            "DPM2 A KARRAS": (KDPM2AncestralDiscreteScheduler, {"use_karras_sigmas": True}),
+            "EULER": (EulerDiscreteScheduler, {}),
+            "EULER A": (EulerAncestralDiscreteScheduler, {}),
+            "HEUN": (HeunDiscreteScheduler, {}),
+            "LMS": (LMSDiscreteScheduler, {}),
+            "LMS KARRAS": (LMSDiscreteScheduler, {"use_karras_sigmas": True}),
+            "DEIS": (DEISMultistepScheduler, {}),
+            "UNIPC": (UniPCMultistepScheduler, {}),
+        }
 
 def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     """
@@ -46,7 +76,9 @@ def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
                 return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning}
         for cls in pipeline_map["xl"]:
             if isinstance(pipeline, cls):
-                compel = Compel(tokenizers,text_encoders,returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,requires_pooled=[False,True],truncate_long_prompts=False)
+                compel = Compel(tokenizers,text_encoders,
+                                returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,
+                                requires_pooled=[False,True],truncate_long_prompts=False)
                 conditioning,pooled = compel(prompt)
                 negative_conditioning, negative_pooled = compel(negative_prompt)
                 [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
@@ -115,6 +147,7 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
     return images
 class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     pipeline_map = pipeline_map
+    scheduler_map = scheduler_map
     overrides = []
 
     def __init__(self,__oins__,init_sub_pipelines=True):
@@ -256,7 +289,8 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 controlnet_model = controlnet_model or "lllyasviel/sd-controlnet-canny"
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=self.download_kwargs,**kwargs)
-                self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+                self.text_to_image_controlnet_pipeline = self.enhancer_class(
+                    StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.sub_pipelines.update(text_to_image_controlnet_pipeline=self.text_to_image_controlnet_pipeline)
                 self.sync_sub_pipelines_mixin_kwargs()
                 self.text_to_image_controlnet_pipeline.to(self.device)
@@ -264,7 +298,8 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 controlnet_model =  controlnet_model or "diffusers/controlnet-canny-sdxl-1.0"
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=self.download_kwargs,**kwargs)
-                self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+                self.text_to_image_controlnet_pipeline = self.enhancer_class(
+                    StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.sub_pipelines.update(text_to_image_controlnet_pipeline=self.text_to_image_controlnet_pipeline)
                 self.sync_sub_pipelines_mixin_kwargs()
                 self.text_to_image_controlnet_pipeline.to(self.device)
