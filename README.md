@@ -1,5 +1,5 @@
 # Hello Xfusion!
-Xfusion is a Python library built on top of [Diffusers](https://github.com/huggingface/diffusers). It specializes in assembling open-source AI models, with a particular focus on models like Stable Diffusion, Flux, and others.
+Xfusion is a Python library specializing in assembling open-source AI models, with a particular focus on models like Stable Diffusion, Flux, and others.
 
 # Features
 - Enhanced support for models from sources outside Hugging Face.
