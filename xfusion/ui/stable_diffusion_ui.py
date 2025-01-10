@@ -238,7 +238,7 @@ def stable_diffusion_ui_template(fns):
                 with gr.Row():
                     with gr.Column():
                         with gr.Accordion("Images"):
-                            with gr.Row:
+                            with gr.Row():
                                 controlnet_i2i_inputs.append(gr.Image(type="pil", label="Controlnet Image"))
                                 controlnet_i2i_inputs.append(gr.Image(type="pil", label="Image"))
                         controlnet_i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
