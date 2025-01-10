@@ -2,37 +2,6 @@ from ..utils import EasyInitSubclass,delete,free_memory_to_system
 from ..ui.ui_utils import UIMixin
 from ..download import DownloadArgumentsMixin,download_file
 from ..message import TGBotMixin
-from diffusers.schedulers import DPMSolverMultistepScheduler,DPMSolverSinglestepScheduler
-from diffusers.schedulers import KDPM2DiscreteScheduler,KDPM2AncestralDiscreteScheduler
-from diffusers.schedulers import EulerDiscreteScheduler,EulerAncestralDiscreteScheduler
-from diffusers.schedulers import HeunDiscreteScheduler
-from diffusers.schedulers import LMSDiscreteScheduler
-from diffusers.schedulers import DEISMultistepScheduler
-from diffusers.schedulers import UniPCMultistepScheduler
-
-
-# from https://huggingface.co/docs/diffusers/api/schedulers/overview
-scheduler_map = {
-            "DPM++ 2M": (DPMSolverMultistepScheduler, {}),
-            "DPM++ 2M KARRAS": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True}),
-            "DPM++ 2M SDE": (DPMSolverMultistepScheduler, {"algorithm_type": "sde-dpmsolver++"}),
-            "DPM++ 2M SDE KARRAS": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True, "algorithm_type": "sde-dpmsolver++"}),
-            "DPM++ 2S A": (DPMSolverSinglestepScheduler, {}),
-            "DPM++ 2S A KARRAS": (DPMSolverSinglestepScheduler, {"use_karras_sigmas": True}),
-            "DPM++ SDE": (DPMSolverSinglestepScheduler, {}),
-            "DPM++ SDE KARRAS": (DPMSolverSinglestepScheduler, {"use_karras_sigmas": True}),
-            "DPM2": (KDPM2DiscreteScheduler, {}),
-            "DPM2 KARRAS": (KDPM2DiscreteScheduler, {"use_karras_sigmas": True}),
-            "DPM2 A": (KDPM2AncestralDiscreteScheduler, {}),
-            "DPM2 A KARRAS": (KDPM2AncestralDiscreteScheduler, {"use_karras_sigmas": True}),
-            "EULER": (EulerDiscreteScheduler, {}),
-            "EULER A": (EulerAncestralDiscreteScheduler, {}),
-            "HEUN": (HeunDiscreteScheduler, {}),
-            "LMS": (LMSDiscreteScheduler, {}),
-            "LMS KARRAS": (LMSDiscreteScheduler, {"use_karras_sigmas": True}),
-            "DEIS": (DEISMultistepScheduler, {}),
-            "UNIPC": (UniPCMultistepScheduler, {}),
-        }
 
 
 class FromURLMixin:
@@ -108,6 +77,7 @@ class ControlnetEnhancerMixin:
 
 class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     pipeline_map = {}
+    scheduler_map = {}
     overrides = ["pipeline_map","enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
                  "model_name","_scheduler","scheduler_map","sub_pipelines",
                  "image_to_image_pipeline","inpainting_pipeline",
@@ -141,7 +111,6 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         self.model_version,self.pipeline_type,self.pipeline_class = self.check_original_pipeline()
         self.model_name = self.name_or_path
         self._scheduler = self.scheduler
-        self.scheduler_map = scheduler_map
 
         self.sub_pipelines = {}
         if init_sub_pipelines:
@@ -183,9 +152,11 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
             self.scheduler = scheduler_type.from_config(self.scheduler.config,**kwargs)
         else:
             if scheduler_type.upper() in self.scheduler_map:
-                self.scheduler = self.scheduler_map[scheduler_type.upper()][0].from_config(self.scheduler.config,**self.scheduler_map[scheduler_type.upper()][1])
+                self.scheduler = self.scheduler_map[scheduler_type.upper()][0].from_config(
+                    self.scheduler.config, **self.scheduler_map[scheduler_type.upper()][1])
             else:
                 raise BaseException(f"{scheduler_type} is not supported yet.")
+
 
     def reset_scheduler(self):
         self.scheduler = self._scheduler
