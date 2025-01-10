@@ -82,6 +82,7 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
             adapter_names = [adapter_names]
         for name in adapter_names:
             self.lora_dict.pop(name)
+        free_memory_to_system()
 
 
 class ControlnetEnhancerMixin:
