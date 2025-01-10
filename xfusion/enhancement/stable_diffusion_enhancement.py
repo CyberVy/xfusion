@@ -249,14 +249,17 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                use_enhancer=use_enhancer,**kwargs)
 
 
-    def load_controlnet(self):
+    def load_controlnet(self,controlnet_model=None):
+
         if self._controlnet is None:
             if self.model_version == "1.5":
-                self._controlnet = load_stable_diffusion_controlnet("lllyasviel/sd-controlnet-canny",self.model_version)
+                controlnet_model = controlnet_model or "lllyasviel/sd-controlnet-canny"
+                self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.text_to_image_controlnet_pipeline.to(self.device)
             elif self.model_version == "xl":
-                self._controlnet = load_stable_diffusion_controlnet("diffusers/controlnet-canny-sdxl-1.0",self.model_version)
+                controlnet_model =  controlnet_model or "diffusers/controlnet-canny-sdxl-1.0"
+                self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.text_to_image_controlnet_pipeline.to(self.device)
             # todo: sd3 controlnet support
