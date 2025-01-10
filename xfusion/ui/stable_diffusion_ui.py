@@ -245,6 +245,7 @@ def stable_diffusion_ui_template(fns):
                         controlnet_i2i_inputs.append(
                             gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
                     with gr.Column():
+                        controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
                         controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
                         controlnet_i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                         controlnet_i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
@@ -449,7 +450,8 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     def controlnet_image_to_image_fn(
             image,control_image,
             prompt, negative_prompt,
-            controlnet_conditioning_scale, guidance_scale, num_inference_steps, clip_skip,
+            controlnet_conditioning_scale,strength,
+            guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
 
@@ -459,7 +461,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
             image=image,control_image=control_image,
             prompt=prompt, negative_prompt=negative_prompt,
-            controlnet_conditioning_scale=controlnet_conditioning_scale,
+            controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
             width=width, height=height,
             seed=int(seed), num=int(num)
@@ -707,7 +709,8 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     def controlnet_image_to_image_fn(
             image, control_image,
             prompt, negative_prompt,
-            controlnet_conditioning_scale, guidance_scale, num_inference_steps, clip_skip,
+            controlnet_conditioning_scale, strength,
+            guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
 
@@ -719,7 +722,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
                 image=image, control_image=control_image,
                 prompt=prompt, negative_prompt=negative_prompt,
-                controlnet_conditioning_scale=controlnet_conditioning_scale,
+                controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
