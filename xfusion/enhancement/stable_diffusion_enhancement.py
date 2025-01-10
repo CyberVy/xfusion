@@ -27,8 +27,8 @@ from diffusers.schedulers import UniPCMultistepScheduler
 # pipeline_type
 # 0-> text_to_image, 1 -> image_to_image, 2 -> inpainting
 pipeline_map = {
-    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline),
-    "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline),
+    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline,StableDiffusionControlNetImg2ImgPipeline),
+    "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline,StableDiffusionXLControlNetImg2ImgPipeline),
     "3":(StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline)}
 
 
@@ -300,7 +300,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             elif self.model_version == "xl":
                 controlnet_model =  controlnet_model or "diffusers/controlnet-canny-sdxl-1.0"
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
-                                                                    download_kwargs=self.download_kwargs,**kwargs)
+                                                                    download_kwargs=self.download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
                     StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.image_to_image_controlnet_pipeline = self.enhancer_class(
