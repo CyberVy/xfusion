@@ -361,7 +361,10 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     @allow_return_error
     def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
         pipeline.load_controlnet = functools.partial(pipeline.load_controlnet,controlnet_model=controlnet_model)
-        return f"{controlnet_model} is set as the default controlnet model."
+        if controlnet_model:
+            return f"{controlnet_model} is set as the default controlnet model."
+        else:
+            return f"Using the default controlnet model."
 
     @allow_return_error
     def load_controlnet_fn(controlnet_model):
@@ -580,7 +583,10 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
         for pipeline in pipelines:
             pipeline.load_controlnet = functools.partial(pipeline.load_controlnet, controlnet_model=controlnet_model)
-        return f"{controlnet_model} is set as the default controlnet model."
+        if controlnet_model:
+            return f"{controlnet_model} is set as the default controlnet model."
+        else:
+            return f"Using the default controlnet model."
 
     @allow_return_error
     def load_controlnet_fn(controlnet_model):
