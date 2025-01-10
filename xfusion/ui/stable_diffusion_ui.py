@@ -184,14 +184,17 @@ def stable_diffusion_ui_template(fns):
                     inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
         with gr.Accordion("Controlnet",open=False):
+            controlnet_inputs = []
             controlnet_outputs = []
-            with gr.Accordion("Controlnet Switch",open=False):
+            with gr.Accordion("Controlnet Selection",open=False):
                 with gr.Row():
                     with gr.Column():
-                        load_controlnet_button = gr.Button("Load controlnet")
-                        offload_controlnet_button = gr.Button("Offoad controlnet")
+                        controlnet_inputs.append(gr.Textbox(label="Give me a controlnet URL!"))
+                        with gr.Row():
+                            load_controlnet_button = gr.Button("Load controlnet")
+                            offload_controlnet_button = gr.Button("Offload controlnet")
                     controlnet_outputs.append(gr.Textbox(label="Result"))
-                    load_controlnet_button.click(fn=fns["load_controlnet_fn"],outputs=controlnet_outputs)
+                    load_controlnet_button.click(fn=fns["load_controlnet_fn"],inputs=controlnet_inputs,outputs=controlnet_outputs)
                     offload_controlnet_button.click(fn=fns["offload_controlnet_fn"],outputs=controlnet_outputs)
             with gr.Accordion("Controlnet Text To Image", open=False):
                 gr.Markdown("# Controlnet Text To Image")
@@ -367,8 +370,8 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             seed=int(seed), num=int(num))
 
     @allow_return_error
-    def load_controlnet_fn():
-        pipeline.load_controlnet()
+    def load_controlnet_fn(controlnet_model):
+        pipeline.load_controlnet(controlnet_model)
         return f"Controlnet is loaded."
 
     @allow_return_error
@@ -579,9 +582,9 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             return f"{num} * {len(pipelines)}"
 
     @allow_return_error
-    def load_controlnet_fn():
+    def load_controlnet_fn(controlnet_model):
         for pipeline in pipelines:
-            pipeline.load_controlnet()
+            pipeline.load_controlnet(controlnet_model)
         return f"Controlnet is loaded."
 
     @allow_return_error
