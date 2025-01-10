@@ -19,7 +19,7 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 **Use UI with a single GPU**
 ```python
 from xfusion.enhancement import load_enhancer
-pipeline = load_enhancer(None)
+pipeline = load_enhancer(None,model_version="xl")
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
 **Use UI with multiple GPUs/single GPU is also supported**
@@ -28,7 +28,7 @@ from xfusion import load_enhancer
 from xfusion import load_stable_diffusion_ui_for_multiple_pipelines
 from xfusion.const import GPU_Count
 
-pipelines = [load_enhancer(None,download_kwargs={"directory":"./"}) for i in range(GPU_Count)]
+pipelines = [load_enhancer(None,model_version="xl",download_kwargs={"directory":"./"}) for i in range(GPU_Count)]
 server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
@@ -39,7 +39,7 @@ server.launch(debug=True,inline=False,quiet=True)
 from xfusion.enhancement import load_enhancer
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model).to("cuda")
+pipeline = load_enhancer(model,model_version="xl").to("cuda")
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
 
@@ -49,8 +49,8 @@ from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cuda:0")
-_pipeline = load_enhancer(model,download_kwargs={"directory":"/xfusion"}).to("cuda:1")
+pipeline = load_enhancer(model,model_version="xl",download_kwargs={"directory":"/xfusion"}).to("cuda:0")
+_pipeline = load_enhancer(model,model_version="xl",download_kwargs={"directory":"/xfusion"}).to("cuda:1")
 server = load_stable_diffusion_ui_for_multiple_pipelines([pipeline,_pipeline],_globals=globals())
 server.launch(debug=True,inline=False,quiet=True)
 ```
