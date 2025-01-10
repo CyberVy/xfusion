@@ -249,18 +249,24 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                use_enhancer=use_enhancer,**kwargs)
 
 
-    def load_controlnet(self,controlnet_model=None):
+    def load_controlnet(self,controlnet_model=None,**kwargs):
 
         if self._controlnet is None:
             if self.model_version == "1.5":
                 controlnet_model = controlnet_model or "lllyasviel/sd-controlnet-canny"
-                self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version)
+                self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
+                                                                    download_kwargs=self.download_kwargs,**kwargs)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+                self.sub_pipelines.update(text_to_image_controlnet_pipeline=self.text_to_image_controlnet_pipeline)
+                self.sync_sub_pipelines_mixin_kwargs()
                 self.text_to_image_controlnet_pipeline.to(self.device)
             elif self.model_version == "xl":
                 controlnet_model =  controlnet_model or "diffusers/controlnet-canny-sdxl-1.0"
-                self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version)
+                self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
+                                                                    download_kwargs=self.download_kwargs,**kwargs)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+                self.sub_pipelines.update(text_to_image_controlnet_pipeline=self.text_to_image_controlnet_pipeline)
+                self.sync_sub_pipelines_mixin_kwargs()
                 self.text_to_image_controlnet_pipeline.to(self.device)
             # todo: sd3 controlnet support
             elif self.model_version == "3":
