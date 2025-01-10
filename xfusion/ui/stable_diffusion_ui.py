@@ -189,7 +189,7 @@ def stable_diffusion_ui_template(fns):
             with gr.Accordion("Controlnet Selection",open=False):
                 with gr.Row():
                     with gr.Column():
-                        controlnet_inputs.append(gr.Textbox(label="Give me a controlnet URL!"))
+                        controlnet_inputs.append(gr.Textbox(placeholder="Give me a controlnet URL!",label="Controlnet Model"))
                         with gr.Row():
                             load_controlnet_button = gr.Button("Load controlnet")
                             offload_controlnet_button = gr.Button("Offload controlnet")
