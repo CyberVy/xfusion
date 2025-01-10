@@ -97,13 +97,13 @@ class ControlnetEnhancerMixin:
     def _check_controlnet_inference_kwargs(self,kwargs):
         raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'check_controlnet_inference_kwargs'")
 
-    def load_controlnet(self):
+    def load_controlnet(self,controlnet_model=None):
         raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'load_controlnet'")
 
     def offload_controlnet(self):
         delete(self._controlnet)
         free_memory_to_system()
-        
+
 
 class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     pipeline_map = {}
