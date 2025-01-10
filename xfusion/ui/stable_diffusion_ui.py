@@ -4,6 +4,7 @@ from ..utils import convert_mask_image_to_rgb
 from ..const import GPU_Count,GPU_Name
 from ..components.component_const import default_stable_diffusion_model_url
 import sys,platform
+import functools
 
 scheduler_list = [
             "DPM++ 2M",
@@ -184,7 +185,7 @@ def stable_diffusion_ui_template(fns):
 
         with gr.Accordion("Controlnet",open=False):
             controlnet_outputs = []
-            with gr.Accordion("Controlnet Switch"):
+            with gr.Accordion("Controlnet Switch",open=False):
                 with gr.Row():
                     with gr.Column():
                         load_controlnet_button = gr.Button("Load controlnet")
@@ -248,6 +249,23 @@ def stable_diffusion_ui_template(fns):
 
 def load_stable_diffusion_ui(pipeline, _globals=None):
 
+    def auto_load_controlnet(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            if pipeline._controlnet is None:
+                pipeline.load_controlnet()
+            return f(*args, **kwargs)
+        return wrapper
+
+    def auto_offload_controlnet(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            if pipeline._controlnet is not None:
+                pipeline.offload_controlnet()
+            return f(*args, **kwargs)
+
+        return wrapper
+
     @allow_return_error
     def model_selection_fn(model,model_version):
         pipeline.reload(model, model_version=model_version)
@@ -286,6 +304,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         return f"{scheduler} is set for text to image pipeline."
 
     @allow_return_error
+    @auto_offload_controlnet
     def text_to_image_fn(
             prompt, negative_prompt,
             guidance_scale, num_inference_steps, clip_skip,
@@ -304,6 +323,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         return f"{scheduler} is set for image to image pipeline."
 
     @allow_return_error
+    @auto_offload_controlnet
     def image_to_image_fn(
             image,
             prompt, negative_prompt,
@@ -329,6 +349,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         return f"{scheduler} is set for inpainting pipeline."
 
     @allow_return_error
+    @auto_offload_controlnet
     def inpainting_fn(
             image,
             prompt, negative_prompt,
@@ -361,6 +382,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         return f"{scheduler} is set for text to image controlnet pipeline."
 
     @allow_return_error
+    @auto_load_controlnet
     def controlnet_text_to_image_fn(
             image,
             prompt, negative_prompt,
@@ -409,6 +431,23 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     load pipelines to multiple GPUs for acceleration
     """
     pipelines = pipelines[:GPU_Count]
+
+    def auto_load_controlnet(f):
+        @functools.wraps(f)
+        def wrapper(pipeline):
+            if pipeline._controlnet is None:
+                pipeline.load_controlnet()
+            return f(pipeline)
+        return wrapper
+
+    def auto_offload_controlnet(f):
+        @functools.wraps(f)
+        def wrapper(pipeline):
+            if pipeline._controlnet is not None:
+                pipeline.offload_controlnet()
+            return f(pipeline)
+        return wrapper
+
     @allow_return_error
     def model_selection_fn(model,model_version):
 
@@ -463,6 +502,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
+        @auto_offload_controlnet
         def f(pipeline):
             return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
                 prompt=prompt, negative_prompt=negative_prompt,
@@ -493,6 +533,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         if not image:
             raise ValueError("Please input an image.")
 
+        @auto_offload_controlnet
         def f(pipeline):
             return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
                 image=image,
@@ -521,6 +562,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
+        @auto_offload_controlnet
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
                 image=image["background"].convert("RGB"),
@@ -565,6 +607,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         if not image:
             raise ValueError("Please input an image.")
 
+        @auto_load_controlnet
         def f(pipeline):
             return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
                 image=image,
