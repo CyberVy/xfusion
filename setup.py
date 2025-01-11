@@ -10,6 +10,7 @@ setup(
         'torch',
         'gradio==5.9.1',
         'diffusers',
+        'accelerate>=1.2.1'
         'optimum-quanto',
         'transformers',
         'compel',
