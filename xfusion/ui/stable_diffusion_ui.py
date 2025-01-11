@@ -223,18 +223,21 @@ def stable_diffusion_ui_template(fns):
                             lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),[controlnet_t2i_inputs,controlnet_t2i_control_image_preview_inputs])
                         controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
                         for component in controlnet_t2i_control_image_preview_inputs:
-                            component.change(fn=fns["controlnet_preview_fn"],inputs=controlnet_t2i_control_image_preview_inputs,outputs=controlnet_t2i_control_image_preview_outputs)
+                            component.change(fn=fns["controlnet_preview_fn"],
+                                             inputs=controlnet_t2i_control_image_preview_inputs,outputs=controlnet_t2i_control_image_preview_outputs)
                     with gr.Column():
                         with gr.Row():
                             controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
-                        controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"], inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
+                        controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
             with gr.Accordion("Controlnet Image To Image",open=False):
                 gr.Markdown("# Controlnet Image To Image")
                 controlnet_i2i_inputs = []
                 controlnet_i2i_outputs = []
+                controlnet_i2i_control_image_preview_inputs = []
+                controlnet_i2i_control_image_preview_outputs = []
                 controlnet_i2i_scheduler_inputs = []
                 controlnet_i2i_scheduler_outputs = []
                 with gr.Row():
@@ -248,7 +251,7 @@ def stable_diffusion_ui_template(fns):
                     with gr.Column():
                         with gr.Accordion("Images"):
                             with gr.Row():
-                                controlnet_i2i_inputs.append(gr.Image(type="pil", label="Controlnet Image"))
+                                lists_append(gr.Image(type="pil", label="Controlnet Image"),[controlnet_i2i_inputs,controlnet_i2i_control_image_preview_inputs])
                                 controlnet_i2i_inputs.append(gr.Image(type="pil", label="Image"))
                         controlnet_i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                         controlnet_i2i_inputs.append(
@@ -262,6 +265,13 @@ def stable_diffusion_ui_template(fns):
                         with gr.Row():
                             controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                             controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                        with gr.Row():
+                            lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),[controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                            lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),[controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                        controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                        for component in controlnet_i2i_control_image_preview_inputs:
+                            component.change(fn=fns["controlnet_preview_fn"],
+                                             inputs=controlnet_i2i_control_image_preview_inputs,outputs=controlnet_i2i_control_image_preview_outputs)
                     with gr.Column():
                         with gr.Row():
                             controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
