@@ -5,7 +5,7 @@ from ..components.component_utils import get_tokenizers_and_text_encoders_from_p
 from ..components import load_stable_diffusion_pipeline
 from ..components import load_stable_diffusion_controlnet
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
-from ..utils import normalize_image,dict_to_str,convert_image_to_canny
+from ..utils import normalize_image,dict_to_str
 from compel import Compel,ReturnedEmbeddingsType
 import torch
 from PIL import Image
@@ -206,20 +206,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             control_image = normalize_image(control_image, width * height)
             kwargs.update(control_image=control_image)
 
-        image = kwargs.get("image")
-        # create text to image controlnet condition
-        if image is not None and control_image is None:
-            image = convert_image_to_canny(image)
-            kwargs.update(image=image)
-            return kwargs
-
-        elif image is not None and control_image is not None:
-            control_image = convert_image_to_canny(control_image)
-            kwargs.update(control_image=control_image)
-            return kwargs
-
-        else:
-            return kwargs
+        return kwargs
 
     def __call__(self,**kwargs):
         kwargs = self.check_inference_kwargs(kwargs)
