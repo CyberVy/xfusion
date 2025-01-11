@@ -481,13 +481,14 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             controlnet_conditioning_scale,strength,
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
+            low_threshold, high_threshold,
             seed, num):
 
         if not image or not control_image:
             raise ValueError("Please input the images.")
 
         return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-            control_image=convert_image_to_canny(control_image),image=image,
+            control_image=convert_image_to_canny(control_image,low_threshold,high_threshold,),image=image,
             prompt=prompt, negative_prompt=negative_prompt,
             controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -712,6 +713,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             prompt, negative_prompt,
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
+            low_threshold, high_threshold,
             seed, num):
 
         if not image:
@@ -720,7 +722,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         @auto_load_controlnet
         def f(pipeline):
             return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-                image=convert_image_to_canny(image),
+                image=convert_image_to_canny(image,low_threshold,high_threshold),
                 prompt=prompt, negative_prompt=negative_prompt,
                 controlnet_conditioning_scale=controlnet_conditioning_scale,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -745,6 +747,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             controlnet_conditioning_scale, strength,
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
+            low_threshold, high_threshold,
             seed, num):
 
         if not image or not control_image:
@@ -753,7 +756,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         @auto_load_controlnet
         def f(pipeline):
             return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-                control_image=convert_image_to_canny(control_image),image=image,
+                control_image=convert_image_to_canny(control_image,low_threshold,high_threshold),image=image,
                 prompt=prompt, negative_prompt=negative_prompt,
                 controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
