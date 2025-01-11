@@ -268,10 +268,11 @@ def stable_diffusion_ui_template(fns):
                         with gr.Row():
                             lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),[controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
                             lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),[controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
-                        controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                        controlnet_i2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
                         for component in controlnet_i2i_control_image_preview_inputs:
                             component.change(fn=fns["controlnet_preview_fn"],
                                              inputs=controlnet_i2i_control_image_preview_inputs,outputs=controlnet_i2i_control_image_preview_outputs)
+
                     with gr.Column():
                         with gr.Row():
                             controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
