@@ -1,4 +1,5 @@
 import gradio as gr
+from .ui_utils import lists_append
 from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..const import GPU_Count,GPU_Name
@@ -205,7 +206,7 @@ def stable_diffusion_ui_template(fns):
                 with gr.Row():
                     with gr.Column():
                         with gr.Accordion("Controlnet Image"):
-                            controlnet_t2i_inputs.append(gr.Image(type="pil", label="Controlnet Image"))
+                            lists_append(gr.Image(type="pil", label="Controlnet Image"),[controlnet_t2i_inputs,controlnet_t2i_control_image_preview_inputs])
                         controlnet_t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                         controlnet_t2i_inputs.append(
                             gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
@@ -218,9 +219,8 @@ def stable_diffusion_ui_template(fns):
                             controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                             controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
                         with gr.Row():
-                            controlnet_t2i_control_image_preview_inputs.append(controlnet_t2i_inputs[0]) # the control image
-                            controlnet_t2i_control_image_preview_inputs.append(gr.Slider(0, 255, 100, step=5, label="Low Threshold"))
-                            controlnet_t2i_control_image_preview_inputs.append(gr.Slider(0, 255, 200, step=5, label="High Threshold"))
+                            lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),[controlnet_t2i_inputs,controlnet_t2i_control_image_preview_inputs])
+                            lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),[controlnet_t2i_inputs,controlnet_t2i_control_image_preview_inputs])
                         controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
                         for component in controlnet_t2i_control_image_preview_inputs:
                             component.change(fn=fns["controlnet_preview_fn"],inputs=controlnet_t2i_control_image_preview_inputs,outputs=controlnet_t2i_control_image_preview_outputs)
@@ -425,6 +425,10 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
 
     @allow_return_error
     def controlnet_preview_fn(image,low_threshold,high_threshold):
+
+        if not image:
+            raise ValueError("Please input an image.")
+
         return convert_image_to_canny(image,low_threshold,high_threshold)
 
     @allow_return_error
@@ -439,13 +443,14 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
             prompt, negative_prompt,
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
+            low_threshold,high_threshold,
             seed, num):
 
         if not image:
             raise ValueError("Please input an image.")
 
         return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-            image=convert_image_to_canny(image),
+            image=convert_image_to_canny(image,low_threshold,high_threshold),
             prompt=prompt, negative_prompt=negative_prompt,
             controlnet_conditioning_scale=controlnet_conditioning_scale,
             guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
