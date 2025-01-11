@@ -192,6 +192,8 @@ def stable_diffusion_ui_template(fns):
                 gr.Markdown("# Controlnet Text To Image")
                 controlnet_t2i_inputs = []
                 controlnet_t2i_outputs = []
+                controlnet_t2i_control_image_preview_inputs = []
+                controlnet_t2i_control_image_preview_outputs = []
                 controlnet_t2i_scheduler_inputs = []
                 controlnet_t2i_scheduler_outputs = []
                 with gr.Row():
@@ -215,6 +217,13 @@ def stable_diffusion_ui_template(fns):
                         with gr.Row():
                             controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                             controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                        with gr.Row():
+                            controlnet_t2i_control_image_preview_inputs.append(controlnet_t2i_inputs[0]) # the control image
+                            controlnet_t2i_control_image_preview_inputs.append(gr.Slider(0, 255, 100, step=5, label="Low Threshold"))
+                            controlnet_t2i_control_image_preview_inputs.append(gr.Slider(0, 255, 200, step=5, label="High Threshold"))
+                        controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                        for component in controlnet_t2i_control_image_preview_inputs:
+                            component.change(fn=fns["controlnet_preview_fn"],inputs=controlnet_t2i_control_image_preview_inputs,outputs=controlnet_t2i_control_image_preview_outputs)
                     with gr.Column():
                         with gr.Row():
                             controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
@@ -413,6 +422,10 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
     def offload_controlnet_fn():
         pipeline.offload_controlnet()
         return f"Controlnet is offloaded."
+
+    @allow_return_error
+    def controlnet_preview_fn(image,low_threshold,high_threshold):
+        return convert_image_to_canny(image,low_threshold,high_threshold)
 
     @allow_return_error
     def controlnet_text_to_image_scheduler_fn(scheduler):
@@ -666,6 +679,10 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         for pipeline in pipelines:
             pipeline.offload_controlnet()
         return f"Controlnet is offloaded."
+
+    @allow_return_error
+    def controlnet_preview_fn(image, low_threshold, high_threshold):
+        return convert_image_to_canny(image, low_threshold, high_threshold)
 
     @allow_return_error
     def controlnet_text_to_image_scheduler_fn(scheduler):
