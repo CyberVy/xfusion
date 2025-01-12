@@ -14,6 +14,7 @@ setup(
         'optimum-quanto',
         'transformers',
         'compel',
+        'cv2',
         'tqdm',
     ],
     author='Eramth Ru',
