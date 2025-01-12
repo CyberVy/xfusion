@@ -3,6 +3,7 @@ from diffusers import StableDiffusionPipeline,StableDiffusionXLPipeline,StableDi
 from diffusers import ControlNetModel,SD3ControlNetModel
 from .component_const import default_stable_diffusion_model_url
 from .component_const import SD_V1_CONFIG_PATH,SD_V2_CONFIG_PATH,SD_3_CONFIG_PATH,SD_XL_CONFIG_PATH
+from .component_const import SD_V1_V2_CONTROLNET_CONFIG_PATH,SD_XL_CONTROLNET_CONFIG_PATH
 from .component_utils import infer_model_version
 from ..download import download_file
 from ..const import HF_HUB_TOKEN
@@ -12,7 +13,7 @@ import os
 
 
 def load_stable_diffusion_controlnet(controlnet_model,
-                                     model_version,file_format="safetensors",download_kwargs=None,**kwargs):
+                                     model_version=None,file_format="safetensors",download_kwargs=None,**kwargs):
     use_internet = True
     model_version = str(model_version).lower()
     if kwargs.get("token") is None:
@@ -28,7 +29,7 @@ def load_stable_diffusion_controlnet(controlnet_model,
     if use_internet:
         # from Hugging face
         if not (controlnet_model.startswith("http://") or controlnet_model.startswith("https://")):
-            if model_version in ["1.5","2","xl","pony"]:
+            if model_version in ["1","1.5","2","xl","pony"]:
                 return ControlNetModel.from_pretrained(controlnet_model,variant="fp16",**kwargs)
             elif model_version in ["3","3.5"]:
                 return SD3ControlNetModel.from_pretrained(controlnet_model,**kwargs)
@@ -37,31 +38,56 @@ def load_stable_diffusion_controlnet(controlnet_model,
         # from single file
         else:
             file_path = download_file(controlnet_model, **download_kwargs)
-
             # bad file name from the url, 'filename.tensor/bin/ckpt' is wanted, but get 'filename'
+
             if not (file_path.endswith(".safetensors") or file_path.endswith(".bin") or file_path.endswith(".ckpt")):
                 print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
                 os.rename(file_path, f"{file_path}.{file_format}")
                 file_path = f"{file_path}.{file_format}"
 
-            if model_version in ["1.5", "2", "xl", "pony"]:
-                return ControlNetModel.from_single_file(file_path,**kwargs)
+            if not model_version:
+                inferred_model_version = infer_model_version(file_path)
+                if "controlnet_xl_large" == inferred_model_version:
+                    model_version = "xl"
+                elif "controlnet" == inferred_model_version:
+                    model_version = "1.5"
+                else:
+                    raise ValueError(f"{model_version} is not supported yet.")
+                print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
+
+            if model_version in ["1","1.5","2"]:
+                return ControlNetModel.from_single_file(file_path,config=SD_V1_V2_CONTROLNET_CONFIG_PATH,**kwargs)
+            elif model_version in ["xl", "pony"]:
+                return ControlNetModel.from_single_file(file_path,config=SD_XL_CONTROLNET_CONFIG_PATH,**kwargs)
             elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_single_file(file_path,**kwargs)
+                return SD3ControlNetModel.from_single_file(file_path,config=None,**kwargs)
             else:
                 raise ValueError(f"{model_version} is not supported yet.")
     else:
         # from local single file
         if controlnet_model.endswith(".safetensors") or controlnet_model.endswith(".bin") or controlnet_model.endswith(".ckpt"):
-            if model_version in ["1.5", "2", "xl", "pony"]:
-                return ControlNetModel.from_single_file(controlnet_model, **kwargs)
+
+            if not model_version:
+                inferred_model_version = infer_model_version(controlnet_model)
+                if "controlnet_xl_large" == inferred_model_version:
+                    model_version = "xl"
+                elif "controlnet" == inferred_model_version:
+                    model_version = "1.5"
+                else:
+                    raise ValueError(f"{model_version} is not supported yet.")
+                print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
+
+            if model_version in ["1", "1.5", "2"]:
+                return ControlNetModel.from_single_file(controlnet_model, config=SD_V1_V2_CONTROLNET_CONFIG_PATH,**kwargs)
+            elif model_version in ["xl", "pony"]:
+                return ControlNetModel.from_single_file(controlnet_model, config=SD_XL_CONTROLNET_CONFIG_PATH, **kwargs)
             elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_single_file(controlnet_model, **kwargs)
+                return SD3ControlNetModel.from_single_file(controlnet_model, config=None, **kwargs)
             else:
                 raise ValueError(f"{model_version} is not supported yet.")
         # from local directory
         else:
-            if model_version in ["1.5", "2", "xl", "pony"]:
+            if model_version in ["1","1.5", "2", "xl", "pony"]:
                 return ControlNetModel.from_pretrained(controlnet_model,**kwargs)
             elif model_version in ["3", "3.5"]:
                 return SD3ControlNetModel.from_pretrained(controlnet_model, **kwargs)
@@ -109,6 +135,14 @@ def load_stable_diffusion_pipeline(model=None,
         # from single file
         else:
             file_path = download_file(model,**download_kwargs)
+
+            # bad file name from the url, 'filename.tensor/bin/ckpt' is wanted, but get 'filename'
+            if not (file_path.endswith(".safetensors") or file_path.endswith(".bin") or file_path.endswith(".ckpt")):
+                print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
+                os.rename(file_path,f"{file_path}.{file_format}")
+                file_path = f"{file_path}.{file_format}"
+            print(f"Loading the model {model_version}...")
+
             if not model_version:
                 inferred_model_version = infer_model_version(file_path)
                 if "sd3" in inferred_model_version:
@@ -119,13 +153,10 @@ def load_stable_diffusion_pipeline(model=None,
                     model_version = "1"
                 elif "v2" == inferred_model_version:
                     model_version = "2"
+                else:
+                    raise ValueError(f"{model_version} is not supported yet.")
                 print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
-            # bad file name from the url, 'filename.tensor/bin/ckpt' is wanted, but get 'filename'
-            if not (file_path.endswith(".safetensors") or file_path.endswith(".bin") or file_path.endswith(".ckpt")):
-                print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
-                os.rename(file_path,f"{file_path}.{file_format}")
-                file_path = f"{file_path}.{file_format}"
-            print(f"Loading the model {model_version}...")
+
             if model_version == "xl":
                 return StableDiffusionXLPipeline.from_single_file(file_path,config=SD_XL_CONFIG_PATH,**kwargs)
             elif model_version == "3":
@@ -149,7 +180,10 @@ def load_stable_diffusion_pipeline(model=None,
                     model_version = "1"
                 elif "v2" == inferred_model_version:
                     model_version = "2"
+                else:
+                    raise ValueError(f"{model_version} is not supported yet.")
                 print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
+
             if model_version == "xl":
                 return StableDiffusionXLPipeline.from_single_file(model, config=SD_XL_CONFIG_PATH, **kwargs)
             elif model_version == "3":
