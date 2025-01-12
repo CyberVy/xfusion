@@ -275,10 +275,12 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     def load_controlnet(self,controlnet_model=None,**kwargs):
 
         if self._controlnet is None:
+            download_kwargs = self.download_kwargs.copy()
+            download_kwargs.update(directory="./controlnet")
             if self.model_version == "1.5":
                 controlnet_model = controlnet_model if controlnet_model else default_sd_v1_v2_controlnet_model_url
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
-                                                                    download_kwargs=self.download_kwargs,**kwargs).to(self.device)
+                                                                    download_kwargs=download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
                     StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.image_to_image_controlnet_pipeline = self.enhancer_class(
@@ -287,7 +289,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             elif self.model_version == "xl":
                 controlnet_model = controlnet_model if controlnet_model else default_sd_xl_controlnet_model_url
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
-                                                                    download_kwargs=self.download_kwargs,**kwargs).to(self.device)
+                                                                    download_kwargs=download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
                     StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
                 self.image_to_image_controlnet_pipeline = self.enhancer_class(
