@@ -1,161 +1,226 @@
-from diffusers import DiffusionPipeline
-from diffusers import StableDiffusionPipeline,StableDiffusionXLPipeline,StableDiffusion3Pipeline
-from diffusers import ControlNetModel,SD3ControlNetModel
-from .component_const import default_stable_diffusion_model_url
-from .component_const import SD_V1_CONFIG_PATH,SD_V2_CONFIG_PATH,SD_3_CONFIG_PATH,SD_XL_CONFIG_PATH
-from .component_utils import infer_model_version
+import os
+import torch
+from .component_const import t5_tokenizer_url_list,t5_encoder_url_list
+from .component_const import clip_tokenizer_url_list,clip_encoder_url_list
 from ..download import download_file
 from ..const import HF_HUB_TOKEN
-import requests
-import torch
-import os
+from transformers import T5EncoderModel,T5Tokenizer,CLIPTextModel,CLIPTokenizer
+from diffusers import AutoencoderKL
+from diffusers.loaders.single_file_utils import load_state_dict,infer_diffusers_model_type
 
 
-def load_stable_diffusion_controlnet(controlnet_model,
-                                     model_version,file_format="safetensors",download_kwargs=None,**kwargs):
-    use_internet = True
-    model_version = str(model_version).lower()
-    if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
-    if kwargs.get("torch_dtype") is None:
-        kwargs.update({"torch_dtype": torch.float16})
-    if download_kwargs is None:
-        download_kwargs = {}
+def infer_model_version(file_path):
+    checkpoint = load_state_dict(file_path)
+    return infer_diffusers_model_type(checkpoint)
 
-    if controlnet_model.startswith(".") or controlnet_model.startswith("/") or controlnet_model.startswith("~"):
-        use_internet = False
+def get_t5_tokenizer_files(directory,**kwargs):
+    url_list = t5_tokenizer_url_list
+    file_list = []
+    for url in url_list:
+        file_list.append(download_file(url, directory=directory,**kwargs))
+    return file_list
 
-    if use_internet:
-        # from Hugging face
-        if not (controlnet_model.startswith("http://") or controlnet_model.startswith("https://")):
-            if model_version in ["1.5","2","xl","pony"]:
-                return ControlNetModel.from_pretrained(controlnet_model,variant="fp16",**kwargs)
-            elif model_version in ["3","3.5"]:
-                return SD3ControlNetModel.from_pretrained(controlnet_model,**kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-        # from single file
-        else:
-            file_path = download_file(controlnet_model, **download_kwargs)
+def get_t5_encoder_files(directory,**kwargs):
+    url_list = t5_encoder_url_list
+    file_list = []
+    for url in url_list:
+        file_list.append(download_file(url, directory=directory,**kwargs))
+    return file_list
 
-            # bad file name from the url, 'filename.tensor/bin/ckpt' is wanted, but get 'filename'
-            if not (file_path.endswith(".safetensors") or file_path.endswith(".bin") or file_path.endswith(".ckpt")):
-                print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
-                os.rename(file_path, f"{file_path}.{file_format}")
-                file_path = f"{file_path}.{file_format}"
-
-            if model_version in ["1.5", "2", "xl", "pony"]:
-                return ControlNetModel.from_single_file(file_path,**kwargs)
-            elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_single_file(file_path,**kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-    else:
-        # from local single file
-        if controlnet_model.endswith(".safetensors") or controlnet_model.endswith(".bin") or controlnet_model.endswith(".ckpt"):
-            if model_version in ["1.5", "2", "xl", "pony"]:
-                return ControlNetModel.from_single_file(controlnet_model, **kwargs)
-            elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_single_file(controlnet_model, **kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-        # from local directory
-        else:
-            if model_version in ["1.5", "2", "xl", "pony"]:
-                return ControlNetModel.from_pretrained(controlnet_model,**kwargs)
-            elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_pretrained(controlnet_model, **kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-
-
-def load_stable_diffusion_pipeline(model=None,
-                                   model_version=None, file_format="safetensors", download_kwargs=None, **kwargs):
+def load_t5_tokenizer(directory=None, use_local_files=False, delete_internet_files=False,download_kwargs=None,**kwargs):
     """
-    :param model: hugging face repo id or unet file URI
-    :param model_version: base model version, make sure this parameter is "xl" if the model is based on XL
-    :param file_format: only for model while it is unet file, when not able to get the file format,this parameter will be the file format.
+    :param directory:
+    :param use_local_files:
+    :param delete_internet_files:
     :param download_kwargs:
-    :param kwargs: for .from_pretrained
+    :param kwargs: passed in T5Tokenizer.from_pretrained
     :return:
     """
-    use_internet = True
-    model = default_stable_diffusion_model_url if not model else model
-    model_version = "" if model_version is None else model_version
-    model_version = str(model_version).lower()
-    if download_kwargs is None:
-        download_kwargs = {}
+    download_kwargs = {} if download_kwargs is None else download_kwargs
     if kwargs.get("token") is None:
         kwargs.update(token=HF_HUB_TOKEN)
+
+    directory = "./t5_tokenizer" if directory is None else directory
+    file_list = []
+    if not use_local_files:
+        file_list = get_t5_tokenizer_files(directory,**download_kwargs)
+
+    t5_tokenizer = T5Tokenizer.from_pretrained(directory,**kwargs)
+    print("T5 Tokenizer ready.")
+
+    if not use_local_files and delete_internet_files:
+        for file in file_list:
+            os.remove(file)
+    return t5_tokenizer
+
+def load_t5_encoder(directory=None, use_local_files=False, delete_internet_files=False,download_kwargs=None,**kwargs):
+    """
+    :param directory:
+    :param use_local_files:
+    :param delete_internet_files:
+    :param download_kwargs:
+    :param kwargs: passed in T5EncoderModel.from_pretrained
+    :return:
+    """
+    download_kwargs = {} if download_kwargs is None else download_kwargs
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
-    if model.startswith(".") or model.startswith("/") or model.startswith("~"):
+    if kwargs.get("token") is None:
+        kwargs.update(token=HF_HUB_TOKEN)
+
+    directory = "./t5_encoder" if directory is None else directory
+    file_list = []
+    if not use_local_files:
+        file_list = get_t5_encoder_files(directory,**download_kwargs)
+
+    t5_encoder = T5EncoderModel.from_pretrained(directory,**kwargs)
+    print("T5 Encoder ready.")
+
+    if not use_local_files and delete_internet_files:
+        for file in file_list:
+            os.remove(file)
+    return t5_encoder
+
+def get_t5_prompt_embeds(tokenizer_2, text_encoder_2,prompt = None,num_images_per_prompt: int = 1,max_sequence_length: int = 512):
+
+    prompt = [prompt] if isinstance(prompt, str) else prompt
+    batch_size = len(prompt)
+
+    text_inputs = tokenizer_2(prompt,padding="max_length",max_length=max_sequence_length,
+        truncation=True,return_length=False, return_overflowing_tokens=False,return_tensors="pt",
+    )
+    text_input_ids = text_inputs.input_ids
+    untruncated_ids = tokenizer_2(prompt, padding="longest", return_tensors="pt").input_ids
+
+    if untruncated_ids.shape[-1] >= text_input_ids.shape[-1] and not torch.equal(text_input_ids, untruncated_ids):
+        removed_text = tokenizer_2.batch_decode(untruncated_ids[:, tokenizer_2.model_max_length - 1 : -1])
+        print(
+            "The following part of your input was truncated because `max_sequence_length` is set to "
+            f" {max_sequence_length} tokens: {removed_text}"
+        )
+
+    with torch.no_grad():
+        prompt_embeds = text_encoder_2(text_input_ids, output_hidden_states=False)[0]
+        _, seq_len, _ = prompt_embeds.shape
+        # duplicate text embeddings and attention mask for each generation per prompt, using mps friendly method
+        prompt_embeds = prompt_embeds.repeat(1, num_images_per_prompt, 1)
+        prompt_embeds = prompt_embeds.view(batch_size * num_images_per_prompt, seq_len, -1)
+
+        return prompt_embeds
+
+def get_clip_tokenizer_files(directory,**kwargs):
+    url_list = clip_tokenizer_url_list
+    file_list = []
+    for url in url_list:
+        file_list.append(download_file(url,directory=directory,**kwargs))
+    return file_list
+
+def get_clip_encoder_files(directory,**kwargs):
+    url_list = clip_encoder_url_list
+    file_list = []
+    for url in url_list:
+        file_list.append(download_file(url, directory=directory,**kwargs))
+    return file_list
+
+def load_clip_tokenizer(directory=None,use_local_files=False,delete_internet_files=False,download_kwargs=None,**kwargs):
+    """
+    :param directory:
+    :param use_local_files:
+    :param delete_internet_files:
+    :param download_kwargs:
+    :param kwargs: passed in CLIPTokenizer.from_pretrained
+    :return:
+    """
+    download_kwargs = {} if download_kwargs is None else download_kwargs
+    if kwargs.get("token") is None:
+        kwargs.update(token=HF_HUB_TOKEN)
+
+    directory = "./clip_tokenizer" if directory is None else directory
+    file_list = []
+    if not use_local_files:
+        file_list = get_clip_tokenizer_files(directory,**download_kwargs)
+
+    clip_tokenizer = CLIPTokenizer.from_pretrained(directory,**kwargs)
+    print("CLIP Tokenizer ready.")
+
+    if not use_local_files and delete_internet_files:
+        for file in file_list:
+            os.remove(file)
+
+    return clip_tokenizer
+
+def load_clip_encoder(directory=None,use_local_files=False,delete_internet_files=False,download_kwargs=None,**kwargs):
+    download_kwargs = {} if download_kwargs is None else download_kwargs
+    if kwargs.get("torch_dtype") is None:
+        kwargs.update({"torch_dtype": torch.float16})
+    if kwargs.get("token") is None:
+        kwargs.update(token=HF_HUB_TOKEN)
+
+    directory = "./clip_encoder" if directory is None else directory
+    file_list = []
+    if not use_local_files:
+        file_list = get_clip_encoder_files(directory,**download_kwargs)
+
+    clip_encoder = CLIPTextModel.from_pretrained(directory,**kwargs)
+    print("CLIP Encoder ready.")
+
+    if not use_local_files and delete_internet_files:
+        for file in file_list:
+            os.remove(file)
+    return clip_encoder
+
+def get_clip_prompt_embeds(tokenizer,text_encoder,prompt,num_images_per_prompt: int = 1):
+    prompt = [prompt] if isinstance(prompt, str) else prompt
+    batch_size = len(prompt)
+
+    text_inputs = tokenizer(prompt,padding="max_length",max_length=tokenizer.model_max_length,
+        truncation=True,return_overflowing_tokens=False,return_length=False,return_tensors="pt",
+    )
+
+    text_input_ids = text_inputs.input_ids
+    untruncated_ids = tokenizer(prompt, padding="longest", return_tensors="pt").input_ids
+    if untruncated_ids.shape[-1] >= text_input_ids.shape[-1] and not torch.equal(text_input_ids, untruncated_ids):
+        removed_text = tokenizer.batch_decode(untruncated_ids[:, tokenizer.model_max_length - 1: -1])
+        print(
+            "The following part of your input was truncated because CLIP can only handle sequences up to"
+            f" {tokenizer.model_max_length} tokens: {removed_text}"
+        )
+
+    with torch.no_grad():
+        prompt_embeds = text_encoder(text_input_ids, output_hidden_states=False)
+        # Use pooled output of CLIPTextModel
+        prompt_embeds = prompt_embeds.pooler_output
+        # duplicate text embeddings for each generation per prompt, using mps friendly method
+        prompt_embeds = prompt_embeds.repeat(1, num_images_per_prompt)
+        prompt_embeds = prompt_embeds.view(batch_size * num_images_per_prompt, -1)
+        return prompt_embeds
+
+def get_tokenizers_and_text_encoders_from_pipeline(pipeline):
+
+    tokenizers = []
+    text_encoders = []
+    tokenizer_names = ["tokenizer", "tokenizer_2", "tokenizer_3"]
+    text_encoder_names = ["text_encoder", "text_encoder_2", "text_encoder_3"]
+    for i, item in enumerate(tokenizer_names):
+        if hasattr(pipeline, item):
+            tokenizers.append(getattr(pipeline, item))
+            text_encoders.append(getattr(pipeline, text_encoder_names[i]))
+    return tokenizers,text_encoders
+
+def load_vae(vae_uri,directory=None,download_kwargs=None,**kwargs):
+
+    use_internet = True
+    if download_kwargs is None:
+        download_kwargs = {}
+
+    if kwargs.get("torch_dtype") is None:
+        kwargs.update({"torch_dtype": torch.float16})
+
+    if vae_uri.startswith(".") or vae_uri.startswith("/") or vae_uri.startswith("~"):
         use_internet = False
 
     if use_internet:
-        # from Hugging face
-        if not (model.startswith("http://") or model.startswith("https://")):
-            text = requests.get(f"https://huggingface.co/{model}/tree/main/vae?not-for-all-audiences=true").text
-            is_fp32 = "diffusion_pytorch_model.safetensors" in text
-            is_fp16 = "diffusion_pytorch_model.fp16.safetensors" in text
-            if is_fp16:
-                kwargs.update({"variant": "fp16"})
-                print("model.fp16.safetensors is selected.")
-            elif is_fp32:
-                print("model.safetensors is selected.")
-            else:
-                raise Exception("Model is not supported.")
-            return DiffusionPipeline.from_pretrained(model, **kwargs)
-        # from single file
-        else:
-            file_path = download_file(model,**download_kwargs)
-            if not model_version:
-                inferred_model_version = infer_model_version(file_path)
-                if "sd3" in inferred_model_version:
-                    model_version = "3"
-                elif "xl" in inferred_model_version:
-                    model_version = "xl"
-                elif "v1" == inferred_model_version:
-                    model_version = "1"
-                elif "v2" == inferred_model_version:
-                    model_version = "2"
-                print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
-            # bad file name from the url, 'filename.tensor/bin/ckpt' is wanted, but get 'filename'
-            if not (file_path.endswith(".safetensors") or file_path.endswith(".bin") or file_path.endswith(".ckpt")):
-                print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
-                os.rename(file_path,f"{file_path}.{file_format}")
-                file_path = f"{file_path}.{file_format}"
-            print(f"Loading the model {model_version}...")
-            if model_version == "xl":
-                return StableDiffusionXLPipeline.from_single_file(file_path,config=SD_XL_CONFIG_PATH,**kwargs)
-            elif model_version == "3":
-                return StableDiffusion3Pipeline.from_single_file(file_path,config=SD_3_CONFIG_PATH,**kwargs)
-            elif model_version == "2":
-                return StableDiffusionPipeline.from_single_file(file_path,config=SD_V2_CONFIG_PATH,**kwargs)
-            elif model_version == "1":
-                return StableDiffusionPipeline.from_single_file(file_path,config=SD_V1_CONFIG_PATH,**kwargs)
+        file_path = download_file(vae_uri,directory=directory,**download_kwargs)
+        return AutoencoderKL.from_single_file(file_path,**kwargs)
     else:
-        # from local single file
-        if model.endswith(".safetensors") or model.endswith(".bin") or model.endswith(".ckpt"):
-            if not model_version:
-                inferred_model_version = infer_model_version(model)
-                if "sd3" in inferred_model_version:
-                    model_version = "3"
-                elif "xl" in inferred_model_version:
-                    model_version = "xl"
-                elif "v1" == inferred_model_version:
-                    model_version = "1"
-                elif "v2" == inferred_model_version:
-                    model_version = "2"
-                print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
-            if model_version == "xl":
-                return StableDiffusionXLPipeline.from_single_file(model, config=SD_XL_CONFIG_PATH, **kwargs)
-            elif model_version == "3":
-                return StableDiffusion3Pipeline.from_single_file(model, config=SD_3_CONFIG_PATH, **kwargs)
-            elif model_version == "2":
-                return StableDiffusionPipeline.from_single_file(model, config=SD_V2_CONFIG_PATH, **kwargs)
-            elif model_version == "1":
-                return StableDiffusionPipeline.from_single_file(model, config=SD_V1_CONFIG_PATH, **kwargs)
-        # from local directory
-        else:
-            return DiffusionPipeline.from_pretrained(model, **kwargs)
+        return AutoencoderKL.from_single_file(vae_uri,**kwargs)
