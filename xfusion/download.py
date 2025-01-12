@@ -1,4 +1,4 @@
-from .const import XFUSION_COOKIE,HF_HUB_TOKEN,CIVITAI_TOKEN
+from .const import XFUSION_COOKIE,HF_HUB_TOKEN,CIVITAI_TOKEN,PROXY_URL_PREFIX,LOCATION
 import requests
 from tqdm import tqdm
 from urllib.parse import urlparse
@@ -19,9 +19,13 @@ def download_file(url,filename=None,directory=None,mute=False,**kwargs):
         if headers.get("authorization") is None:
             headers.update(authorization=f"Bearer {HF_HUB_TOKEN}")
 
+        url = urlparse(f"{PROXY_URL_PREFIX}/{url.geturl()}") if LOCATION in [None,"CN"] and PROXY_URL_PREFIX else url
+
     elif url.hostname == "civitai.com":
         if headers.get("authorization") is None:
             headers.update(authorization=f"Bearer {CIVITAI_TOKEN}")
+
+        url = urlparse(f"{PROXY_URL_PREFIX}/{url.geturl()}") if LOCATION in [None,"CN"] and PROXY_URL_PREFIX else url
 
     kwargs.update(headers=headers)
 
