@@ -6,7 +6,12 @@ from ..download import download_file
 from ..const import HF_HUB_TOKEN
 from transformers import T5EncoderModel,T5Tokenizer,CLIPTextModel,CLIPTokenizer
 from diffusers import AutoencoderKL
+from diffusers.loaders.single_file_utils import load_state_dict,infer_diffusers_model_type
 
+
+def infer_model_version(file_path):
+    checkpoint = load_state_dict(file_path)
+    return infer_diffusers_model_type(checkpoint)
 
 def get_t5_tokenizer_files(directory,**kwargs):
     url_list = t5_tokenizer_url_list
