@@ -113,7 +113,7 @@ def load_stable_diffusion_pipeline(model=None,
                 inferred_model_version = infer_model_version(file_path)
                 if "sd3" in inferred_model_version:
                     model_version = "3"
-                elif "xl" in inferred_model_version:
+                elif "xl_base" == inferred_model_version:
                     model_version = "xl"
                 elif "v1" == inferred_model_version:
                     model_version = "1"
@@ -134,6 +134,8 @@ def load_stable_diffusion_pipeline(model=None,
                 return StableDiffusionPipeline.from_single_file(file_path,config=SD_V2_CONFIG_PATH,**kwargs)
             elif model_version == "1":
                 return StableDiffusionPipeline.from_single_file(file_path,config=SD_V1_CONFIG_PATH,**kwargs)
+            else:
+                raise ValueError(f"{model_version} is not supported yet.")
     else:
         # from local single file
         if model.endswith(".safetensors") or model.endswith(".bin") or model.endswith(".ckpt"):
@@ -141,7 +143,7 @@ def load_stable_diffusion_pipeline(model=None,
                 inferred_model_version = infer_model_version(model)
                 if "sd3" in inferred_model_version:
                     model_version = "3"
-                elif "xl" in inferred_model_version:
+                elif "xl_base" == inferred_model_version:
                     model_version = "xl"
                 elif "v1" == inferred_model_version:
                     model_version = "1"
@@ -156,6 +158,8 @@ def load_stable_diffusion_pipeline(model=None,
                 return StableDiffusionPipeline.from_single_file(model, config=SD_V2_CONFIG_PATH, **kwargs)
             elif model_version == "1":
                 return StableDiffusionPipeline.from_single_file(model, config=SD_V1_CONFIG_PATH, **kwargs)
+            else:
+                raise ValueError(f"{model_version} is not supported yet.")
         # from local directory
         else:
             return DiffusionPipeline.from_pretrained(model, **kwargs)
