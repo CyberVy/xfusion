@@ -1,8 +1,7 @@
-Telegram_Bot_API_URL_Prefix = "https://api.telegram.org"
-Proxy_URL_Prefix = "https://us.xsolutiontech.com"
+from ..const import LOCATION,PROXY_URL_PREFIX
 
 
-from ..const import LOCATION
+TELEGRAM_BOT_API_URL_PREFIX = "https://api.telegram.org"
 
-if LOCATION in ["CN",None]:
-    Telegram_Bot_API_URL_Prefix = f"{Proxy_URL_Prefix}/{Telegram_Bot_API_URL_Prefix}"
+if LOCATION in ["CN",None] and PROXY_URL_PREFIX:
+    TELEGRAM_BOT_API_URL_PREFIX = f"{PROXY_URL_PREFIX}/{TELEGRAM_BOT_API_URL_PREFIX}"
