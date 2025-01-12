@@ -2,7 +2,7 @@ import gradio as gr
 from .ui_utils import lists_append
 from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
-from ..const import GPU_Count,GPU_Name
+from ..const import GPU_COUNT,GPU_NAME
 from ..components.component_const import default_stable_diffusion_model_url
 import sys,platform
 import functools
@@ -32,7 +32,7 @@ scheduler_list = [
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
-    with gr.Blocks(title=f"Xfusion{GPU_Name}", theme=theme) as server:
+    with gr.Blocks(title=f"Xfusion{GPU_NAME}", theme=theme) as server:
         with gr.Accordion("Model Selection", open=True):
             gr.Markdown("# Model Selection")
             model_selection_inputs = []
@@ -283,7 +283,7 @@ def stable_diffusion_ui_template(fns):
 
         with gr.Accordion("Code",open=False):
             gr.Markdown("# Code")
-            gr.Markdown(f"- GPUs: {GPU_Name}")
+            gr.Markdown(f"- GPUs: {GPU_NAME}")
             gr.Markdown(f"- Python: {sys.version}")
             gr.Markdown(f"- OS: {platform.platform()}")
             code_inputs = []
@@ -529,7 +529,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     """
     load pipelines to multiple GPUs for acceleration
     """
-    pipelines = pipelines[:GPU_Count]
+    pipelines = pipelines[:GPU_COUNT]
 
     def auto_load_controlnet(f):
         @functools.wraps(f)
