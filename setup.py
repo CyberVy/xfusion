@@ -14,7 +14,7 @@ setup(
         'optimum-quanto',
         'transformers',
         'compel',
-        'cv2',
+        'opencv-python',
         'tqdm',
     ],
     author='Eramth Ru',
