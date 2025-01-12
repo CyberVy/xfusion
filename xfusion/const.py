@@ -28,3 +28,4 @@ def get_origin():
 
 LOCATION = get_origin()
 NEED_PROXY_LOCATION_LIST = ["CN",None]
+NEED_PROXY = LOCATION in NEED_PROXY_LOCATION_LIST
