@@ -27,3 +27,4 @@ def get_origin():
     return country
 
 LOCATION = get_origin()
+NEED_PROXY_LOCATION_LIST = ["CN",None]
