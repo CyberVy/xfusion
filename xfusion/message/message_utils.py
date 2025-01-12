@@ -1,10 +1,10 @@
-from .message_const import Telegram_Bot_API_URL_Prefix
+from .message_const import TELEGRAM_BOT_API_URL_PREFIX
 import requests
 from io import BytesIO
 
 
 def send_message_to_telegram(text,parse_mode="HTML",tg_token=None,chat_id=None):
-    r = requests.post(f"{Telegram_Bot_API_URL_Prefix}/bot{tg_token}/sendMessage",
+    r = requests.post(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{tg_token}/sendMessage",
                       data={"method":"POST","chat_id":chat_id,"text":text,"parse_mode":parse_mode})
     return r
 
@@ -37,7 +37,7 @@ def send_PIL_photo(image,**kwargs):
     image_byte_array = BytesIO()
     image.save(image_byte_array, format=file_type)
     image_byte_array.seek(0)
-    r = requests.post(f"{Telegram_Bot_API_URL_Prefix}/bot{token}/sendDocument",
+    r = requests.post(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{token}/sendDocument",
                       data={"chat_id": chat_id, "caption": caption},
                       files={"document": (file_name,image_byte_array,"image/png")})
     return r
