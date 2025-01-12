@@ -24,14 +24,15 @@ pipeline = load_enhancer(None,model_version="xl")
 server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
 **Use UI with multiple GPUs/single GPU is also supported**
+
 ```python
 from xfusion import load_enhancer
 from xfusion import load_stable_diffusion_ui_for_multiple_pipelines
-from xfusion.const import GPU_Count
+from xfusion.const import GPU_COUNT
 
-pipelines = [load_enhancer(None,model_version="xl",download_kwargs={"directory":"./"}) for i in range(GPU_Count)]
-server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
-server.launch(debug=True,inline=False,quiet=True)
+pipelines = [load_enhancer(None, model_version="xl", download_kwargs={"directory": "./"}) for i in range(GPU_COUNT)]
+server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=globals())
+server.launch(debug=True, inline=False, quiet=True)
 ```
 
 ---
@@ -45,15 +46,16 @@ server = pipeline.load_ui(globals(),debug=True,inline=False)
 ```
 
 **Use pipelines with multiple GPUs in UI**
+
 ```python
 from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui_for_multiple_pipelines
-from xfusion.const import GPU_Count
+from xfusion.const import GPU_COUNT
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipelines = [load_enhancer(model,model_version="xl",download_kwargs={"directory":"./"}) for i in range(GPU_Count)]
-server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines,_globals=globals())
-server.launch(debug=True,inline=False,quiet=True)
+pipelines = [load_enhancer(model, model_version="xl", download_kwargs={"directory": "./"}) for i in range(GPU_COUNT)]
+server = load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=globals())
+server.launch(debug=True, inline=False, quiet=True)
 ```
 ---
 **Directly use a pipeline in the backend**
