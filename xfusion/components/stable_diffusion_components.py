@@ -157,7 +157,7 @@ def load_stable_diffusion_pipeline(model=None,
                     raise ValueError(f"{model_version} is not supported yet.")
                 print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
 
-            if model_version == "xl":
+            if model_version in ["xl","pony"]:
                 return StableDiffusionXLPipeline.from_single_file(file_path,config=SD_XL_CONFIG_PATH,**kwargs)
             elif model_version == "3":
                 return StableDiffusion3Pipeline.from_single_file(file_path,config=SD_3_CONFIG_PATH,**kwargs)
@@ -184,7 +184,7 @@ def load_stable_diffusion_pipeline(model=None,
                     raise ValueError(f"{model_version} is not supported yet.")
                 print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
 
-            if model_version == "xl":
+            if model_version in ["xl","pony"]:
                 return StableDiffusionXLPipeline.from_single_file(model, config=SD_XL_CONFIG_PATH, **kwargs)
             elif model_version == "3":
                 return StableDiffusion3Pipeline.from_single_file(model, config=SD_3_CONFIG_PATH, **kwargs)
