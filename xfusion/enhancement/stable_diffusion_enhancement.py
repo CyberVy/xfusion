@@ -275,7 +275,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         if self._controlnet is None:
             if self.model_version == "1.5":
-                controlnet_model = controlnet_model or "https://huggingface.co/lllyasviel/control_v11p_sd15_canny/resolve/main/diffusion_pytorch_model.fp16.safetensors?download=true"
+                controlnet_model = controlnet_model or "lllyasviel/control_v11p_sd15_canny"
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=self.download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
@@ -285,7 +285,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 )
 
             elif self.model_version == "xl":
-                controlnet_model =  controlnet_model or "https://huggingface.co/diffusers/controlnet-canny-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors?download=true"
+                controlnet_model =  controlnet_model or "diffusers/controlnet-canny-sdxl-1.0"
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=self.download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
@@ -311,7 +311,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                    init_sub_pipelines=init_sub_pipelines)
 
     def reload(self,url,**kwargs):
-        supported_model_version_list = [None, "", "sdxl", "xl", "pony", "1.5", "2", "3", "3.5"]
+        supported_model_version_list = [None, "", "sdxl", "xl", "pony","1","1.5", "2","3","3.5"]
         if kwargs.get("model_version") not in supported_model_version_list:
             raise ValueError(
                 f"Model version: {kwargs.get('model_version')} is not supported, {supported_model_version_list[2:]} is expected.")
