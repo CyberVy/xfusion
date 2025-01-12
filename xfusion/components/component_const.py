@@ -4,6 +4,10 @@ SD_V1_CONFIG_PATH = f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_V1"
 SD_V2_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_V2"
 SD_XL_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_XL"
 SD_3_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_3"
+
+SD_V1_V2_CONTROLNET_CONFIG_PATH = f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_V1_V2_CONTROLNET"
+SD_XL_CONTROLNET_CONFIG_PATH = f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_XL_CONTROLNET"
+
 FLUX_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/FLUX"
 
 
