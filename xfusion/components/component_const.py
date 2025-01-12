@@ -54,8 +54,8 @@ flux_scheduler_url_list = [
 # https://civitai.com/models/277058/epicrealism-xl
 default_stable_diffusion_model_url = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 
-default_sd_xl_controlnet_model_url = "https://huggingface.co/lllyasviel/control_v11p_sd15_canny/resolve/main/diffusion_pytorch_model.fp16.safetensors?download=true"
-default_sd_v1_v2_controlnet_model_url = "https://huggingface.co/diffusers/controlnet-canny-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors?download=true"
+default_sd_v1_v2_controlnet_model_url = "https://huggingface.co/lllyasviel/control_v11p_sd15_canny/resolve/main/diffusion_pytorch_model.fp16.safetensors?download=true"
+default_sd_xl_controlnet_model_url = "https://huggingface.co/diffusers/controlnet-canny-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors?download=true"
 
 # collection
 
