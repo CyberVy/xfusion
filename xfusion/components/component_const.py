@@ -1,5 +1,12 @@
 # components_utils.py
 
+SD_V1_CONFIG_PATH = f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_V1"
+SD_V2_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_V2"
+SD_XL_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_XL"
+SD_3_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/SD_3"
+FLUX_CONFIG_PATH =  f"{'/'.join(__file__.split('/')[:-1])}/CONFIG/FLUX"
+
+
 t5_tokenizer_url_list = [
     "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/tokenizer_2/special_tokens_map.json?download=true",
     "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/tokenizer_2/spiece.model?download=true",
