@@ -2,6 +2,7 @@
 
 from .enhancement_utils import PipelineEnhancerBase
 from ..components.component_utils import get_tokenizers_and_text_encoders_from_pipeline
+from ..components.component_const import default_sd_v1_v2_controlnet_model_url,default_sd_xl_controlnet_model_url
 from ..components import load_stable_diffusion_pipeline
 from ..components import load_stable_diffusion_controlnet
 from ..ui.stable_diffusion_ui import load_stable_diffusion_ui
@@ -275,7 +276,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         if self._controlnet is None:
             if self.model_version == "1.5":
-                controlnet_model = controlnet_model or "lllyasviel/control_v11p_sd15_canny"
+                controlnet_model = controlnet_model if controlnet_model else default_sd_v1_v2_controlnet_model_url
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=self.download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
@@ -283,9 +284,8 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 self.image_to_image_controlnet_pipeline = self.enhancer_class(
                     StableDiffusionControlNetImg2ImgPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False
                 )
-
             elif self.model_version == "xl":
-                controlnet_model =  controlnet_model or "diffusers/controlnet-canny-sdxl-1.0"
+                controlnet_model = controlnet_model if controlnet_model else default_sd_xl_controlnet_model_url
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=self.download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
