@@ -2,6 +2,8 @@ from diffusers import DiffusionPipeline
 from diffusers import StableDiffusionPipeline,StableDiffusionXLPipeline,StableDiffusion3Pipeline
 from diffusers import ControlNetModel,SD3ControlNetModel
 from .component_const import default_stable_diffusion_model_url
+from .component_const import SD_V1_CONFIG_PATH,SD_V2_CONFIG_PATH,SD_3_CONFIG_PATH,SD_XL_CONFIG_PATH
+from .component_utils import infer_model_version
 from ..download import download_file
 from ..const import HF_HUB_TOKEN
 import requests
@@ -108,8 +110,15 @@ def load_stable_diffusion_pipeline(model=None,
         else:
             file_path = download_file(model,**download_kwargs)
             if not model_version:
-                if "xl" in file_path.split("/")[-1].lower():
+                inferred_model_version = infer_model_version(file_path)
+                if "sd3" in inferred_model_version:
+                    model_version = "3"
+                elif "xl" in inferred_model_version:
                     model_version = "xl"
+                elif "v1" == inferred_model_version:
+                    model_version = "1"
+                elif "v2" == inferred_model_version:
+                    model_version = "2"
                 print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
             # bad file name from the url, 'filename.tensor/bin/ckpt' is wanted, but get 'filename'
             if not (file_path.endswith(".safetensors") or file_path.endswith(".bin") or file_path.endswith(".ckpt")):
@@ -118,24 +127,35 @@ def load_stable_diffusion_pipeline(model=None,
                 file_path = f"{file_path}.{file_format}"
             print(f"Loading the model {model_version}...")
             if model_version == "xl":
-                return StableDiffusionXLPipeline.from_single_file(file_path,**kwargs)
+                return StableDiffusionXLPipeline.from_single_file(file_path,config=SD_XL_CONFIG_PATH,**kwargs)
             elif model_version == "3":
-                return StableDiffusion3Pipeline.from_single_file(file_path, **kwargs)
-            else:
-                return StableDiffusionPipeline.from_single_file(file_path, **kwargs)
+                return StableDiffusion3Pipeline.from_single_file(file_path,config=SD_3_CONFIG_PATH,**kwargs)
+            elif model_version == "2":
+                return StableDiffusionPipeline.from_single_file(file_path,config=SD_V2_CONFIG_PATH,**kwargs)
+            elif model_version == "1":
+                return StableDiffusionPipeline.from_single_file(file_path,config=SD_V1_CONFIG_PATH,**kwargs)
     else:
         # from local single file
         if model.endswith(".safetensors") or model.endswith(".bin") or model.endswith(".ckpt"):
             if not model_version:
-                if "xl" in model.lower():
+                inferred_model_version = infer_model_version(model)
+                if "sd3" in inferred_model_version:
+                    model_version = "3"
+                elif "xl" in inferred_model_version:
                     model_version = "xl"
+                elif "v1" == inferred_model_version:
+                    model_version = "1"
+                elif "v2" == inferred_model_version:
+                    model_version = "2"
                 print(f"Auto detect result: {model_version}. If not work, please pass in 'model_version' manually.")
             if model_version == "xl":
-                return StableDiffusionXLPipeline.from_single_file(model,**kwargs)
+                return StableDiffusionXLPipeline.from_single_file(model, config=SD_XL_CONFIG_PATH, **kwargs)
             elif model_version == "3":
-                return StableDiffusion3Pipeline.from_single_file(model,**kwargs)
-            else:
-                return StableDiffusionPipeline.from_single_file(model,**kwargs)
+                return StableDiffusion3Pipeline.from_single_file(model, config=SD_3_CONFIG_PATH, **kwargs)
+            elif model_version == "2":
+                return StableDiffusionPipeline.from_single_file(model, config=SD_V2_CONFIG_PATH, **kwargs)
+            elif model_version == "1":
+                return StableDiffusionPipeline.from_single_file(model, config=SD_V1_CONFIG_PATH, **kwargs)
         # from local directory
         else:
             return DiffusionPipeline.from_pretrained(model, **kwargs)
