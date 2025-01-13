@@ -210,7 +210,6 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         telegram_kwargs = self.telegram_kwargs
         object.__getattribute__(self,"__init__")(
             self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
-        self.is_empty_pipeline = False
         self.download_kwargs = download_kwargs
         self.telegram_kwargs = telegram_kwargs
         self.model_name = url
