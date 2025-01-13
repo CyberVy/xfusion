@@ -533,18 +533,20 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
 
     def auto_load_controlnet(f):
         @functools.wraps(f)
-        def wrapper(pipeline):
-            if pipeline._controlnet is None:
-                pipeline.load_controlnet()
-            return f(pipeline)
+        def wrapper(*args,**kwargs):
+            for pipeline in pipelines:
+                if pipeline._controlnet is None:
+                    pipeline.load_controlnet()
+            return f(*args,**kwargs)
         return wrapper
 
     def auto_offload_controlnet(f):
         @functools.wraps(f)
-        def wrapper(pipeline):
-            if pipeline._controlnet is not None:
-                pipeline.offload_controlnet()
-            return f(pipeline)
+        def wrapper(*args,**kwargs):
+            for pipeline in pipelines:
+                if pipeline._controlnet is not None:
+                    pipeline.offload_controlnet()
+            return f(*args,**kwargs)
         return wrapper
 
     @allow_return_error
@@ -596,12 +598,13 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         return f"{scheduler} is set for text to image pipeline."
 
     @allow_return_error
+    @auto_offload_controlnet
     def text_to_image_fn(
             prompt, negative_prompt,
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
-        @auto_offload_controlnet
+
         def f(pipeline):
             return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
                 prompt=prompt, negative_prompt=negative_prompt,
@@ -621,6 +624,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         return f"{scheduler} is set for image to image pipeline."
 
     @allow_return_error
+    @auto_offload_controlnet
     def image_to_image_fn(
             image,
             prompt, negative_prompt,
@@ -632,7 +636,6 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         if not image:
             raise ValueError("Please input an image.")
 
-        @auto_offload_controlnet
         def f(pipeline):
             return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
                 image=image,
@@ -654,6 +657,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         return f"{scheduler} is set for inpainting pipeline."
 
     @allow_return_error
+    @auto_offload_controlnet
     def inpainting_fn(
             image,
             prompt, negative_prompt,
@@ -661,7 +665,6 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num):
-        @auto_offload_controlnet
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
                 image=image["background"].convert("RGB"),
@@ -709,6 +712,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         return f"{scheduler} is set for text to image controlnet pipeline."
 
     @allow_return_error
+    @auto_load_controlnet
     def controlnet_text_to_image_fn(
             image,
             prompt, negative_prompt,
@@ -720,7 +724,6 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         if not image:
             raise ValueError("Please input an image.")
 
-        @auto_load_controlnet
         def f(pipeline):
             return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
                 image=convert_image_to_canny(image,low_threshold,high_threshold),
@@ -742,6 +745,7 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         return f"{scheduler} is set for image to image controlnet pipeline."
 
     @allow_return_error
+    @auto_load_controlnet
     def controlnet_image_to_image_fn(
             control_image,image,
             prompt, negative_prompt,
@@ -754,7 +758,6 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         if not image or not control_image:
             raise ValueError("Please input the images.")
 
-        @auto_load_controlnet
         def f(pipeline):
             return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
                 control_image=convert_image_to_canny(control_image,low_threshold,high_threshold),image=image,
