@@ -87,6 +87,10 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
                  "to",
                  "clear","reload","load"]
 
+    @property
+    def is_empty_pipeline(self):
+        return self.__oins__ is None
+
     def sync_sub_pipelines_mixin_kwargs(self):
         for pipeline in self.sub_pipelines.values():
             pipeline.telegram_kwargs = self.telegram_kwargs
@@ -102,10 +106,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
         # support empty pipeline
         if __oins__ is None:
-            self.is_empty_pipeline = True
             return
-        else:
-            self.is_empty_pipeline = False
 
         # pipeline_type: 0,1,2 -> text_to_image, image_to_image, inpainting
         self.model_version,self.pipeline_type,self.pipeline_class = self.check_original_pipeline()
@@ -174,6 +175,8 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         uncleared = delete(self._controlnet)[-1]
         if uncleared:
             print(f"Warning: {uncleared}")
+
+        delete(self.__oins__)
         free_memory_to_system()
 
     def reload(self,url,**kwargs):
