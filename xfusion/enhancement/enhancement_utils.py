@@ -158,7 +158,6 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
             else:
                 raise BaseException(f"{scheduler_type} is not supported yet.")
 
-
     def reset_scheduler(self):
         self.scheduler = self._scheduler
 
