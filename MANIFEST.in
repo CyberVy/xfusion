@@ -1,1 +1,1 @@
-recursive-include xfusion/components/config_assets *.*
+recursive-include xfusion/components/CONFIG *.*
