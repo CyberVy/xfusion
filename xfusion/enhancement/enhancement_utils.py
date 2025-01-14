@@ -103,6 +103,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         LoraEnhancerMixin.__init__(self)
         ControlnetEnhancerMixin.__init__(self)
         self.enhancer_class:"PipelineEnhancerBase" = object.__getattribute__(self,"__class__")
+        self.sub_pipelines = {}
 
         # support empty pipeline
         if __oins__ is None:
@@ -113,7 +114,6 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         self.model_name = self.name_or_path
         self._scheduler = self.scheduler
 
-        self.sub_pipelines = {}
         if init_sub_pipelines:
             if self.pipeline_type != 0:
                 self.text_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][0](**self.components),
