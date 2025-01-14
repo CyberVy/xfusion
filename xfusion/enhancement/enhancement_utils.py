@@ -95,7 +95,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         for pipeline in self.sub_pipelines.values():
             pipeline.telegram_kwargs = self.telegram_kwargs
             pipeline.download_kwargs = self.download_kwargs
-            self.lora_dict = self.lora_dict
+            pipeline.lora_dict = self.lora_dict
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
@@ -135,8 +135,6 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
                 self.sub_pipelines.update(inpainting_pipeline=self.inpainting_pipeline)
             else:
                 self.inpainting_pipeline = self
-
-            self.sync_sub_pipelines_mixin_kwargs()
 
     def check_original_pipeline(self):
         for model_version, pipeline_class_tuple in self.pipeline_map.items():
@@ -189,12 +187,15 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
         download_kwargs = self.download_kwargs
         telegram_kwargs = self.telegram_kwargs
+        lora_dict = self.lora_dict
         device = self.device
         self.clear()
         object.__getattribute__(self,"__init__")(
             self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
         self.download_kwargs = download_kwargs
         self.telegram_kwargs = telegram_kwargs
+        self.lora_dict = lora_dict
+        self.sync_sub_pipelines_mixin_kwargs()
         self.model_name = url
         self.to(device)
 
@@ -207,8 +208,17 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
         download_kwargs = self.download_kwargs
         telegram_kwargs = self.telegram_kwargs
+        lora_dict = self.lora_dict
         object.__getattribute__(self,"__init__")(
             self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
         self.download_kwargs = download_kwargs
         self.telegram_kwargs = telegram_kwargs
+        self.lora_dict = lora_dict
+        self.sync_sub_pipelines_mixin_kwargs()
         self.model_name = url
+        
+    def __getattribute__(self, item):
+        attr = super().__getattribute__(item)
+        if item.startswith("set") and item.endswith("kwargs"):
+            self.sync_sub_pipelines_mixin_kwargs()
+        return attr
