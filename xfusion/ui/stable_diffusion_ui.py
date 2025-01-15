@@ -305,40 +305,43 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     pipelines:list = pipelines[:GPU_COUNT]
     if len(pipelines) == 0:
         raise RuntimeError("No available GPU.")
-
+    
+    
+    # the way Gradio pass the arguments to function is based on the position instead of the keyword
+    # so there is no **kwargs in wrapper function
+    # num: args[-1], seed: args[-2]
     def auto_load_controlnet(f):
         @functools.wraps(f)
-        def wrapper(*args,**kwargs):
+        def wrapper(*args):
             for pipeline in pipelines:
                 if pipeline._controlnet is None:
                     pipeline.load_controlnet()
-            return f(*args,**kwargs)
+            return f(*args)
         return wrapper
 
     def auto_offload_controlnet(f):
         @functools.wraps(f)
-        def wrapper(*args,**kwargs):
+        def wrapper(*args):
             for pipeline in pipelines:
                 if pipeline._controlnet is not None:
                     pipeline.offload_controlnet()
-            return f(*args,**kwargs)
+            return f(*args)
         return wrapper
 
     def auto_gpu_distribute(f):
         @functools.wraps(f)
-        def wrapper(*args,**kwargs):
-            print(kwargs)
-            if kwargs.get("seed") != 0 or len(pipelines) == 1:
-                return f(*args,**kwargs)(pipelines[0])
+        def wrapper(*args):
+            if args[-2] != 0  or len(pipelines) == 1:
+                return f(*args)(pipelines[0])
             else:
-                threads_execute(f(*args,**kwargs),pipelines)
-                return f"{kwargs.get('num')} * {len(pipelines)}"
+                threads_execute(f(*args),pipelines)
+                return f"{args[-1]} * {len(pipelines)}"
         return wrapper
 
     def auto_gpu_loop(f):
         @functools.wraps(f)
-        def wrapper(*args,**kwargs):
-            return [f(*args,**kwargs)(pipeline) for pipeline in pipelines][0]
+        def wrapper(*args):
+            return [f(*args)(pipeline) for pipeline in pipelines][0]
         return wrapper
 
     @allow_return_error
