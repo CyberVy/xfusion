@@ -297,219 +297,14 @@ def stable_diffusion_ui_template(fns):
                     code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
     return server
 
-def load_stable_diffusion_ui(pipeline, _globals=None):
-
-    def auto_load_controlnet(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            if pipeline._controlnet is None:
-                pipeline.load_controlnet()
-            return f(*args, **kwargs)
-        return wrapper
-
-    def auto_offload_controlnet(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            if pipeline._controlnet is not None:
-                pipeline.offload_controlnet()
-            return f(*args, **kwargs)
-
-        return wrapper
-
-    @allow_return_error
-    def model_selection_fn(model,model_version):
-        pipeline.reload(model, model_version=model_version)
-        if str(pipeline.device) == "cpu":
-            print("Loading the model into cuda...")
-            pipeline.to("cuda")
-        return f"{model}, {model_version}"
-
-    @allow_return_error
-    def set_lora_fn(url, lora_name, strength):
-        pipeline.set_lora(url, lora_name, strength)
-        return f"{lora_name}, {strength}"
-
-    @allow_return_error
-    def delete_lora_fn(_,lora_name,__):
-        pipeline.delete_adapters(lora_name)
-        return f"{lora_name} is deleted."
-
-    @allow_return_error
-    def show_lora_fn():
-        return f"{pipeline.lora_dict}"
-
-    @allow_return_error
-    def enable_lora_fn():
-        pipeline.enable_lora()
-        return f"LoRA Enabled."
-
-    @allow_return_error
-    def disable_lora_fn():
-        pipeline.disable_lora()
-        return f"LoRA disabled."
-
-    @allow_return_error
-    def text_to_image_scheduler_fn(scheduler):
-        pipeline.text_to_image_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for text to image pipeline."
-
-    @allow_return_error
-    @auto_offload_controlnet
-    def text_to_image_fn(
-            prompt, negative_prompt,
-            guidance_scale, num_inference_steps, clip_skip,
-            width, height,
-            seed, num):
-
-        return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
-            prompt=prompt, negative_prompt=negative_prompt,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width, height=height,
-            seed=int(seed), num=int(num))
-
-    @allow_return_error
-    def image_to_image_scheduler_fn(scheduler):
-        pipeline.image_to_image_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for image to image pipeline."
-
-    @allow_return_error
-    @auto_offload_controlnet
-    def image_to_image_fn(
-            image,
-            prompt, negative_prompt,
-            strength,
-            guidance_scale, num_inference_steps, clip_skip,
-            width,height,
-            seed, num):
-
-        if not image:
-            raise ValueError("Please input an image.")
-
-        return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
-            image=image,
-            prompt=prompt, negative_prompt=negative_prompt,
-            strength=strength,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width,height=height,
-            seed=int(seed), num=int(num))
-
-    @allow_return_error
-    def inpainting_scheduler_fn(scheduler):
-        pipeline.inpainting_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for inpainting pipeline."
-
-    @allow_return_error
-    @auto_offload_controlnet
-    def inpainting_fn(
-            image,
-            prompt, negative_prompt,
-            strength,
-            guidance_scale, num_inference_steps, clip_skip,
-            width,height,
-            seed, num):
-        return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
-            image=image["background"].convert("RGB"),
-            mask_image=convert_mask_image_to_rgb(image["layers"][0]),
-            prompt=prompt, negative_prompt=negative_prompt,
-            strength=strength,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width,height=height,
-            seed=int(seed), num=int(num))
-
-    @allow_return_error
-    def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
-        pipeline.load_controlnet = functools.partial(pipeline.load_controlnet,controlnet_model=controlnet_model)
-        if controlnet_model:
-            return f"{controlnet_model} is set as the default controlnet model."
-        else:
-            return f"Using the default controlnet model."
-
-    @allow_return_error
-    def load_controlnet_fn(controlnet_model):
-        pipeline.load_controlnet(controlnet_model=controlnet_model)
-        return f"Controlnet is loaded."
-
-    @allow_return_error
-    def offload_controlnet_fn():
-        pipeline.offload_controlnet()
-        return f"Controlnet is offloaded."
-
-    @allow_return_error
-    def controlnet_preview_fn(image,low_threshold,high_threshold):
-
-        if not image:
-            raise ValueError("Please input an image.")
-
-        return convert_image_to_canny(image,low_threshold,high_threshold)
-
-    @allow_return_error
-    def controlnet_text_to_image_scheduler_fn(scheduler):
-        pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for text to image controlnet pipeline."
-
-    @allow_return_error
-    @auto_load_controlnet
-    def controlnet_text_to_image_fn(
-            image,
-            prompt, negative_prompt,
-            controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
-            width, height,
-            low_threshold,high_threshold,
-            seed, num):
-
-        if not image:
-            raise ValueError("Please input an image.")
-
-        return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-            image=convert_image_to_canny(image,low_threshold,high_threshold),
-            prompt=prompt, negative_prompt=negative_prompt,
-            controlnet_conditioning_scale=controlnet_conditioning_scale,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width, height=height,
-            seed=int(seed), num=int(num)
-        )
-
-    @allow_return_error
-    def controlnet_image_to_image_scheduler_fn(scheduler):
-        pipeline.image_to_image_controlnet_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for image to image controlnet pipeline."
-
-    @allow_return_error
-    @auto_load_controlnet
-    def controlnet_image_to_image_fn(
-            control_image,image,
-            prompt, negative_prompt,
-            controlnet_conditioning_scale,strength,
-            guidance_scale, num_inference_steps, clip_skip,
-            width, height,
-            low_threshold, high_threshold,
-            seed, num):
-
-        if not image or not control_image:
-            raise ValueError("Please input the images.")
-
-        return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-            control_image=convert_image_to_canny(control_image,low_threshold,high_threshold,),image=image,
-            prompt=prompt, negative_prompt=negative_prompt,
-            controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
-            width=width, height=height,
-            seed=int(seed), num=int(num)
-        )
-
-    @allow_return_error
-    def run_code_fn(code):
-        exec(code,_globals)
-        if _globals:
-            return _globals.pop("_cout", None)
-
-    return stable_diffusion_ui_template(locals())
-
-def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
+def load_stable_diffusion_ui(pipelines, _globals=None):
     """
     load pipelines to multiple GPUs for acceleration
     """
-    pipelines = pipelines[:GPU_COUNT]
+    pipelines = [pipelines] if not isinstance(pipelines,list) else pipelines
+    pipelines:list = pipelines[:GPU_COUNT]
+    if len(pipelines) == 0:
+        raise RuntimeError("No available GPU.")
 
     def auto_load_controlnet(f):
         @functools.wraps(f)
@@ -529,56 +324,86 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
             return f(*args,**kwargs)
         return wrapper
 
+    def auto_gpu_distribute(f):
+        @functools.wraps(f)
+        def wrapper(*args,**kwargs):
+
+            if int(kwargs.get("seed")) != 0 or len(pipelines) == 1:
+                return f(*args,**kwargs)(pipelines[0])
+            else:
+                threads_execute(f(*args,**kwargs),pipelines)
+                return f"{kwargs.get("num")} * {len(pipelines)}"
+        return wrapper
+
+    def auto_gpu_loop(f):
+        @functools.wraps(f)
+        def wrapper(*args,**kwargs):
+            return [f(*args,**kwargs)(pipeline) for pipeline in pipelines][0]
+        return wrapper
+
     @allow_return_error
+    @auto_gpu_loop
     def model_selection_fn(model,model_version):
 
-        for i,pipeline in enumerate(pipelines):
+        def f(pipeline):
             pipeline.reload(model,model_version=model_version)
             if str(pipeline.device) == "cpu":
+                i = pipelines.index(pipeline)
                 print(f"Loading the model into cuda:{i}...")
                 pipeline.to(f"cuda:{i}")
-
-        return f"{model}, {model_version}"
+            return f"{model}, {model_version}"
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def set_lora_fn(url, lora_name, strength):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.set_lora(url,lora_name,strength)
-        return f"{lora_name}, {strength}"
+            return f"{lora_name}, {strength}"
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def delete_lora_fn(_,lora_name,__):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.delete_adapters(lora_name)
-        return f"{lora_name} is deleted."
+            return f"{lora_name} is deleted."
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def show_lora_fn():
-        r = ""
-        for pipeline in pipelines:
-            r += str(pipeline.lora_dict) + " "
-        return f"{r}"
+        def f(pipeline):
+            return str(pipeline.lora_dict)
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def enable_lora_fn():
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.enable_lora()
-        return f"LoRA Enabled."
+            return f"LoRA Enabled."
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def disable_lora_fn():
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.disable_lora()
-        return f"LoRA disabled."
+            return f"LoRA disabled."
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def text_to_image_scheduler_fn(scheduler):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.text_to_image_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for text to image pipeline."
+            return f"{scheduler} is set for text to image pipeline."
+        return f
 
     @allow_return_error
     @auto_offload_controlnet
+    @auto_gpu_distribute
     def text_to_image_fn(
             prompt, negative_prompt,
             guidance_scale, num_inference_steps, clip_skip,
@@ -591,20 +416,19 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
-        if int(seed) != 0:
-            return f(pipelines[0])
-        else:
-            threads_execute(f, pipelines)
-            return f"{num} * {len(pipelines)}"
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def image_to_image_scheduler_fn(scheduler):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.image_to_image_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for image to image pipeline."
+            return f"{scheduler} is set for image to image pipeline."
+        return f
 
     @allow_return_error
     @auto_offload_controlnet
+    @auto_gpu_distribute
     def image_to_image_fn(
             image,
             prompt, negative_prompt,
@@ -624,20 +448,19 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width,height=height,
                 seed=int(seed), num=int(num))
-        if int(seed) != 0:
-            return f(pipelines[0])
-        else:
-            threads_execute(f, pipelines)
-            return f"{num} * {len(pipelines)}"
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def inpainting_scheduler_fn(scheduler):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.inpainting_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for inpainting pipeline."
+            return f"{scheduler} is set for inpainting pipeline."
+        return f
 
     @allow_return_error
     @auto_offload_controlnet
+    @auto_gpu_distribute
     def inpainting_fn(
             image,
             prompt, negative_prompt,
@@ -654,45 +477,50 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
-        if int(seed) != 0:
-            return f(pipelines[0])
-        else:
-            threads_execute(f, pipelines)
-            return f"{num} * {len(pipelines)}"
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.load_controlnet = functools.partial(pipeline.load_controlnet, controlnet_model=controlnet_model)
-        if controlnet_model:
-            return f"{controlnet_model} is set as the default controlnet model."
-        else:
-            return f"Using the default controlnet model."
+            if controlnet_model:
+                return f"{controlnet_model} is set as the default controlnet model."
+            else:
+                return f"Using the default controlnet model."
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def load_controlnet_fn(controlnet_model):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.load_controlnet(controlnet_model)
-        return f"Controlnet is loaded."
+            return f"Controlnet is loaded."
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def offload_controlnet_fn():
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.offload_controlnet()
-        return f"Controlnet is offloaded."
+            return f"Controlnet is offloaded."
+        return f
 
     @allow_return_error
     def controlnet_preview_fn(image, low_threshold, high_threshold):
         return convert_image_to_canny(image, low_threshold, high_threshold)
 
     @allow_return_error
+    @auto_gpu_loop
     def controlnet_text_to_image_scheduler_fn(scheduler):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.text_to_image_controlnet_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for text to image controlnet pipeline."
+            return f"{scheduler} is set for text to image controlnet pipeline."
+        return f
 
     @allow_return_error
     @auto_load_controlnet
+    @auto_gpu_distribute
     def controlnet_text_to_image_fn(
             image,
             prompt, negative_prompt,
@@ -712,20 +540,19 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
-        if int(seed) != 0:
-            return f(pipelines[0])
-        else:
-            threads_execute(f, pipelines)
-            return f"{num} * {len(pipelines)}"
+        return f
 
     @allow_return_error
+    @auto_gpu_loop
     def controlnet_image_to_image_scheduler_fn(scheduler):
-        for pipeline in pipelines:
+        def f(pipeline):
             pipeline.image_to_image_controlnet_pipeline.set_scheduler(scheduler)
-        return f"{scheduler} is set for image to image controlnet pipeline."
+            return f"{scheduler} is set for image to image controlnet pipeline."
+        return f
 
     @allow_return_error
     @auto_load_controlnet
+    @auto_gpu_distribute
     def controlnet_image_to_image_fn(
             control_image,image,
             prompt, negative_prompt,
@@ -746,17 +573,14 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
-        if int(seed) != 0:
-            return f(pipelines[0])
-        else:
-            threads_execute(f, pipelines)
-            return f"{num} * {len(pipelines)}"
-
+        return f
 
     @allow_return_error
     def run_code_fn(code):
         exec(code,_globals)
         if _globals:
             return _globals.pop("_cout", None)
-
-    return stable_diffusion_ui_template(locals())
+        
+    fns = locals()
+    fns.pop("_globals")
+    return stable_diffusion_ui_template(fns)
