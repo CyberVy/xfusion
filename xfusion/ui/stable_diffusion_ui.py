@@ -503,27 +503,7 @@ def load_stable_diffusion_ui(pipeline, _globals=None):
         if _globals:
             return _globals.pop("_cout", None)
 
-    fns = {"model_selection_fn": model_selection_fn,
-           "set_lora_fn": set_lora_fn, "delete_lora_fn": delete_lora_fn,
-           "show_lora_fn": show_lora_fn, "enable_lora_fn": enable_lora_fn,
-           "disable_lora_fn": disable_lora_fn,
-           "text_to_image_scheduler_fn": text_to_image_scheduler_fn,
-           "text_to_image_fn": text_to_image_fn,
-           "image_to_image_scheduler_fn": image_to_image_scheduler_fn,
-           "image_to_image_fn": image_to_image_fn,
-           "inpainting_scheduler_fn": inpainting_scheduler_fn,
-           "inpainting_fn": inpainting_fn,
-           "set_default_controlnet_for_auto_load_controlnet_fn": set_default_controlnet_for_auto_load_controlnet_fn,
-           "load_controlnet_fn": load_controlnet_fn,
-           "offload_controlnet_fn": offload_controlnet_fn,
-           "controlnet_preview_fn":controlnet_preview_fn,
-           "controlnet_text_to_image_scheduler_fn": controlnet_text_to_image_scheduler_fn,
-           "controlnet_text_to_image_fn": controlnet_text_to_image_fn,
-           "controlnet_image_to_image_scheduler_fn": controlnet_image_to_image_scheduler_fn,
-           "controlnet_image_to_image_fn": controlnet_image_to_image_fn,
-           "run_code_fn": run_code_fn}
-
-    return stable_diffusion_ui_template(fns)
+    return stable_diffusion_ui_template(locals())
 
 def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
     """
@@ -779,24 +759,4 @@ def load_stable_diffusion_ui_for_multiple_pipelines(pipelines, _globals=None):
         if _globals:
             return _globals.pop("_cout", None)
 
-    fns = {"model_selection_fn": model_selection_fn,
-           "set_lora_fn": set_lora_fn, "delete_lora_fn": delete_lora_fn,
-           "show_lora_fn": show_lora_fn, "enable_lora_fn": enable_lora_fn,
-           "disable_lora_fn": disable_lora_fn,
-           "text_to_image_scheduler_fn": text_to_image_scheduler_fn,
-           "text_to_image_fn": text_to_image_fn,
-           "image_to_image_scheduler_fn": image_to_image_scheduler_fn,
-           "image_to_image_fn": image_to_image_fn,
-           "inpainting_scheduler_fn": inpainting_scheduler_fn,
-           "inpainting_fn": inpainting_fn,
-           "set_default_controlnet_for_auto_load_controlnet_fn": set_default_controlnet_for_auto_load_controlnet_fn,
-           "load_controlnet_fn":load_controlnet_fn,
-           "offload_controlnet_fn":offload_controlnet_fn,
-           "controlnet_preview_fn":controlnet_preview_fn,
-           "controlnet_text_to_image_scheduler_fn":controlnet_text_to_image_scheduler_fn,
-           "controlnet_text_to_image_fn":controlnet_text_to_image_fn,
-           "controlnet_image_to_image_scheduler_fn":controlnet_image_to_image_scheduler_fn,
-           "controlnet_image_to_image_fn":controlnet_image_to_image_fn,
-           "run_code_fn": run_code_fn}
-
-    return stable_diffusion_ui_template(fns)
+    return stable_diffusion_ui_template(locals())
