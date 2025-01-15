@@ -327,8 +327,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args,**kwargs):
-
-            if kwargs.get("seed") != 0 or len(pipelines) == 1:
+            print(str(kwargs.get("seed")))
+            if int(kwargs.get("seed")) != 0 or len(pipelines) == 1:
                 return f(*args,**kwargs)(pipelines[0])
             else:
                 threads_execute(f(*args,**kwargs),pipelines)
