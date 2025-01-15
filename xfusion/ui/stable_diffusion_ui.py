@@ -332,7 +332,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
                 return f(*args,**kwargs)(pipelines[0])
             else:
                 threads_execute(f(*args,**kwargs),pipelines)
-                return f"{kwargs.get("num")} * {len(pipelines)}"
+                return f"{kwargs.get('num')} * {len(pipelines)}"
         return wrapper
 
     def auto_gpu_loop(f):
@@ -580,7 +580,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         exec(code,_globals)
         if _globals:
             return _globals.pop("_cout", None)
-        
+
     fns = locals()
     fns.pop("_globals")
     return stable_diffusion_ui_template(fns)
