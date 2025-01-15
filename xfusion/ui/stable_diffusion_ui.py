@@ -305,8 +305,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     pipelines:list = pipelines[:GPU_COUNT]
     if len(pipelines) == 0:
         raise RuntimeError("No available GPU.")
-    
-    
+
+
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
     # num: args[-1], seed: args[-2]
@@ -331,7 +331,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args):
-            if args[-2] != 0  or len(pipelines) == 1:
+            if int(args[-2]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
                 threads_execute(f(*args),pipelines)
