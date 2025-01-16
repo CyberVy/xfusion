@@ -309,7 +309,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
-    # num: args[-2], seed: args[-3]
+    # progress: args[-1], num: args[-2], seed: args[-3]
     def auto_load_controlnet(f):
         @functools.wraps(f)
         def wrapper(*args):
@@ -331,7 +331,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args):
-            print(args[-1],args[-2],args[-3])
             if int(args[-3]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
@@ -440,7 +439,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             strength,
             guidance_scale, num_inference_steps, clip_skip,
             width,height,
-            seed, num):
+            seed, num,
+            progress=gr.Progress(track_tqdm=True)):
 
         if not image:
             raise ValueError("Please input an image.")
@@ -472,7 +472,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             strength,
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
-            seed, num):
+            seed, num,
+            progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
                 image=image["background"].convert("RGB"),
@@ -497,7 +498,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_gpu_loop
-    def load_controlnet_fn():
+    def load_controlnet_fn(progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
             pipeline.load_controlnet()
             return f"Controlnet is loaded."
@@ -532,7 +533,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
             low_threshold, high_threshold,
-            seed, num):
+            seed, num,
+            progress=gr.Progress(track_tqdm=True)):
 
         if not image:
             raise ValueError("Please input an image.")
@@ -565,7 +567,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             low_threshold, high_threshold,
-            seed, num):
+            seed, num,
+            progress=gr.Progress(track_tqdm=True)):
 
         if not image or not control_image:
             raise ValueError("Please input the images.")
