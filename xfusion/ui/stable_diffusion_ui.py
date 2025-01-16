@@ -498,7 +498,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_gpu_loop
-    def load_controlnet_fn():
+    def load_controlnet_fn(progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
             pipeline.load_controlnet()
             return f"Controlnet is loaded."
@@ -526,7 +526,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_load_controlnet
-    @auto_gpu_distribute
     def controlnet_text_to_image_fn(
             image,
             prompt, negative_prompt,
@@ -547,7 +546,13 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
-        return f
+
+        if int(seed) != 0:
+            return f(pipelines[0])
+        else:
+            threads_execute(f,pipelines)
+            return f"{num} * {len(pipelines)}"
+
 
     @allow_return_error
     @auto_gpu_loop
