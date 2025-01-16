@@ -10,7 +10,7 @@ setup(
         'peft',
         'torch',
         'gradio==5.9.1',
-        'diffusers==0.32.1',
+        'diffusers==0.32.2',
         'optimum-quanto',
         'transformers',
         'compel',
