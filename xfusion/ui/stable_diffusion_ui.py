@@ -532,8 +532,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
             low_threshold, high_threshold,
-            seed, num,
-            progress=gr.Progress(track_tqdm=True)):
+            seed, num,):
 
         if not image:
             raise ValueError("Please input an image.")
@@ -546,12 +545,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
-
-        if int(seed) != 0:
-            return f(pipelines[0])
-        else:
-            threads_execute(f,pipelines)
-            return f"{num} * {len(pipelines)}"
+        return threads_execute(f,pipelines)
 
 
     @allow_return_error
