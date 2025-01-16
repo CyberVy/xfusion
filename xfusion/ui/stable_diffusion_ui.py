@@ -340,7 +340,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     def auto_gpu_loop(f):
         @functools.wraps(f)
-        def wrapper(*args):
+        def wrapper(*args,progress=gr.Progress(track_tqdm=True)):
             return [f(*args)(pipeline) for pipeline in pipelines][0]
         return wrapper
 
