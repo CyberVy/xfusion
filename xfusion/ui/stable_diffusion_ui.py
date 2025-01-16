@@ -474,10 +474,10 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             width, height,
             seed, num,
             progress=gr.Progress(track_tqdm=True)):
-        
+
         _image = image["background"].convert("RGB")
         mask_image = convert_mask_image_to_rgb(image["layers"][0])
-        
+
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
                 image=_image,
@@ -518,7 +518,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     def controlnet_preview_fn(image, low_threshold, high_threshold):
-        return convert_image_to_canny(image, low_threshold, high_threshold)
+        if image:
+            return convert_image_to_canny(image, low_threshold, high_threshold)
 
     @allow_return_error
     @auto_gpu_loop
@@ -542,7 +543,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
         if not image:
             raise ValueError("Please input an image.")
-        
+
         image = convert_image_to_canny(image,low_threshold,high_threshold)
 
         def f(pipeline):
