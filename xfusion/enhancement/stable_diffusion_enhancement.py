@@ -87,7 +87,7 @@ def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
                 [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
                 return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning,
                         "pooled_prompt_embeds":pooled,"negative_pooled_prompt_embeds":negative_pooled}
-    except KeyError:
+    except BaseException:
         pass
     # compel only supports sd1 sd2 sdxl now
     return {}
