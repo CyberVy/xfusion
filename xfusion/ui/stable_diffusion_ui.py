@@ -359,7 +359,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_gpu_loop
-    def set_lora_fn(url, lora_name, strength):
+    def set_lora_fn(url, lora_name, strength,progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
             pipeline.set_lora(url,lora_name,strength)
             return f"{lora_name}, {strength}"
