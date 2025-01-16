@@ -411,7 +411,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             prompt, negative_prompt,
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
-            seed, num):
+            seed, num,
+            progress=gr.Progress(track_tqdm=True)):
 
         def f(pipeline):
             return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
