@@ -187,7 +187,7 @@ def stable_diffusion_ui_template(fns):
                             load_controlnet_button = gr.Button("Load controlnet")
                             offload_controlnet_button = gr.Button("Offload controlnet")
                     controlnet_outputs.append(gr.Textbox(label="Result"))
-                    load_controlnet_button.click(fn=fns["load_controlnet_fn"],inputs=controlnet_inputs,outputs=controlnet_outputs)
+                    load_controlnet_button.click(fn=fns["load_controlnet_fn"],outputs=controlnet_outputs)
                     offload_controlnet_button.click(fn=fns["offload_controlnet_fn"],outputs=controlnet_outputs)
             with gr.Accordion("Controlnet Text To Image", open=False):
                 gr.Markdown("# Controlnet Text To Image")
@@ -495,9 +495,9 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_gpu_loop
-    def load_controlnet_fn(controlnet_model):
+    def load_controlnet_fn():
         def f(pipeline):
-            pipeline.load_controlnet(controlnet_model)
+            pipeline.load_controlnet()
             return f"Controlnet is loaded."
         return f
 
