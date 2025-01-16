@@ -526,13 +526,15 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_load_controlnet
+    @auto_gpu_distribute
     def controlnet_text_to_image_fn(
             image,
             prompt, negative_prompt,
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
             low_threshold, high_threshold,
-            seed, num,):
+            seed, num,
+            progress=gr.Progress(track_tqdm=True)):
 
         if not image:
             raise ValueError("Please input an image.")
@@ -545,7 +547,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
                 seed=int(seed), num=int(num))
-        return threads_execute(f,pipelines)
+        return f
 
 
     @allow_return_error
