@@ -571,8 +571,11 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             seed, num,
             progress=gr.Progress(track_tqdm=True)):
 
-        if not image or not control_image:
+        if not image and not control_image:
             raise ValueError("Please input the images.")
+
+        control_image = control_image if control_image else image
+        image = image if image else control_image
 
         def f(pipeline):
             return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
