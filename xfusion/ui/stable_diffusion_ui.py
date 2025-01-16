@@ -309,7 +309,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
-    # num: args[-1], seed: args[-2]
+    # num: args[-2], seed: args[-3]
     def auto_load_controlnet(f):
         @functools.wraps(f)
         def wrapper(*args):
@@ -331,11 +331,11 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args):
-            if int(args[-2]) != 0  or len(pipelines) == 1:
+            if int(args[-3]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
                 threads_execute(f(*args),pipelines)
-                return f"{args[-1]} * {len(pipelines)}"
+                return f"{args[-2]} * {len(pipelines)}"
         return wrapper
 
     def auto_gpu_loop(f):
