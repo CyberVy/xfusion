@@ -346,7 +346,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_gpu_loop
-    def model_selection_fn(model,model_version):
+    def model_selection_fn(model,model_version,progress=gr.Progress(track_tqdm=True)):
 
         def f(pipeline):
             pipeline.reload(model,model_version=model_version)
