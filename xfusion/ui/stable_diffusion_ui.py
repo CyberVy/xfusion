@@ -474,10 +474,14 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             width, height,
             seed, num,
             progress=gr.Progress(track_tqdm=True)):
+        
+        _image = image["background"].convert("RGB")
+        mask_image = convert_mask_image_to_rgb(image["layers"][0])
+        
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
-                image=image["background"].convert("RGB"),
-                mask_image=convert_mask_image_to_rgb(image["layers"][0]),
+                image=_image,
+                mask_image=mask_image,
                 prompt=prompt, negative_prompt=negative_prompt,
                 strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -538,10 +542,12 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
         if not image:
             raise ValueError("Please input an image.")
+        
+        image = convert_image_to_canny(image,low_threshold,high_threshold)
 
         def f(pipeline):
             return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-                image=convert_image_to_canny(image,low_threshold,high_threshold),
+                image=image,
                 prompt=prompt, negative_prompt=negative_prompt,
                 controlnet_conditioning_scale=controlnet_conditioning_scale,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -576,10 +582,11 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
         control_image = control_image if control_image else image
         image = image if image else control_image
+        control_image = convert_image_to_canny(control_image, low_threshold, high_threshold)
 
         def f(pipeline):
             return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-                control_image=convert_image_to_canny(control_image,low_threshold,high_threshold),image=image,
+                control_image=control_image,image=image,
                 prompt=prompt, negative_prompt=negative_prompt,
                 controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
