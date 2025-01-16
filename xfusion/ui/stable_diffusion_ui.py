@@ -498,7 +498,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     @allow_return_error
     @auto_gpu_loop
-    def load_controlnet_fn(progress=gr.Progress(track_tqdm=True)):
+    def load_controlnet_fn():
         def f(pipeline):
             pipeline.load_controlnet()
             return f"Controlnet is loaded."
