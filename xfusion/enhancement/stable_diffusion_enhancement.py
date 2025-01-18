@@ -13,9 +13,9 @@ from PIL import Image
 import threading
 from random import randint
 from diffusers import (StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,
-                       StableDiffusionControlNetPipeline,StableDiffusionControlNetImg2ImgPipeline)
+                       StableDiffusionControlNetPipeline,StableDiffusionControlNetImg2ImgPipeline,StableDiffusionControlNetInpaintPipeline)
 from diffusers import (StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,
-                       StableDiffusionXLControlNetPipeline,StableDiffusionXLControlNetImg2ImgPipeline)
+                       StableDiffusionXLControlNetPipeline,StableDiffusionXLControlNetImg2ImgPipeline,StableDiffusionXLControlNetInpaintPipeline)
 from diffusers import StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline
 from diffusers.schedulers import DPMSolverMultistepScheduler,DPMSolverSinglestepScheduler
 from diffusers.schedulers import KDPM2DiscreteScheduler,KDPM2AncestralDiscreteScheduler
@@ -28,8 +28,8 @@ from diffusers.schedulers import UniPCMultistepScheduler
 # pipeline_type
 # 0-> text_to_image, 1 -> image_to_image, 2 -> inpainting
 pipeline_map = {
-    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline,StableDiffusionControlNetImg2ImgPipeline),
-    "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline,StableDiffusionXLControlNetImg2ImgPipeline),
+    "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline,StableDiffusionControlNetImg2ImgPipeline,StableDiffusionControlNetInpaintPipeline),
+    "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline,StableDiffusionXLControlNetImg2ImgPipeline,StableDiffusionXLControlNetInpaintPipeline),
     "3":(StableDiffusion3Pipeline,StableDiffusion3Img2ImgPipeline,StableDiffusion3InpaintPipeline)}
 
 
@@ -282,9 +282,13 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
-                    StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+                    StableDiffusionControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False
+                )
                 self.image_to_image_controlnet_pipeline = self.enhancer_class(
                     StableDiffusionControlNetImg2ImgPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False
+                )
+                self.inpainting_controlnet_pipeline = self.enhancer_class(
+                    StableDiffusionControlNetInpaintPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False
                 )
             elif self.model_version == "xl":
                 download_kwargs.update(directory="./controlnet_sdxl")
@@ -292,10 +296,14 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=download_kwargs,**kwargs).to(self.device)
                 self.text_to_image_controlnet_pipeline = self.enhancer_class(
-                    StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
+                    StableDiffusionXLControlNetPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False
+                )
                 self.image_to_image_controlnet_pipeline = self.enhancer_class(
-                    StableDiffusionXLControlNetImg2ImgPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False)
-
+                    StableDiffusionXLControlNetImg2ImgPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False
+                )
+                self.inpainting_controlnet_pipeline = self.enhancer_class(
+                    StableDiffusionXLControlNetInpaintPipeline(**self.components, controlnet=self._controlnet),init_sub_pipelines=False
+                )
             # todo: sd3 controlnet support
             elif self.model_version == "3":
                 ...
@@ -304,6 +312,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
             self.sub_pipelines.update(text_to_image_controlnet_pipeline=self.text_to_image_controlnet_pipeline)
             self.sub_pipelines.update(image_to_image_controlnet_pipeline=self.image_to_image_controlnet_pipeline)
+            self.sub_pipelines.update(inpainting_controlnet_pipeline=self.inpainting_controlnet_pipeline)
             self.sync_sub_pipelines_mixin_kwargs()
         else:
             print(f"Controlnet is already implemented.")
