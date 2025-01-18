@@ -232,6 +232,7 @@ def stable_diffusion_ui_template(fns):
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
                         controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
+            
             with gr.Accordion("Controlnet Image To Image",open=False):
                 gr.Markdown("# Controlnet Image To Image")
                 controlnet_i2i_inputs = []
@@ -281,6 +282,62 @@ def stable_diffusion_ui_template(fns):
                         controlnet_i2i_btn = gr.Button("Run")
                         controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs, outputs=controlnet_i2i_outputs)
 
+            with gr.Accordion("Controlnet Inpainting", open=False):
+                gr.Markdown("# Controlnet Inpainting")
+                controlnet_inpainting_inputs = []
+                controlnet_inpainting_outputs = []
+                controlnet_inpainting_control_image_preview_inputs = []
+                controlnet_inpainting_control_image_preview_outputs = []
+                controlnet_inpainting_scheduler_inputs = []
+                controlnet_inpainting_scheduler_outputs = []
+                with gr.Row():
+                    with gr.Accordion("Scheduler", open=False):
+                        controlnet_inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                        controlnet_inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
+                        controlnet_inpainting_scheduler_inputs[0].change(
+                            fn=fns["controlnet_inpainting_scheduler_fn"], inputs=controlnet_inpainting_scheduler_inputs,
+                            outputs=controlnet_inpainting_scheduler_outputs)
+                with gr.Row():
+                    with gr.Column():
+                        with gr.Accordion("Images"):
+                            with gr.Row():
+                                lists_append(gr.Image(type="pil", label="Controlnet Image"),
+                                             [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                                controlnet_inpainting_inputs.append(gr.ImageMask(type="pil", label="Image"))
+                        controlnet_inpainting_inputs.append(
+                            gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                        controlnet_inpainting_inputs.append(
+                            gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+                    with gr.Column():
+                        controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                        controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
+                        controlnet_inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                        controlnet_inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                        controlnet_inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                        with gr.Row():
+                            controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                            controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                        with gr.Row():
+                            lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),
+                                         [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                            lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
+                                         [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                        controlnet_inpainting_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                        for component in controlnet_inpainting_control_image_preview_inputs:
+                            component.change(fn=fns["controlnet_preview_fn"],
+                                             inputs=controlnet_inpainting_control_image_preview_inputs,
+                                             outputs=controlnet_inpainting_control_image_preview_outputs)
+
+                    with gr.Column():
+                        with gr.Row():
+                            controlnet_inpainting_inputs.append(
+                                gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                            controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                        controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
+                        controlnet_inpainting_btn = gr.Button("Run")
+                        controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
+                                                 outputs=controlnet_inpainting_outputs)
+
         with gr.Accordion("Code",open=False):
             gr.Markdown("# Code")
             gr.Markdown(f"- GPUs: {GPU_NAME}")
@@ -295,6 +352,8 @@ def stable_diffusion_ui_template(fns):
                     code_outputs.append(gr.Textbox(label="Code Result"))
                     code_btn = gr.Button("Run Code")
                     code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
+
+
     return server
 
 def load_stable_diffusion_ui(pipelines, _globals=None):
@@ -556,7 +615,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
                 seed=int(seed), num=int(num))
         return f
 
-
     @allow_return_error
     @auto_gpu_loop
     def controlnet_image_to_image_scheduler_fn(scheduler):
@@ -588,6 +646,43 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         def f(pipeline):
             return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
                 control_image=control_image,image=image,
+                prompt=prompt, negative_prompt=negative_prompt,
+                controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
+                width=width, height=height,
+                seed=int(seed), num=int(num))
+        return f
+
+    @allow_return_error
+    @auto_gpu_loop
+    def controlnet_inpainting_scheduler_fn(scheduler):
+        def f(pipeline):
+            pipeline.inpainting_controlnet_pipeline.set_scheduler(scheduler)
+            return f"{scheduler} is set for inpainting controlnet pipeline."
+        return f
+
+    @allow_return_error
+    @auto_load_controlnet
+    @auto_gpu_distribute
+    def controlnet_inpainting_fn(
+            control_image,image,mask_image,
+            prompt, negative_prompt,
+            controlnet_conditioning_scale, strength,
+            guidance_scale, num_inference_steps, clip_skip,
+            width, height,
+            low_threshold, high_threshold,
+            seed, num,
+            progress=gr.Progress(track_tqdm=True)):
+
+        _image = image["background"].convert("RGB")
+        mask_image = convert_mask_image_to_rgb(image["layers"][0])
+
+        control_image = control_image if control_image else _image
+        control_image = convert_image_to_canny(control_image, low_threshold, high_threshold)
+
+        def f(pipeline):
+            return pipeline.inpainting_controlnet_pipeline.generate_image_and_send_to_telegram(
+                control_image=control_image,image=_image,mask_image=mask_image,
                 prompt=prompt, negative_prompt=negative_prompt,
                 controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
