@@ -232,7 +232,7 @@ def stable_diffusion_ui_template(fns):
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
                         controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
-            
+
             with gr.Accordion("Controlnet Image To Image",open=False):
                 gr.Markdown("# Controlnet Image To Image")
                 controlnet_i2i_inputs = []
@@ -539,8 +539,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
-                image=_image,
-                mask_image=mask_image,
+                image=_image,mask_image=mask_image,
                 prompt=prompt, negative_prompt=negative_prompt,
                 strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
@@ -665,7 +664,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_inpainting_fn(
-            control_image,image,mask_image,
+            control_image,image,
             prompt, negative_prompt,
             controlnet_conditioning_scale, strength,
             guidance_scale, num_inference_steps, clip_skip,
