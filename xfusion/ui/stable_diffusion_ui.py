@@ -33,6 +33,7 @@ def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
     with gr.Blocks(title=f"Xfusion{GPU_NAME}", theme=theme) as server:
+
         with gr.Accordion("Model Selection", open=True):
             gr.Markdown("# Model Selection")
             model_selection_inputs = []
@@ -300,10 +301,10 @@ def stable_diffusion_ui_template(fns):
                 with gr.Row():
                     with gr.Column():
                         with gr.Accordion("Images"):
-                            with gr.Row():
+                            with gr.Column():
                                 lists_append(gr.Image(type="pil", label="Controlnet Image"),
                                              [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
-                                controlnet_inpainting_inputs.append(gr.ImageMask(type="pil", label="Image"))
+                                controlnet_inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
                         controlnet_inpainting_inputs.append(
                             gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
                         controlnet_inpainting_inputs.append(
@@ -352,7 +353,6 @@ def stable_diffusion_ui_template(fns):
                     code_outputs.append(gr.Textbox(label="Code Result"))
                     code_btn = gr.Button("Run Code")
                     code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
-
 
     return server
 
