@@ -7,27 +7,14 @@ from ..components.component_const import default_stable_diffusion_model_url
 import sys,platform
 import functools
 
+
 scheduler_list = [
-            "DPM++ 2M",
-            "DPM++ 2M KARRAS",
-            "DPM++ 2M SDE",
-            "DPM++ 2M SDE KARRAS",
-            "DPM++ 2S A",
-            "DPM++ 2S A KARRAS",
-            "DPM++ SDE",
-            "DPM++ SDE KARRAS",
-            "DPM2",
-            "DPM2 KARRAS",
-            "DPM2 A",
-            "DPM2 A KARRAS",
-            "EULER",
-            "EULER A",
-            "HEUN",
-            "LMS",
-            "LMS KARRAS",
-            "DEIS",
-            "UNIPC"
-        ]
+    "DPM++ 2M","DPM++ 2M KARRAS", "DPM++ 2M SDE","DPM++ 2M SDE KARRAS",
+    "DPM++ 2S A","DPM++ 2S A KARRAS","DPM++ SDE","DPM++ SDE KARRAS",
+    "DPM2","DPM2 KARRAS","DPM2 A","DPM2 A KARRAS",
+    "EULER", "EULER A",
+    "HEUN","LMS","LMS KARRAS","DEIS","UNIPC"]
+
 
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
