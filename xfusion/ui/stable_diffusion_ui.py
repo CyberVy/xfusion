@@ -310,7 +310,7 @@ def stable_diffusion_ui_template(fns):
                             gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
                     with gr.Column():
                         controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
-                        controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
+                        controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
                         controlnet_inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                         controlnet_inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                         controlnet_inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
