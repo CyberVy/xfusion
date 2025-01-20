@@ -78,7 +78,7 @@ class ControlnetEnhancerMixin:
 class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass,metaclass=NoAsync):
     pipeline_map = {}
     scheduler_map = {}
-    locked_list = ["__init__","__call__","set_scheduler","reset_scheduler","to","clear","reload","load",
+    locked_list = ["__call__","set_scheduler","reset_scheduler","to","clear","reload","load",
                    "load_controlnet","offload_controlnet"]
 
     overrides = ["pipeline_map","scheduler_map","locked_list",
