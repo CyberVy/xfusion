@@ -119,8 +119,8 @@ def delete(obj):
     _referrers = []
     for item in gc.get_referrers(obj):
         if hasattr(item, "__dict__"):
-            # make sure get the right __dict__ by object.__getattribute__
-            # item.__dict__ may not work when the __getattribute__ is overridden
+            # get the correct __dict__ by object.__getattribute__
+            # item.__dict__ may not work when item.__getattribute__ is overridden
             __dict__ = object.__getattribute__(item,"__dict__")
         elif isinstance(item, dict):
             __dict__ = item
