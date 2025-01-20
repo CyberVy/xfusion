@@ -656,10 +656,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
         _image = image["background"].convert("RGB")
         mask_image = convert_mask_image_to_rgb(image["layers"][0])
-
         control_image = convert_mask_image_to_rgb(control_image["layers"][0])
-        control_image = convert_image_to_canny(control_image, low_threshold, high_threshold)
-
         def f(pipeline):
             return pipeline.inpainting_controlnet_pipeline.generate_image_and_send_to_telegram(
                 control_image=control_image,image=_image,mask_image=mask_image,
