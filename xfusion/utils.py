@@ -255,11 +255,6 @@ class NoAsync(type):
 
         @lru_cache()
         def __get__(self, instance, owner):
-            if instance is None:
-                context = owner
-            else:
-                context = instance
-            print(context)
             @wraps(self.f)
             def wrapper(*args, **kwargs):
                 chain = []
@@ -267,20 +262,23 @@ class NoAsync(type):
                     chain.append(stack.function)
 
                 invoked_in_locked_function = False
-                for locked_function in context.locked_list:
+                for locked_function in owner.locked_list:
                     if locked_function in chain[1:]:
                         invoked_in_locked_function = True
 
                 # when a function not allowed async invoked in another function not allowed async
                 if invoked_in_locked_function:
-                    return self.f(context, *args, **kwargs)
+                    if instance:
+                        return self.f(self,*args, **kwargs)
+                    else:
+                        return self.f(*args,**kwargs)
 
-                if not context.lock["status"]:
-                    context.lock["status"] = True
+                if not instance.lock["status"]:
+                    instance.lock["status"] = True
                     try:
-                        r = self.f(context, *args, **kwargs)
+                        r = self.f(instance,*args, **kwargs)
                     finally:
-                        context.lock["status"] = False
+                        instance.lock["status"] = False
                     return r
                 else:
                     raise RuntimeError(f"Async and multiple threads are not allowed for {self.f.__name__}.")
