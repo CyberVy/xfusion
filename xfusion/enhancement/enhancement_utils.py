@@ -72,6 +72,7 @@ class ControlnetEnhancerMixin:
 
     def offload_controlnet(self):
         delete(self._controlnet)
+        self._controlnet = None
         free_memory_to_system()
 
 
