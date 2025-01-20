@@ -1,6 +1,7 @@
 import os,shutil,gc
+import inspect
 import threading
-from functools import wraps
+from functools import wraps,lru_cache
 from PIL.Image import Image,Resampling,merge,fromarray
 import cv2
 import torch
@@ -161,6 +162,20 @@ def threads_execute(f,args,_await=True):
             thread.start()
     return threads
 
+def disallow_async_and_threads(f):
+    locked = False
+    wraps(f)
+    def wrapper(*args,**kwargs):
+        nonlocal locked
+        if locked:
+            raise RuntimeError(f"Async and multiple threads are not allowed for {f.__name__}.")
+        try:
+            locked = True
+            return f(*args,**kwargs)
+        finally:
+            locked = False
+    return wrapper
+
 def allow_return_error(f):
     @wraps(f)
     def wrapper(*args,**kwargs):
@@ -227,3 +242,44 @@ def dict_to_str(_dict:dict):
 def free_memory_to_system():
     gc.collect()
     torch.cuda.empty_cache()
+
+class NoAsync(type):
+
+    def __init__(cls,*args):
+        for item in cls.locked_list:
+            type.__setattr__(cls,item,cls.Lock(type.__getattribute__(cls,item)))
+
+    class Lock:
+        def __init__(self, f):
+            self.f = f
+
+        @lru_cache()
+        def __get__(self, instance, owner):
+            context = instance or owner
+
+            @wraps(self.f)
+            def wrapper(*args, **kwargs):
+                chain = []
+                for stack in inspect.stack():
+                    chain.append(stack.function)
+
+                invoked_in_locked_function = False
+                for locked_function in context.locked_list:
+                    if locked_function in chain[1:]:
+                        invoked_in_locked_function = True
+
+                # when a function not allowed async invoked in another function not allowed async
+                if invoked_in_locked_function:
+                    return self.f(context, *args, **kwargs)
+
+                if not context.lock["status"]:
+                    context.lock["status"] = True
+                    try:
+                        r = self.f(context, *args, **kwargs)
+                    finally:
+                        context.lock["status"] = False
+                    return r
+                else:
+                    raise RuntimeError(f"Async and multiple threads are not allowed for {self.f.__name__}.")
+
+            return wrapper
