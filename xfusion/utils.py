@@ -255,8 +255,11 @@ class NoAsync(type):
 
         @lru_cache()
         def __get__(self, instance, owner):
-            context = instance or owner
-
+            if instance is None:
+                context = owner
+            else:
+                context = instance
+                
             @wraps(self.f)
             def wrapper(*args, **kwargs):
                 chain = []
