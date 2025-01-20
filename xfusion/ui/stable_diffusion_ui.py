@@ -289,8 +289,8 @@ def stable_diffusion_ui_template(fns):
                     with gr.Column():
                         with gr.Accordion("Images"):
                             with gr.Column():
-                                lists_append(gr.Image(type="pil", label="Controlnet Image"),
-                                             [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                                lists_append(gr.ImageMask(type="pil", label="Controlnet Image"),
+                                             [controlnet_inpainting_inputs])
                                 controlnet_inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
                         controlnet_inpainting_inputs.append(
                             gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
@@ -306,16 +306,10 @@ def stable_diffusion_ui_template(fns):
                             controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                             controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
                         with gr.Row():
-                            lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),
-                                         [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                            lists_append(gr.Slider(0, 255, 100, step=5, label="Low Threshold"),
+                                         [controlnet_inpainting_inputs])
                             lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
-                                         [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
-                        controlnet_inpainting_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
-                        for component in controlnet_inpainting_control_image_preview_inputs:
-                            component.change(fn=fns["controlnet_preview_fn"],
-                                             inputs=controlnet_inpainting_control_image_preview_inputs,
-                                             outputs=controlnet_inpainting_control_image_preview_outputs)
-
+                                         [controlnet_inpainting_inputs])
                     with gr.Column():
                         with gr.Row():
                             controlnet_inpainting_inputs.append(
@@ -663,7 +657,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         _image = image["background"].convert("RGB")
         mask_image = convert_mask_image_to_rgb(image["layers"][0])
 
-        control_image = control_image if control_image else _image
+        control_image = convert_mask_image_to_rgb(control_image["layers"][0])
         control_image = convert_image_to_canny(control_image, low_threshold, high_threshold)
 
         def f(pipeline):
