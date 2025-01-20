@@ -259,7 +259,7 @@ class NoAsync(type):
                 context = owner
             else:
                 context = instance
-                
+            print(context)
             @wraps(self.f)
             def wrapper(*args, **kwargs):
                 chain = []
