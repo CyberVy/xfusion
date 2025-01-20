@@ -94,7 +94,6 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
     def sync_sub_pipelines_mixin_kwargs(self):
         for pipeline in self.sub_pipelines.values():
-            pipeline.lock = self.lock
             pipeline.telegram_kwargs = self.telegram_kwargs
             pipeline.download_kwargs = self.download_kwargs
             pipeline.lora_dict = self.lora_dict
