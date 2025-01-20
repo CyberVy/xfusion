@@ -75,7 +75,7 @@ class ControlnetEnhancerMixin:
         free_memory_to_system()
 
 
-class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass,metaclass=type):
+class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     pipeline_map = {}
     scheduler_map = {}
     locked_list = ["__call__","set_scheduler","reset_scheduler","to","clear","reload","load",
