@@ -78,19 +78,15 @@ class ControlnetEnhancerMixin:
 class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     pipeline_map = {}
     scheduler_map = {}
-    locked_list = ["__call__","set_scheduler","reset_scheduler","to","clear","reload","load",
-                   "load_controlnet","offload_controlnet"]
 
-    overrides = ["pipeline_map","scheduler_map","locked_list",
+    overrides = ["pipeline_map","scheduler_map",
                  "enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
                  "model_name","_scheduler","sub_pipelines",
-                 "lock",
                  "image_to_image_pipeline","inpainting_pipeline",
                  "sync_sub_pipelines_mixin_kwargs",
                  "check_original_pipeline","check_inference_kwargs",
                  "set_scheduler","reset_scheduler",
-                 "to",
-                 "clear","reload","load"]
+                 "to","clear","reload","load"]
 
     @property
     def is_empty_pipeline(self):
@@ -110,7 +106,6 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         ControlnetEnhancerMixin.__init__(self)
         self.enhancer_class:"PipelineEnhancerBase" = object.__getattribute__(self,"__class__")
         self.sub_pipelines = {}
-        self.lock = {"status": False}
 
         # support empty pipeline
         if __oins__ is None:
