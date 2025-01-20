@@ -1,4 +1,4 @@
-from ..utils import EasyInitSubclass,delete,free_memory_to_system,NoAsync
+from ..utils import EasyInitSubclass,delete,free_memory_to_system
 from ..ui.ui_utils import UIMixin
 from ..download import DownloadArgumentsMixin,download_file
 from ..message import TGBotMixin
@@ -83,7 +83,8 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
     overrides = ["pipeline_map","scheduler_map","locked_list",
                  "enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
-                 "model_name","_scheduler","sub_pipelines","lock",
+                 "model_name","_scheduler","sub_pipelines",
+                 "lock",
                  "image_to_image_pipeline","inpainting_pipeline",
                  "sync_sub_pipelines_mixin_kwargs",
                  "check_original_pipeline","check_inference_kwargs",
