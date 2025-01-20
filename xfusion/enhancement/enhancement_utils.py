@@ -1,4 +1,4 @@
-from ..utils import EasyInitSubclass,delete,free_memory_to_system
+from ..utils import EasyInitSubclass,delete,free_memory_to_system,NoAsync
 from ..ui.ui_utils import UIMixin
 from ..download import DownloadArgumentsMixin,download_file
 from ..message import TGBotMixin
@@ -75,11 +75,15 @@ class ControlnetEnhancerMixin:
         free_memory_to_system()
 
 
-class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
+class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass,metaclass=NoAsync):
     pipeline_map = {}
     scheduler_map = {}
-    overrides = ["pipeline_map","enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
-                 "model_name","_scheduler","scheduler_map","sub_pipelines",
+    locked_list = ["__init__","__call__","set_scheduler","reset_scheduler","to","clear","reload","load",
+                   "load_controlnet","offload_controlnet"]
+
+    overrides = ["pipeline_map","scheduler_map","locked_list",
+                 "enhancer_class","is_empty_pipeline","model_version","pipeline_type","pipeline_class",
+                 "model_name","_scheduler","sub_pipelines","lock",
                  "image_to_image_pipeline","inpainting_pipeline",
                  "sync_sub_pipelines_mixin_kwargs",
                  "check_original_pipeline","check_inference_kwargs",
@@ -93,6 +97,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
     def sync_sub_pipelines_mixin_kwargs(self):
         for pipeline in self.sub_pipelines.values():
+            pipeline.lock = self.lock
             pipeline.telegram_kwargs = self.telegram_kwargs
             pipeline.download_kwargs = self.download_kwargs
             pipeline.lora_dict = self.lora_dict
@@ -104,6 +109,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         ControlnetEnhancerMixin.__init__(self)
         self.enhancer_class:"PipelineEnhancerBase" = object.__getattribute__(self,"__class__")
         self.sub_pipelines = {}
+        self.lock = {"status": False}
 
         # support empty pipeline
         if __oins__ is None:
