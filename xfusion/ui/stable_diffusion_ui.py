@@ -357,7 +357,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
     # progress: args[-1], num: args[-2], seed: args[-3]
-    def _lock(lock_state=None):
+    def lock(lock_state=None):
         lock_state = lock_state if lock_state is not None else [False]
 
         def decorator(f):
@@ -410,7 +410,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             print(args)
             return [f(*args)(pipeline) for pipeline in pipelines][0]
         return wrapper
-
+    
+    @allow_return_error
     @lock(lock_state)
     @auto_gpu_loop
     def model_selection_fn(model,model_version,progress=gr.Progress(track_tqdm=True)):
