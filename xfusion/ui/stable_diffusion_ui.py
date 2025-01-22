@@ -16,6 +16,24 @@ scheduler_list = [
     "HEUN","LMS","LMS KARRAS","DEIS","UNIPC"]
 
 
+def lock(lock_state=None):
+    lock_state = lock_state if lock_state is not None else [False]
+
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args):
+            if lock_state[0]:
+                raise RuntimeError(f"Async and multiple threads are not allowed for {f.__name__}.")
+            try:
+                lock_state[0] = True
+                return f(*args)
+            finally:
+                lock_state[0] = False
+
+        return wrapper
+
+    return decorator
+
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
@@ -357,23 +375,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
     # progress: args[-1], num: args[-2], seed: args[-3]
-    def lock(lock_state=None):
-        lock_state = lock_state if lock_state is not None else [False]
-
-        def decorator(f):
-            @functools.wraps(f)
-            def wrapper(*args):
-                if lock_state[0]:
-                    raise RuntimeError(f"Async and multiple threads are not allowed for {f.__name__}.")
-                try:
-                    lock_state[0] = True
-                    return f(*args)
-                finally:
-                    lock_state[0] = False
-
-            return wrapper
-
-        return decorator
 
     def auto_load_controlnet(f):
         @functools.wraps(f)
@@ -410,7 +411,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             print(args)
             return [f(*args)(pipeline) for pipeline in pipelines][0]
         return wrapper
-    
+
     @allow_return_error
     @lock(lock_state)
     @auto_gpu_loop
