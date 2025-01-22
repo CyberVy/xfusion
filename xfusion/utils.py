@@ -6,7 +6,8 @@ from PIL.Image import Image,Resampling,merge,fromarray
 import cv2
 import torch
 import numpy as np
-from typing import Tuple
+from typing import Tuple,Union,Optional
+from types import FunctionType,MethodType
 
 
 class EasyInitSubclass:
@@ -105,7 +106,7 @@ class EasyInitSubclass:
         # final step before self is completely deleted from RAM
         print(f"{object.__getattribute__(self,'__class__').__name__}:{id(self)} has been deleted from RAM.")
 
-def delete(obj):
+def delete(obj) -> Tuple[int,list,int,list]:
     """
         Example:
         >>> a = [1,2,3]
@@ -113,7 +114,7 @@ def delete(obj):
         >>> delete(a)
     """
     if obj is None:
-        return 0, [], 0
+        return 0, [], 0,[]
     i = 0
     _i = 0
     referrers = []
@@ -148,7 +149,7 @@ def delete(obj):
 
     return i, referrers, _i, _referrers
 
-def threads_execute(f,args,_await=True):
+def threads_execute(f:Union[FunctionType | MethodType],args:Union[list | tuple],_await:bool = True):
     threads = []
     if _await:
         for arg in args[1:]:
@@ -165,7 +166,7 @@ def threads_execute(f,args,_await=True):
             thread.start()
     return threads
 
-def allow_return_error(f):
+def allow_return_error(f:Union[FunctionType | MethodType]):
     @wraps(f)
     def wrapper(*args,**kwargs):
         try:
@@ -183,7 +184,7 @@ def delete_all_contents_of_path(folder_path):
             elif os.path.isdir(full_path):
                 shutil.rmtree(full_path)
 
-def normalize_image_size(image_size:Tuple[int,int],target_pixels:int):
+def normalize_image_size(image_size:Tuple[int,int],target_pixels:int) -> Tuple[int,int]:
     """
     upscale or downscale the image size with the same aspect ratio to the target pixels
     """
@@ -195,7 +196,7 @@ def normalize_image_size(image_size:Tuple[int,int],target_pixels:int):
     height = height - height % 8
     return width,height
 
-def normalize_image(image:Image, target_pixels:int):
+def normalize_image(image:Image, target_pixels:int) -> Image:
     """
     upscale or downscale the image with the same aspect ratio to the target pixels
     """
@@ -203,14 +204,14 @@ def normalize_image(image:Image, target_pixels:int):
     width,height = normalize_image_size((width,height),target_pixels)
     return image.resize((width,height),Resampling.LANCZOS)
 
-def convert_mask_image_to_rgb(mask_image:Image):
+def convert_mask_image_to_rgb(mask_image:Image) -> Image:
     """
     convert rgba mask image to rgb image
     """
     r, g, b, a = mask_image.split()
     return merge("L", [a]).convert("RGB")
 
-def convert_image_to_canny(image:Image,low_threshold=None,high_threshold=None):
+def convert_image_to_canny(image:Image,low_threshold:Optional[int] = None,high_threshold:Optional[int] = None) -> Image:
 
     low_threshold = low_threshold if low_threshold is not None else 100
     high_threshold = high_threshold if high_threshold is not None else 200
@@ -222,7 +223,7 @@ def convert_image_to_canny(image:Image,low_threshold=None,high_threshold=None):
     image = fromarray(image)
     return image
 
-def dict_to_str(_dict:dict):
+def dict_to_str(_dict:dict) -> str:
     r = ""
     for key,value in _dict.items():
         r += f"{key}: {value}\n\n"
