@@ -393,7 +393,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return wrapper
 
     @allow_return_error
-    @lock(lock_state)
     @auto_gpu_loop
     def model_selection_fn(model,model_version,progress=gr.Progress(track_tqdm=True)):
 
