@@ -26,7 +26,8 @@ from diffusers.schedulers import DEISMultistepScheduler
 from diffusers.schedulers import UniPCMultistepScheduler
 
 # pipeline_type
-# 0-> text_to_image, 1 -> image_to_image, 2 -> inpainting
+# 0 -> text_to_image, 1 -> image_to_image, 2 -> inpainting
+# 3 -> text_to_image_controlnet, 4 -> image_to_image_controlnet, 5 -> inpainting_controlnet
 pipeline_map = {
     "1.5":(StableDiffusionPipeline,StableDiffusionImg2ImgPipeline,StableDiffusionInpaintPipeline,StableDiffusionControlNetPipeline,StableDiffusionControlNetImg2ImgPipeline,StableDiffusionControlNetInpaintPipeline),
     "xl":(StableDiffusionXLPipeline,StableDiffusionXLImg2ImgPipeline,StableDiffusionXLInpaintPipeline,StableDiffusionXLControlNetPipeline,StableDiffusionXLControlNetImg2ImgPipeline,StableDiffusionXLControlNetInpaintPipeline),
