@@ -452,10 +452,11 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
             return f"{scheduler} is set for text to image pipeline."
         return f
 
+
     @allow_return_error
     @auto_offload_controlnet
-    @lock(lock_state)
     @auto_gpu_distribute
+    @lock(lock_state)
     def text_to_image_fn(
             prompt, negative_prompt,
             guidance_scale, num_inference_steps, clip_skip,
