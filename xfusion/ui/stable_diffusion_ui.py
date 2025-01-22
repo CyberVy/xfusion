@@ -354,6 +354,9 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     lock_state = [False]
 
+    # the way Gradio pass the arguments to function is based on the position instead of the keyword
+    # so there is no **kwargs in wrapper function
+    # progress: args[-1], num: args[-2], seed: args[-3]
     def lock(lock_state=None):
         lock_state = lock_state if lock_state is not None else [False]
 
@@ -372,9 +375,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
         return decorator
 
-    # the way Gradio pass the arguments to function is based on the position instead of the keyword
-    # so there is no **kwargs in wrapper function
-    # progress: args[-1], num: args[-2], seed: args[-3]
     def auto_load_controlnet(f):
         @functools.wraps(f)
         def wrapper(*args):
