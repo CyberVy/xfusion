@@ -407,6 +407,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def set_lora_fn(url, lora_name, strength,progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
@@ -415,6 +416,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def delete_lora_fn(_,lora_name,__):
         def f(pipeline):
