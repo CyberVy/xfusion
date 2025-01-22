@@ -378,6 +378,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args):
+            print(args[-3])
             if int(args[-3]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
@@ -453,8 +454,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_offload_controlnet
+    @lock(lock_state)
     @auto_gpu_distribute
     def text_to_image_fn(
             prompt, negative_prompt,
@@ -480,7 +481,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def image_to_image_fn(
@@ -514,7 +514,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def inpainting_fn(
@@ -551,7 +550,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_gpu_loop
     def load_controlnet_fn(progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
@@ -560,7 +558,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_gpu_loop
     def offload_controlnet_fn():
         def f(pipeline):
@@ -582,7 +579,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_text_to_image_fn(
@@ -618,7 +614,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_image_to_image_fn(
@@ -657,7 +652,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
-    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_inpainting_fn(
