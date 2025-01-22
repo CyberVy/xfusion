@@ -16,24 +16,6 @@ scheduler_list = [
     "HEUN","LMS","LMS KARRAS","DEIS","UNIPC"]
 
 
-def _lock(lock_state=None):
-    lock_state = lock_state if lock_state is not None else [False]
-
-    def decorator(f):
-        @functools.wraps(f)
-        def wrapper(*args):
-            if lock_state[0]:
-                raise RuntimeError(f"Async and multiple threads are not allowed for {f.__name__}.")
-            try:
-                lock_state[0] = True
-                return f(*args)
-            finally:
-                lock_state[0] = False
-
-        return wrapper
-
-    return decorator
-
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
@@ -397,7 +379,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args):
-            print(args)
             if int(args[-3]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
@@ -408,7 +389,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_loop(f):
         @functools.wraps(f)
         def wrapper(*args):
-            print(args)
             return [f(*args)(pipeline) for pipeline in pipelines][0]
         return wrapper
 
@@ -475,6 +455,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
 
     @allow_return_error
+    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def text_to_image_fn(
@@ -501,6 +482,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def image_to_image_fn(
@@ -534,6 +516,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def inpainting_fn(
@@ -570,6 +553,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def load_controlnet_fn(progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
@@ -578,6 +562,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def offload_controlnet_fn():
         def f(pipeline):
@@ -599,6 +584,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_text_to_image_fn(
@@ -634,6 +620,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_image_to_image_fn(
@@ -672,6 +659,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_inpainting_fn(
