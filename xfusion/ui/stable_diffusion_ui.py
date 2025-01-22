@@ -1,6 +1,6 @@
 import gradio as gr
 from .ui_utils import lists_append
-from ..utils import allow_return_error,threads_execute
+from ..utils import allow_return_error,threads_execute,lock
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..const import GPU_COUNT,GPU_NAME
 from ..components.component_const import default_stable_diffusion_model_url
@@ -354,7 +354,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     lock_state = [False]
 
-    def lock(lock_state=None):
+    def _lock(lock_state=None):
         lock_state = lock_state if lock_state is not None else [False]
 
         def decorator(f):
