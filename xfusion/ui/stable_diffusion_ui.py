@@ -1,5 +1,5 @@
 import gradio as gr
-from .ui_utils import lists_append
+from .ui_utils import lists_append,lock
 from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..const import GPU_COUNT,GPU_NAME
@@ -16,7 +16,7 @@ scheduler_list = [
     "HEUN","LMS","LMS KARRAS","DEIS","UNIPC"]
 
 
-def lock(lock_state=None):
+def _lock(lock_state=None):
     lock_state = lock_state if lock_state is not None else [False]
 
     def decorator(f):
