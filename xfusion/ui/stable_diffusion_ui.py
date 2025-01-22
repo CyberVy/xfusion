@@ -1,6 +1,6 @@
 import gradio as gr
 from .ui_utils import lists_append
-from ..utils import allow_return_error,threads_execute
+from ..utils import allow_return_error,threads_execute,lock
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..const import GPU_COUNT,GPU_NAME
 from ..components.component_const import default_stable_diffusion_model_url
@@ -357,7 +357,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
     # progress: args[-1], num: args[-2], seed: args[-3]
-    def lock(lock_state=None):
+    def _lock(lock_state=None):
         lock_state = lock_state if lock_state is not None else [False]
 
         def decorator(f):
@@ -407,10 +407,11 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_loop(f):
         @functools.wraps(f)
         def wrapper(*args):
+            print(args)
             return [f(*args)(pipeline) for pipeline in pipelines][0]
         return wrapper
 
-    @allow_return_error
+    @lock
     @auto_gpu_loop
     def model_selection_fn(model,model_version,progress=gr.Progress(track_tqdm=True)):
 
@@ -474,7 +475,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     @allow_return_error
     @auto_offload_controlnet
     @auto_gpu_distribute
-    @lock(lock_state)
     def text_to_image_fn(
             prompt, negative_prompt,
             guidance_scale, num_inference_steps, clip_skip,
