@@ -352,7 +352,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     if len(pipelines) == 0:
         raise RuntimeError("No available GPU.")
 
-    lock_state = [False]
+    lock_state = [False,None]
 
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
