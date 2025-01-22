@@ -1,6 +1,6 @@
 import gradio as gr
 from .ui_utils import lists_append
-from ..utils import allow_return_error,threads_execute
+from ..utils import allow_return_error,threads_execute,lock
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..const import GPU_COUNT,GPU_NAME
 from ..components.component_const import default_stable_diffusion_model_url
@@ -352,6 +352,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     if len(pipelines) == 0:
         raise RuntimeError("No available GPU.")
 
+    lock_state = [False]
 
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
@@ -391,6 +392,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return wrapper
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def model_selection_fn(model,model_version,progress=gr.Progress(track_tqdm=True)):
 
@@ -451,6 +453,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def text_to_image_fn(
@@ -477,6 +480,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def image_to_image_fn(
@@ -510,6 +514,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_offload_controlnet
     @auto_gpu_distribute
     def inpainting_fn(
@@ -546,6 +551,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def load_controlnet_fn(progress=gr.Progress(track_tqdm=True)):
         def f(pipeline):
@@ -554,6 +560,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def offload_controlnet_fn():
         def f(pipeline):
@@ -575,6 +582,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_text_to_image_fn(
@@ -610,6 +618,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_image_to_image_fn(
@@ -648,6 +657,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_inpainting_fn(
