@@ -6,6 +6,7 @@ from PIL.Image import Image,Resampling,merge,fromarray
 import cv2
 import torch
 import numpy as np
+from typing import Tuple
 
 
 class EasyInitSubclass:
@@ -182,7 +183,7 @@ def delete_all_contents_of_path(folder_path):
             elif os.path.isdir(full_path):
                 shutil.rmtree(full_path)
 
-def normalize_image_size(image_size,target_pixels):
+def normalize_image_size(image_size:Tuple[int,int],target_pixels:int):
     """
     upscale or downscale the image size with the same aspect ratio to the target pixels
     """
@@ -194,7 +195,7 @@ def normalize_image_size(image_size,target_pixels):
     height = height - height % 8
     return width,height
 
-def normalize_image(image:Image, target_pixels):
+def normalize_image(image:Image, target_pixels:int):
     """
     upscale or downscale the image with the same aspect ratio to the target pixels
     """
@@ -202,14 +203,14 @@ def normalize_image(image:Image, target_pixels):
     width,height = normalize_image_size((width,height),target_pixels)
     return image.resize((width,height),Resampling.LANCZOS)
 
-def convert_mask_image_to_rgb(mask_image):
+def convert_mask_image_to_rgb(mask_image:Image):
     """
     convert rgba mask image to rgb image
     """
     r, g, b, a = mask_image.split()
     return merge("L", [a]).convert("RGB")
 
-def convert_image_to_canny(image,low_threshold=None,high_threshold=None):
+def convert_image_to_canny(image:Image,low_threshold=None,high_threshold=None):
 
     low_threshold = low_threshold if low_threshold is not None else 100
     high_threshold = high_threshold if high_threshold is not None else 200
