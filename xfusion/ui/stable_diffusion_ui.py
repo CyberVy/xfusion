@@ -378,7 +378,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args):
-            print(args[-3])
+            print(args)
             if int(args[-3]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
