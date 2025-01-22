@@ -17,12 +17,12 @@ def lock(lock_state=None):
 
     def decorator(f):
         @functools.wraps(f)
-        def wrapper(*args):
+        def wrapper(*args,**kwargs):
             if lock_state[0]:
                 raise RuntimeError(f"Async and multiple threads are not allowed for {f.__name__}.")
             try:
                 lock_state[0] = True
-                return f(*args)
+                return f(*args,**kwargs)
             finally:
                 lock_state[0] = False
 
