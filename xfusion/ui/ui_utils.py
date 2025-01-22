@@ -1,5 +1,5 @@
 import functools
-
+from typing import List,Union
 
 class UIMixin:
     overrides = ["load_ui"]
@@ -12,7 +12,7 @@ def lists_append(element,lists):
     for _list in lists:
         _list.append(element)
 
-def lock(lock_state=None):
+def lock(lock_state:Union[List[bool,None] | None]=None):
     lock_state = lock_state if lock_state is not None else [False,None]
 
     def decorator(f):
