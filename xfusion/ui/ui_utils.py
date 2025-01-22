@@ -13,18 +13,20 @@ def lists_append(element,lists):
         _list.append(element)
 
 def lock(lock_state=None):
-    lock_state = lock_state if lock_state is not None else [False]
+    lock_state = lock_state if lock_state is not None else [False,None]
 
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args,**kwargs):
             if lock_state[0]:
-                raise RuntimeError(f"Async and multiple threads are not allowed for {f.__name__}.")
+                raise RuntimeError(f"Async and multiple threads are not allowed for {f.__name__}, because {lock_state[1]} is working.")
             try:
                 lock_state[0] = True
+                lock_state[1] = f.__name__
                 return f(*args,**kwargs)
             finally:
                 lock_state[0] = False
+                lock_state[1] = None
 
         return wrapper
 
