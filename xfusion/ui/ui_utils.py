@@ -1,3 +1,6 @@
+import functools
+
+
 class UIMixin:
     overrides = ["load_ui"]
 
