@@ -698,4 +698,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     fns.pop("_globals")
     server =  stable_diffusion_ui_template(fns)
     server.launch(inline=False,quiet=True,**kwargs)
+    if server.share_url:
+        pipelines[0].send_text(f"* Running on public URL: {server.share_url}")
     return server
