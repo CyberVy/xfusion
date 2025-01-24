@@ -1,4 +1,5 @@
 import functools
+import time
 from typing import List,Union,Optional
 
 class UIMixin:
@@ -31,3 +32,12 @@ def lock(lock_state:Optional[List[Optional[bool]]] = None):
         return wrapper
 
     return decorator
+
+def safe_block():
+    import time
+    while (1):
+        try:
+            time.sleep(len("hello world. " * 100))
+        except KeyboardInterrupt:
+            break
+    
