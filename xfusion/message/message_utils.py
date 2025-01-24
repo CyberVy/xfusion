@@ -22,7 +22,7 @@ def send_PIL_photo(image:Image,**kwargs):
     """
     caption = kwargs.get("caption") or ""
     file_type = kwargs.get("file_type") or "JPEG"
-    file_name = kwargs.get("file_name") or f"file.{"JPG" if file_type.upper() == "JPEG" else file_type.upper()}"
+    file_name = kwargs.get("file_name") or f"file.{'JPG' if file_type.upper() == 'JPEG' else file_type.upper()}"
     token = kwargs.get("token") or "8001790084:AAFNqWprWz7WUnco5fob6U0CMHwockkZY8M"
     chat_id = kwargs.get("chat_id") or "5143886367"
     image_byte_array = BytesIO()
