@@ -341,7 +341,7 @@ def stable_diffusion_ui_template(fns):
 
     return server
 
-def load_stable_diffusion_ui(pipelines, _globals=None,block=True,**kwargs):
+def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     """
     load pipelines to multiple GPUs for acceleration
     """
@@ -700,12 +700,13 @@ def load_stable_diffusion_ui(pipelines, _globals=None,block=True,**kwargs):
 
     if not kwargs.get("inline"): kwargs.update(inline=False)
     if not kwargs.get("quiet"): kwargs.update(quiet=True)
+    block = kwargs.pop("debug",True)
     server.launch(**kwargs)
 
-    if server.share_url and not kwargs.get("debug"):
+    if server.share_url:
         pipelines[0].send_text(f"* Running on public URL: {server.share_url}")
 
-    if block and not kwargs.get("debug"):
+    if block:
         def close():
             server.close()
             for pipeline in pipelines: pipeline.clear()
