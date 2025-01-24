@@ -706,6 +706,9 @@ def load_stable_diffusion_ui(pipelines, _globals=None,block=True,**kwargs):
         pipelines[0].send_text(f"* Running on public URL: {server.share_url}")
 
     if block and not kwargs.get("debug"):
-        safe_block(server.close)
+        def close():
+            server.close()
+            for pipeline in pipelines: pipeline.clear()
+        safe_block(close)
 
     return server
