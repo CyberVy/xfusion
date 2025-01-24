@@ -21,7 +21,7 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 from xfusion.enhancement import load_enhancer
 
 pipeline = load_enhancer(None,model_version="xl")
-server = pipeline.load_ui(globals(),debug=True,inline=False)
+server = pipeline.load_ui(globals())
 ```
 **Use UI with multiple GPUs/A single GPU is also supported**
 
@@ -32,7 +32,6 @@ from xfusion.const import GPU_COUNT
 
 pipelines = [load_enhancer(None, model_version="xl", download_kwargs={"directory": "./"}) for i in range(GPU_COUNT)]
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
-server.launch(debug=True, inline=False, quiet=True)
 ```
 
 ---
@@ -42,7 +41,7 @@ from xfusion.enhancement import load_enhancer
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model,model_version="xl").to("cuda")
-server = pipeline.load_ui(globals(),debug=True,inline=False)
+server = pipeline.load_ui(globals())
 ```
 
 **Use pipelines with multiple GPUs in UI**
@@ -55,7 +54,6 @@ from xfusion.const import GPU_COUNT
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipelines = [load_enhancer(model, model_version="xl", download_kwargs={"directory": "./"}) for i in range(GPU_COUNT)]
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
-server.launch(debug=True, inline=False, quiet=True)
 ```
 ---
 **Directly use a pipeline in the backend**
