@@ -33,11 +33,11 @@ def lock(lock_state:Optional[List[Optional[bool]]] = None):
 
     return decorator
 
-def safe_block():
+def safe_block(f=None):
     import time
     while (1):
         try:
             time.sleep(len("hello world. " * 100))
         except KeyboardInterrupt:
+            f() if f else ()
             break
-    
