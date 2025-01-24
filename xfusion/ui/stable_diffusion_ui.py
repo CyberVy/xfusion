@@ -341,7 +341,7 @@ def stable_diffusion_ui_template(fns):
 
     return server
 
-def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
+def load_stable_diffusion_ui(pipelines, _globals=None,block=True,**kwargs):
     """
     load pipelines to multiple GPUs for acceleration
     """
@@ -700,5 +700,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     server.launch(inline=False,quiet=True,**kwargs)
     if server.share_url:
         pipelines[0].send_text(f"* Running on public URL: {server.share_url}")
-    safe_block()
+    if block and not kwargs.get("debug"):
+        safe_block()
     return server
