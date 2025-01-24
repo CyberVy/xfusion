@@ -21,8 +21,8 @@ def send_PIL_photo(image:Image,**kwargs):
     :return:
     """
     caption = kwargs.get("caption") or ""
-    file_type = kwargs.get("file_type") or "JPG"
-    file_name = kwargs.get("file_name") or f"file.{file_type}"
+    file_type = kwargs.get("file_type") or "JPEG"
+    file_name = kwargs.get("file_name") or f"file.{"JPG" if file_type.upper() == "JPEG" else file_type.upper()}"
     token = kwargs.get("token") or "8001790084:AAFNqWprWz7WUnco5fob6U0CMHwockkZY8M"
     chat_id = kwargs.get("chat_id") or "5143886367"
     image_byte_array = BytesIO()
@@ -30,7 +30,7 @@ def send_PIL_photo(image:Image,**kwargs):
     image_byte_array.seek(0)
     r = requests.post(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{token}/sendDocument",
                       data={"chat_id": chat_id, "caption": caption},
-                      files={"document": (file_name,image_byte_array,f"image/{'jpeg' if file_type.lower() == 'jpg' else file_type.lower()}")})
+                      files={"document": (file_name,image_byte_array,f"image/{file_type.lower()}")})
     return r
 
 
