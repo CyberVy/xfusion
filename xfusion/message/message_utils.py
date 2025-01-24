@@ -4,7 +4,10 @@ from io import BytesIO
 from PIL.Image import Image
 
 
-def send_text(text,parse_mode="HTML",token=None,chat_id=None):
+def send_text(text,**kwargs):
+    token = kwargs.get("token") or "8001790084:AAFNqWprWz7WUnco5fob6U0CMHwockkZY8M"
+    chat_id = kwargs.get("chat_id") or "5143886367"
+    parse_mode = kwargs.get("parse_mode") or "HTML"
     r = requests.post(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{token}/sendMessage",
                       data={"chat_id":chat_id,"text":text,"parse_mode":parse_mode})
     return r
@@ -47,10 +50,10 @@ class TGBotMixin:
     def send_pil_photo(self, image, **kwargs):
         kw = self.telegram_kwargs.copy()
         kw.update(**kwargs)
-        send_pil_photo(image, **kw)
+        return send_pil_photo(image, **kw)
 
     def send_text(self,text):
-        send_text(text,**self.telegram_kwargs)
+        return send_text(text,**self.telegram_kwargs)
 
     def set_telegram_kwargs(self,**kwargs):
         self.telegram_kwargs.update(**kwargs)
