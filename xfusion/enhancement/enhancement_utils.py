@@ -167,6 +167,9 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         return self
 
     def clear(self):
+        if not hasattr(self,"components"):
+            return
+
         for component in self.components.values():
             uncleared = delete(component)[-1]
             if uncleared:
