@@ -341,7 +341,7 @@ def stable_diffusion_ui_template(fns):
 
     return server
 
-def load_stable_diffusion_ui(pipelines, _globals=None):
+def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     """
     load pipelines to multiple GPUs for acceleration
     """
@@ -696,4 +696,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None):
 
     fns = locals()
     fns.pop("_globals")
-    return stable_diffusion_ui_template(fns)
+    server =  stable_diffusion_ui_template(fns)
+    server.launch(inline=False,quiet=True,**kwargs)
+    return server
