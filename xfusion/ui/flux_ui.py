@@ -3,7 +3,7 @@ from ..utils import allow_return_error
 from PIL import Image
 
 
-def load_flux_ui(pipeline, _globals=None):
+def load_flux_ui(pipeline, _globals=None,**kwargs):
 
     @allow_return_error
     def text_to_image_fn(prompt,
@@ -88,5 +88,7 @@ def load_flux_ui(pipeline, _globals=None):
                 code_outputs.append(gr.Textbox(label="Code Result"))
                 code_btn = gr.Button("Run Code")
                 code_btn.click(fn=run_code_fn, inputs=code_inputs, outputs=code_outputs)
+
+    server.launch(inline=False,quiet=True,**kwargs)
 
     return server
