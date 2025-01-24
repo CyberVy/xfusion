@@ -331,6 +331,5 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         PipelineEnhancerBase.reload(self,url,**kwargs)
 
     def load_ui(self,_globals=None,**kwargs):
-        server = load_stable_diffusion_ui(self,_globals)
-        server.launch(quiet=True,**kwargs)
+        server = load_stable_diffusion_ui(self,_globals,**kwargs)
         return server
