@@ -1,5 +1,5 @@
 import gradio as gr
-from .ui_utils import lists_append,lock
+from .ui_utils import lists_append,lock,safe_block
 from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..const import GPU_COUNT,GPU_NAME
@@ -700,4 +700,5 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     server.launch(inline=False,quiet=True,**kwargs)
     if server.share_url:
         pipelines[0].send_text(f"* Running on public URL: {server.share_url}")
+    safe_block()
     return server
