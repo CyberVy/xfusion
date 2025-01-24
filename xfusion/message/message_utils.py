@@ -30,7 +30,7 @@ def send_PIL_photo(image:Image,**kwargs):
     image_byte_array.seek(0)
     r = requests.post(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{token}/sendDocument",
                       data={"chat_id": chat_id, "caption": caption},
-                      files={"document": (file_name,image_byte_array,f"image/{file_type.lower()}")})
+                      files={"document": (file_name,image_byte_array,f"image/{'jpeg' if file_type.lower() == 'jpg' else file_type.lower()}")})
     return r
 
 
