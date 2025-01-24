@@ -1,4 +1,5 @@
 import gradio as gr
+from .ui_utils import safe_block
 from ..utils import allow_return_error
 from PIL import Image
 
@@ -89,7 +90,18 @@ def load_flux_ui(pipeline, _globals=None,**kwargs):
                 code_btn = gr.Button("Run Code")
                 code_btn.click(fn=run_code_fn, inputs=code_inputs, outputs=code_outputs)
 
-    server.launch(inline=False,quiet=True,**kwargs)
+    if not kwargs.get("inline"): kwargs.update(inline=False)
+    if not kwargs.get("quiet"): kwargs.update(quiet=True)
+    block = kwargs.pop("debug", True)
+    server.launch(**kwargs)
+
     if server.share_url:
         pipeline.send_text(f"* Running on public URL: {server.share_url}")
+
+    if block:
+        def close():
+            server.close()
+            pipeline.clear()
+        safe_block(close)
+
     return server
