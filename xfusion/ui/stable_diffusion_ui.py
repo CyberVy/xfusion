@@ -220,7 +220,6 @@ def stable_diffusion_ui_template(fns):
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
                         controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
-
             with gr.Accordion("Controlnet Image To Image",open=False):
                 gr.Markdown("# Controlnet Image To Image")
                 controlnet_i2i_inputs = []
@@ -247,7 +246,7 @@ def stable_diffusion_ui_template(fns):
                             gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
                     with gr.Column():
                         controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
-                        controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
+                        controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
                         controlnet_i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                         controlnet_i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                         controlnet_i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
@@ -269,7 +268,6 @@ def stable_diffusion_ui_template(fns):
                         controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_i2i_btn = gr.Button("Run")
                         controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs, outputs=controlnet_i2i_outputs)
-
             with gr.Accordion("Controlnet Inpainting", open=False):
                 gr.Markdown("# Controlnet Inpainting")
                 controlnet_inpainting_inputs = []
