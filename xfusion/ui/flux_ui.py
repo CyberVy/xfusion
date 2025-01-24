@@ -90,5 +90,6 @@ def load_flux_ui(pipeline, _globals=None,**kwargs):
                 code_btn.click(fn=run_code_fn, inputs=code_inputs, outputs=code_outputs)
 
     server.launch(inline=False,quiet=True,**kwargs)
-
+    if server.share_url:
+        pipeline.send_text(f"* Running on public URL: {server.share_url}")
     return server
