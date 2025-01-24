@@ -76,6 +76,5 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
         return cls(load_flux_pipeline(url,**kwargs),init_sub_pipelines=init_sub_pipelines)
 
     def load_ui(self,_globals=None,**kwargs):
-        server = load_flux_ui(self,_globals)
-        server.launch(quiet=True,**kwargs)
+        server = load_flux_ui(self,_globals,**kwargs)
         return server
