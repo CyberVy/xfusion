@@ -698,8 +698,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     fns.pop("_globals")
     server =  stable_diffusion_ui_template(fns)
 
-    if not kwargs.get("inline"): kwargs.update(inline=False)
-    if not kwargs.get("quiet"): kwargs.update(quiet=True)
+    if kwargs.get("inline") is None: kwargs.update(inline=False)
+    if kwargs.get("quiet") is None: kwargs.update(quiet=True)
     block = kwargs.pop("debug",True)
     server.launch(**kwargs)
 
