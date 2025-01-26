@@ -373,7 +373,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         def wrapper(*args):
             code = args[-2]
             exec_assets = locals()
-            exec(code, {}, exec_assets)
+            exec(code, _globals, exec_assets)
             callback = exec_assets.get("callback")
             if callable(callback):
                 args = callback(*args)
