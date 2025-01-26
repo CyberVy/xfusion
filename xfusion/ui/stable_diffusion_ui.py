@@ -384,7 +384,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             preprocess = exec_assets.get("preprocess")
             if callable(preprocess):
                 args = preprocess(*args,**kwargs)
-            return f(*args,**kwargs)
+            return f(*args[:-1],**args[-1])
         return wrapper
 
     def auto_load_controlnet(f):
