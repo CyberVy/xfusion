@@ -89,6 +89,8 @@ def stable_diffusion_ui_template(fns):
                     with gr.Row():
                         t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                    with gr.Accordion("Code"):
+                        t2i_inputs.append(gr.Code("def callback(*args):args",language="python",label="Python"))
                     t2i_outputs.append(gr.Textbox(label="Result"))
                     t2i_btn = gr.Button("Run")
                     t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
@@ -124,6 +126,8 @@ def stable_diffusion_ui_template(fns):
                     with gr.Row():
                         i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                    with gr.Accordion("Code"):
+                        i2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                     i2i_outputs.append(gr.Textbox(label="Result"))
                     i2i_btn = gr.Button("Run")
                     i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
@@ -159,6 +163,8 @@ def stable_diffusion_ui_template(fns):
                     with gr.Row():
                         inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                    with gr.Accordion("Code"):
+                        inpainting_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                     inpainting_outputs.append(gr.Textbox(label="Result"))
                     inpainting_btn = gr.Button("Run")
                     inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
@@ -217,6 +223,8 @@ def stable_diffusion_ui_template(fns):
                         with gr.Row():
                             controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
+                        with gr.Accordion("Code"):
+                            controlnet_t2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
                         controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
@@ -265,6 +273,8 @@ def stable_diffusion_ui_template(fns):
                         with gr.Row():
                             controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                        with gr.Accordion("Code"):
+                            controlnet_i2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                         controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_i2i_btn = gr.Button("Run")
                         controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs, outputs=controlnet_i2i_outputs)
@@ -319,6 +329,8 @@ def stable_diffusion_ui_template(fns):
                             controlnet_inpainting_inputs.append(
                                 gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                        with gr.Accordion("Code"):
+                            controlnet_inpainting_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                         controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
                         controlnet_inpainting_btn = gr.Button("Run")
                         controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
@@ -354,7 +366,19 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
-    # progress: args[-1], num: args[-2], seed: args[-3]
+    # progress: args[-1], callback: args[-2], num: args[-3], seed: args[-4]
+
+    def allow_code_control(f):
+        @functools.wraps(f)
+        def wrapper(*args):
+            code = args[-2]
+            exec_assets = locals()
+            exec(code, {}, exec_assets)
+            callback = exec_assets.get("callback")
+            if callable(callback):
+                args = callback(*args)
+            return f(*args)
+        return wrapper
 
     def auto_load_controlnet(f):
         @functools.wraps(f)
@@ -377,11 +401,11 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     def auto_gpu_distribute(f):
         @functools.wraps(f)
         def wrapper(*args):
-            if int(args[-3]) != 0  or len(pipelines) == 1:
+            if int(args[-4]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
                 threads_execute(f(*args),pipelines)
-                return f"{args[-2]} * {len(pipelines)}"
+                return f"{args[-3]} * {len(pipelines)}"
         return wrapper
 
     def auto_gpu_loop(f):
@@ -456,6 +480,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
+    @allow_code_control
     @auto_offload_controlnet
     @auto_gpu_distribute
     def text_to_image_fn(
@@ -463,6 +488,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num,
+            code,
             progress=gr.Progress(track_tqdm=True)):
 
         def f(pipeline):
@@ -483,6 +509,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
+    @allow_code_control
     @auto_offload_controlnet
     @auto_gpu_distribute
     def image_to_image_fn(
@@ -492,6 +519,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             guidance_scale, num_inference_steps, clip_skip,
             width,height,
             seed, num,
+            code,
             progress=gr.Progress(track_tqdm=True)):
 
         if not image:
@@ -517,6 +545,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
+    @allow_code_control
     @auto_offload_controlnet
     @auto_gpu_distribute
     def inpainting_fn(
@@ -526,6 +555,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             seed, num,
+            code,
             progress=gr.Progress(track_tqdm=True)):
 
         _image = image["background"].convert("RGB")
@@ -585,6 +615,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
+    @allow_code_control
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_text_to_image_fn(
@@ -594,6 +625,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             width, height,
             low_threshold, high_threshold,
             seed, num,
+            code,
             progress=gr.Progress(track_tqdm=True)):
 
         if not image:
@@ -621,6 +653,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
+    @allow_code_control
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_image_to_image_fn(
@@ -631,6 +664,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             width, height,
             low_threshold, high_threshold,
             seed, num,
+            code,
             progress=gr.Progress(track_tqdm=True)):
 
         if not image and not control_image:
@@ -660,6 +694,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
+    @allow_code_control
     @auto_load_controlnet
     @auto_gpu_distribute
     def controlnet_inpainting_fn(
@@ -670,6 +705,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             width, height,
             low_threshold, high_threshold,
             seed, num,
+            code,
             progress=gr.Progress(track_tqdm=True)):
 
         _image = image["background"].convert("RGB")
