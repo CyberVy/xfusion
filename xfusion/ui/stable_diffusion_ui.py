@@ -529,7 +529,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             width,height,
             seed, num,
             code,
-            progress=gr.Progress(track_tqdm=True)):
+            progress=gr.Progress(track_tqdm=True),**kwargs):
 
         if not image:
             raise ValueError("Please input an image.")
@@ -541,7 +541,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
                 strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width,height=height,
-                seed=int(seed), num=int(num))
+                seed=int(seed), num=int(num),**kwargs)
         return f
 
     @allow_return_error
@@ -565,7 +565,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             width, height,
             seed, num,
             code,
-            progress=gr.Progress(track_tqdm=True)):
+            progress=gr.Progress(track_tqdm=True),**kwargs):
 
         _image = image["background"].convert("RGB")
         mask_image = convert_mask_image_to_rgb(image["layers"][0])
@@ -577,7 +577,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
                 strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
-                seed=int(seed), num=int(num))
+                seed=int(seed), num=int(num),**kwargs)
         return f
 
     @allow_return_error
@@ -635,7 +635,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             low_threshold, high_threshold,
             seed, num,
             code,
-            progress=gr.Progress(track_tqdm=True)):
+            progress=gr.Progress(track_tqdm=True),**kwargs):
 
         if not image:
             raise ValueError("Please input an image.")
@@ -649,7 +649,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
                 controlnet_conditioning_scale=controlnet_conditioning_scale,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
-                seed=int(seed), num=int(num))
+                seed=int(seed), num=int(num),**kwargs)
         return f
 
     @allow_return_error
@@ -674,7 +674,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             low_threshold, high_threshold,
             seed, num,
             code,
-            progress=gr.Progress(track_tqdm=True)):
+            progress=gr.Progress(track_tqdm=True),**kwargs):
 
         if not image and not control_image:
             raise ValueError("Please input the images.")
@@ -690,7 +690,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
                 controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
-                seed=int(seed), num=int(num))
+                seed=int(seed), num=int(num),**kwargs)
         return f
 
     @allow_return_error
@@ -715,7 +715,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             low_threshold, high_threshold,
             seed, num,
             code,
-            progress=gr.Progress(track_tqdm=True)):
+            progress=gr.Progress(track_tqdm=True),**kwargs):
 
         _image = image["background"].convert("RGB")
         mask_image = convert_mask_image_to_rgb(image["layers"][0])
@@ -730,7 +730,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
                 controlnet_conditioning_scale=controlnet_conditioning_scale,strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
-                seed=int(seed), num=int(num))
+                seed=int(seed), num=int(num),**kwargs)
         return f
 
     @allow_return_error
