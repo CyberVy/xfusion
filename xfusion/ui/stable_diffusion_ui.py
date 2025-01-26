@@ -6,6 +6,7 @@ from ..const import GPU_COUNT,GPU_NAME
 from ..components.component_const import default_stable_diffusion_model_url
 import sys,platform
 import functools
+import inspect
 
 
 scheduler_list = [
@@ -90,7 +91,7 @@ def stable_diffusion_ui_template(fns):
                         t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                     with gr.Accordion("Code",open=False):
-                        t2i_inputs.append(gr.Code("def callback(*args):args",language="python",label="Python"))
+                        t2i_inputs.append(gr.Code("def callback(*args): return args",language="python",label="Python"))
                     t2i_outputs.append(gr.Textbox(label="Result"))
                     t2i_btn = gr.Button("Run")
                     t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
@@ -127,7 +128,7 @@ def stable_diffusion_ui_template(fns):
                         i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                     with gr.Accordion("Code",open=False):
-                        i2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
+                        i2i_inputs.append(gr.Code("def callback(*args): return args", language="python", label="Python"))
                     i2i_outputs.append(gr.Textbox(label="Result"))
                     i2i_btn = gr.Button("Run")
                     i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
@@ -164,7 +165,7 @@ def stable_diffusion_ui_template(fns):
                         inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                     with gr.Accordion("Code",open=False):
-                        inpainting_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
+                        inpainting_inputs.append(gr.Code("def callback(*args): return args", language="python", label="Python"))
                     inpainting_outputs.append(gr.Textbox(label="Result"))
                     inpainting_btn = gr.Button("Run")
                     inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
@@ -224,7 +225,7 @@ def stable_diffusion_ui_template(fns):
                             controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                         with gr.Accordion("Code",open=False):
-                            controlnet_t2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
+                            controlnet_t2i_inputs.append(gr.Code("def callback(*args): return args", language="python", label="Python"))
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
                         controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
@@ -274,7 +275,7 @@ def stable_diffusion_ui_template(fns):
                             controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
                         with gr.Accordion("Code",open=False):
-                            controlnet_i2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
+                            controlnet_i2i_inputs.append(gr.Code("def callback(*args): return args", language="python", label="Python"))
                         controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_i2i_btn = gr.Button("Run")
                         controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs, outputs=controlnet_i2i_outputs)
@@ -330,7 +331,7 @@ def stable_diffusion_ui_template(fns):
                                 gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
                         with gr.Accordion("Code",open=False):
-                            controlnet_inpainting_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
+                            controlnet_inpainting_inputs.append(gr.Code("def callback(*args): return args", language="python", label="Python"))
                         controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
                         controlnet_inpainting_btn = gr.Button("Run")
                         controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
