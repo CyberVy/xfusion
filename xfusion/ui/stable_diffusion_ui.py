@@ -384,6 +384,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             preprocess = exec_assets.get("preprocess")
             if callable(preprocess):
                 args_and_kwargs = preprocess(*args,**kwargs)
+                print(args_and_kwargs)
                 return f(*args_and_kwargs[:-1],**args_and_kwargs[-1])
             else:
                 return f(*args,**kwargs)
