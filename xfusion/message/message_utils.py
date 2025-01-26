@@ -7,7 +7,7 @@ from PIL.Image import Image
 def send_text(text,**kwargs):
     token = kwargs.get("token") or "8001790084:AAFNqWprWz7WUnco5fob6U0CMHwockkZY8M"
     chat_id = kwargs.get("chat_id") or "5143886367"
-    parse_mode = kwargs.get("parse_mode") or "HTML"
+    parse_mode = kwargs.get("parse_mode") or ""
     r = requests.post(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{token}/sendMessage",
                       data={"chat_id":chat_id,"text":text,"parse_mode":parse_mode})
     return r
