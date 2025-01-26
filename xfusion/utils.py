@@ -1,12 +1,14 @@
 import os,shutil,gc
-import inspect
+import requests
 import threading
 from functools import wraps,lru_cache
 from PIL.Image import Image,Resampling,merge,fromarray
+import PIL.Image
+import PIL.ImageOps
 import cv2
 import torch
 import numpy as np
-from typing import Tuple,Union,Optional
+from typing import Tuple,Union,Optional,Callable
 from types import FunctionType,MethodType
 
 
@@ -175,14 +177,36 @@ def allow_return_error(f:Union[FunctionType | MethodType]):
             return f"{e}"
     return wrapper
 
-def delete_all_contents_of_path(folder_path):
-    if os.path.exists(folder_path):
-        for file_or_dir in os.listdir(folder_path):
-            full_path = os.path.join(folder_path, file_or_dir)
-            if os.path.isfile(full_path) or os.path.islink(full_path):
-                os.remove(full_path)
-            elif os.path.isdir(full_path):
-                shutil.rmtree(full_path)
+def load_image(
+    image: Union[str, PIL.Image.Image], convert_method: Optional[Callable[[PIL.Image.Image], PIL.Image.Image]] = None
+) -> PIL.Image.Image:
+    """
+    Loads `image` to a PIL Image.
+    """
+    if isinstance(image, str):
+        if image.startswith("http://") or image.startswith("https://"):
+            image = PIL.Image.open(requests.get(image, stream=True).raw)
+        elif os.path.isfile(image):
+            image = PIL.Image.open(image)
+        else:
+            raise ValueError(
+                f"Incorrect path or URL. URLs must start with `http://` or `https://`, and {image} is not a valid path."
+            )
+    elif isinstance(image, PIL.Image.Image):
+        image = image
+    else:
+        raise ValueError(
+            "Incorrect format used for the image. Should be a URL linking to an image, a local path, or a PIL image."
+        )
+
+    image = PIL.ImageOps.exif_transpose(image)
+
+    if convert_method is not None:
+        image = convert_method(image)
+    else:
+        image = image.convert("RGB")
+
+    return image
 
 def normalize_image_size(image_size:Tuple[int,int],target_pixels:int) -> Tuple[int,int]:
     """
