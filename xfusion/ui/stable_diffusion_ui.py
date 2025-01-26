@@ -89,7 +89,7 @@ def stable_diffusion_ui_template(fns):
                     with gr.Row():
                         t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                    with gr.Accordion("Code"):
+                    with gr.Accordion("Code",open=False):
                         t2i_inputs.append(gr.Code("def callback(*args):args",language="python",label="Python"))
                     t2i_outputs.append(gr.Textbox(label="Result"))
                     t2i_btn = gr.Button("Run")
@@ -126,7 +126,7 @@ def stable_diffusion_ui_template(fns):
                     with gr.Row():
                         i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                    with gr.Accordion("Code"):
+                    with gr.Accordion("Code",open=False):
                         i2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                     i2i_outputs.append(gr.Textbox(label="Result"))
                     i2i_btn = gr.Button("Run")
@@ -163,7 +163,7 @@ def stable_diffusion_ui_template(fns):
                     with gr.Row():
                         inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                         inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                    with gr.Accordion("Code"):
+                    with gr.Accordion("Code",open=False):
                         inpainting_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                     inpainting_outputs.append(gr.Textbox(label="Result"))
                     inpainting_btn = gr.Button("Run")
@@ -223,7 +223,7 @@ def stable_diffusion_ui_template(fns):
                         with gr.Row():
                             controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                        with gr.Accordion("Code"):
+                        with gr.Accordion("Code",open=False):
                             controlnet_t2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
@@ -273,7 +273,7 @@ def stable_diffusion_ui_template(fns):
                         with gr.Row():
                             controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                        with gr.Accordion("Code"):
+                        with gr.Accordion("Code",open=False):
                             controlnet_i2i_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                         controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_i2i_btn = gr.Button("Run")
@@ -329,7 +329,7 @@ def stable_diffusion_ui_template(fns):
                             controlnet_inpainting_inputs.append(
                                 gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                             controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                        with gr.Accordion("Code"):
+                        with gr.Accordion("Code",open=False):
                             controlnet_inpainting_inputs.append(gr.Code("def callback(*args):args", language="python", label="Python"))
                         controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
                         controlnet_inpainting_btn = gr.Button("Run")
