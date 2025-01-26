@@ -384,7 +384,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             preprocess = exec_assets.get("preprocess")
             if callable(preprocess):
                 args_and_kwargs = preprocess(*args,**kwargs)
-                print(args_and_kwargs)
                 return f(*args_and_kwargs[:-1],**args_and_kwargs[-1])
             else:
                 return f(*args,**kwargs)
@@ -412,7 +411,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         @functools.wraps(f)
         def wrapper(*args,**kwargs):
             if int(args[-4]) != 0  or len(pipelines) == 1:
-                return f(*args)(pipelines[0])
+                return f(*args,**kwargs)(pipelines[0])
             else:
                 threads_execute(f(*args,**kwargs),pipelines)
                 return f"{args[-3]} * {len(pipelines)}"
