@@ -92,7 +92,7 @@ def stable_diffusion_ui_template(fns):
                         t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                     with gr.Accordion("Code",open=False):
                         t2i_callback_args_name = ",".join(list(inspect.signature(fns["text_to_image_fn"]).parameters.keys()))
-                        t2i_inputs.append(gr.Code(f"def callback({t2i_callback_args_name}): return {t2i_callback_args_name}",language="python",label="Python"))
+                        t2i_inputs.append(gr.Code(f"def callback({t2i_callback_args_name}):\n    return {t2i_callback_args_name}",language="python",label="Python"))
                     t2i_outputs.append(gr.Textbox(label="Result"))
                     t2i_btn = gr.Button("Run")
                     t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
@@ -130,7 +130,7 @@ def stable_diffusion_ui_template(fns):
                         i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                     with gr.Accordion("Code",open=False):
                         i2i_callback_args_name = ",".join(list(inspect.signature(fns["image_to_image_fn"]).parameters.keys()))
-                        i2i_inputs.append(gr.Code(f"def callback({i2i_callback_args_name}): return {i2i_callback_args_name}", language="python", label="Python"))
+                        i2i_inputs.append(gr.Code(f"def callback({i2i_callback_args_name}):\n    return {i2i_callback_args_name}", language="python", label="Python"))
                     i2i_outputs.append(gr.Textbox(label="Result"))
                     i2i_btn = gr.Button("Run")
                     i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
@@ -168,7 +168,7 @@ def stable_diffusion_ui_template(fns):
                         inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                     with gr.Accordion("Code",open=False):
                         inpainting_callback_args_name = ",".join(list(inspect.signature(fns["inpainting_fn"]).parameters.keys()))
-                        inpainting_inputs.append(gr.Code(f"def callback({inpainting_callback_args_name}): return {inpainting_callback_args_name}", language="python", label="Python"))
+                        inpainting_inputs.append(gr.Code(f"def callback({inpainting_callback_args_name}):\n    return {inpainting_callback_args_name}", language="python", label="Python"))
                     inpainting_outputs.append(gr.Textbox(label="Result"))
                     inpainting_btn = gr.Button("Run")
                     inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
@@ -229,7 +229,7 @@ def stable_diffusion_ui_template(fns):
                             controlnet_t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
                         with gr.Accordion("Code",open=False):
                             controlnet_t2i_args_name = ",".join(list(inspect.signature(fns["controlnet_text_to_image_fn"]).parameters.keys()))
-                            controlnet_t2i_inputs.append(gr.Code(f"def callback({controlnet_t2i_args_name}): return {controlnet_t2i_args_name}", language="python", label="Python"))
+                            controlnet_t2i_inputs.append(gr.Code(f"def callback({controlnet_t2i_args_name}):\n    return {controlnet_t2i_args_name}", language="python", label="Python"))
                         controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_t2i_btn = gr.Button("Run")
                         controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
@@ -280,7 +280,7 @@ def stable_diffusion_ui_template(fns):
                             controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
                         with gr.Accordion("Code",open=False):
                             controlnet_i2i_args_name = ",".join(list(inspect.signature(fns["controlnet_image_to_image_fn"]).parameters.keys()))
-                            controlnet_i2i_inputs.append(gr.Code(f"def callback({controlnet_i2i_args_name}): return {controlnet_i2i_args_name}", language="python", label="Python"))
+                            controlnet_i2i_inputs.append(gr.Code(f"def callback({controlnet_i2i_args_name}):\n    return {controlnet_i2i_args_name}", language="python", label="Python"))
                         controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
                         controlnet_i2i_btn = gr.Button("Run")
                         controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs, outputs=controlnet_i2i_outputs)
@@ -337,7 +337,7 @@ def stable_diffusion_ui_template(fns):
                             controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
                         with gr.Accordion("Code",open=False):
                             controlnet_inpainting_args_name = ",".join(list(inspect.signature(fns["controlnet_inpainting_fn"]).parameters.keys()))
-                            controlnet_inpainting_inputs.append(gr.Code(f"def callback({controlnet_inpainting_args_name}): return {controlnet_inpainting_args_name}", language="python", label="Python"))
+                            controlnet_inpainting_inputs.append(gr.Code(f"def callback({controlnet_inpainting_args_name}):\n    return {controlnet_inpainting_args_name}", language="python", label="Python"))
                         controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
                         controlnet_inpainting_btn = gr.Button("Run")
                         controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
