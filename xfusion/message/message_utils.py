@@ -40,8 +40,6 @@ def send_pil_photo(image:Image, **kwargs):
     r = requests.post(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{token}/sendDocument",
                       data={"chat_id": chat_id, "caption": caption,"parse_mode":parse_mode},
                       files={"document": (file_name,image_byte_array,f"image/{file_type.lower()}")})
-    send_text(get_file_path(r,token),**kwargs)
-
     return r
 
 
