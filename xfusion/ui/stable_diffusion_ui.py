@@ -391,36 +391,36 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     def auto_load_controlnet(f):
         @functools.wraps(f)
-        def wrapper(*args):
+        def wrapper(*args,**kwargs):
             for pipeline in pipelines:
                 if pipeline._controlnet is None:
                     pipeline.load_controlnet()
-            return f(*args)
+            return f(*args,**kwargs)
         return wrapper
 
     def auto_offload_controlnet(f):
         @functools.wraps(f)
-        def wrapper(*args):
+        def wrapper(*args,**kwargs):
             for pipeline in pipelines:
                 if pipeline._controlnet is not None:
                     pipeline.offload_controlnet()
-            return f(*args)
+            return f(*args,**kwargs)
         return wrapper
 
     def auto_gpu_distribute(f):
         @functools.wraps(f)
-        def wrapper(*args):
+        def wrapper(*args,**kwargs):
             if int(args[-4]) != 0  or len(pipelines) == 1:
                 return f(*args)(pipelines[0])
             else:
-                threads_execute(f(*args),pipelines)
+                threads_execute(f(*args,**kwargs),pipelines)
                 return f"{args[-3]} * {len(pipelines)}"
         return wrapper
 
     def auto_gpu_loop(f):
         @functools.wraps(f)
-        def wrapper(*args):
-            return [f(*args)(pipeline) for pipeline in pipelines][0]
+        def wrapper(*args,**kwargs):
+            return [f(*args,**kwargs)(pipeline) for pipeline in pipelines][0]
         return wrapper
 
     @allow_return_error
