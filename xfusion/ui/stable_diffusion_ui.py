@@ -373,18 +373,18 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
     # so there is no **kwargs in wrapper function
-    # progress: args[-1], callback: args[-2], num: args[-3], seed: args[-4]
+    # progress: args[-1], code: args[-2], num: args[-3], seed: args[-4]
 
     def allow_code_control(f):
         @functools.wraps(f)
-        def wrapper(*args):
+        def wrapper(*args,**kwargs):
             code = args[-2]
             exec_assets = locals()
             exec(code, _globals, exec_assets)
             preprocess = exec_assets.get("preprocess")
             if callable(preprocess):
-                args = preprocess(*args)
-            return f(*args)
+                args = preprocess(*args,**kwargs)
+            return f(*args,**kwargs)
         return wrapper
 
     def auto_load_controlnet(f):
@@ -496,14 +496,14 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             width, height,
             seed, num,
             code,
-            progress=gr.Progress(track_tqdm=True)):
+            progress=gr.Progress(track_tqdm=True),**kwargs):
 
         def f(pipeline):
             return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
                 prompt=prompt, negative_prompt=negative_prompt,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps, clip_skip=clip_skip,
                 width=width, height=height,
-                seed=int(seed), num=int(num))
+                seed=int(seed), num=int(num),**kwargs)
         return f
 
     @allow_return_error
