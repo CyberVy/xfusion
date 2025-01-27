@@ -1,1 +1,2 @@
-from .stable_diffusion_callbacks import GradualCFG
+from .stable_diffusion_callbacks import SDCFGCutoffCallback
+from .stable_diffusion_callbacks import SDXLCFGCutoffCallback,SDXLControlnetCFGCutoffCallback
