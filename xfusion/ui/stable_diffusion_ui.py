@@ -384,7 +384,6 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     lock_state = [False,None]
 
     # the way Gradio pass the arguments to function is based on the position instead of the keyword
-    # so there is no **kwargs in wrapper function
     # progress: args[-1], code: args[-2], num: args[-3], seed: args[-4]
 
     def allow_code_control(f):
