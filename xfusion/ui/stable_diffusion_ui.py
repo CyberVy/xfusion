@@ -749,6 +749,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         exec(code,_globals)
         if _globals:
             return _globals.pop("_cout", None)
+    exec("import os,sys,gc,torch\nimport xfusion.enhancement.callbacks as cbk",_globals)
 
     fns = locals()
     fns.pop("_globals")
