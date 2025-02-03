@@ -20,7 +20,9 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 ```python
 from xfusion.enhancement import load_enhancer
 
-pipeline = load_enhancer(None,model_version="xl")
+telegram_kwargs = {"token":"","chat_id":""}
+download_kwargs = {"directory":"./"}
+pipeline = load_enhancer(None,model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs)
 server = pipeline.load_ui(globals())
 ```
 **Use UI with multiple GPUs/A single GPU is also supported**
@@ -30,7 +32,9 @@ from xfusion import load_enhancer
 from xfusion import load_stable_diffusion_ui
 from xfusion.const import GPU_COUNT
 
-pipelines = [load_enhancer(None, model_version="xl", download_kwargs={"directory": "./"}) for i in range(GPU_COUNT)]
+telegram_kwargs = {"token":"","chat_id":""}
+download_kwargs = {"directory":"./"}
+pipelines = [load_enhancer(None, model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
 ```
 
@@ -39,8 +43,10 @@ server = load_stable_diffusion_ui(pipelines, _globals=globals())
 ```python
 from xfusion.enhancement import load_enhancer
 
+telegram_kwargs = {"token":"","chat_id":""}
+download_kwargs = {"directory":"./"}
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model,model_version="xl").to("cuda")
+pipeline = load_enhancer(model,model_version="xl, download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs").to("cuda")
 server = pipeline.load_ui(globals())
 ```
 
@@ -51,8 +57,10 @@ from xfusion.enhancement import load_enhancer
 from xfusion.ui import load_stable_diffusion_ui
 from xfusion.const import GPU_COUNT
 
+telegram_kwargs = {"token":"","chat_id":""}
+download_kwargs = {"directory":"./"}
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipelines = [load_enhancer(model, model_version="xl", download_kwargs={"directory": "./"}) for i in range(GPU_COUNT)]
+pipelines = [load_enhancer(model, model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
 ```
 ---
@@ -61,8 +69,11 @@ server = load_stable_diffusion_ui(pipelines, _globals=globals())
 from xfusion.enhancement import load_enhancer
 import torch
 
+telegram_kwargs = {"token":"","chat_id":""}
+download_kwargs = {"directory":"./"}
+
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model,model_version="xl").to("cuda")
+pipeline = load_enhancer(model,model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs).to("cuda")
 
 prompt = """
 young white woman with dramatic makeup resembling a melted clown, deep black smokey eyes, smeared red lipstick, and white face paint streaks, wet hair falling over shoulders, dark and intense aesthetic, fashion editorial style, aged around 20 years, inspired by rick genest's zombie boy look, best quality
