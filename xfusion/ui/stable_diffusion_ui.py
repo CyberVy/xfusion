@@ -364,7 +364,7 @@ def stable_diffusion_ui_template(fns):
             code_outputs = []
             with gr.Row():
                 with gr.Column():
-                    code_inputs.append(gr.Code(value="import os,sys,gc,torch\nimport xfusion.enhancement.callbacks as cbk\n_cout = 'Hello world.'", language="python", lines=5, label="Python"))
+                    code_inputs.append(gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
                 with gr.Column():
                     code_outputs.append(gr.Textbox(label="Code Result"))
                     code_btn = gr.Button("Run Code")
@@ -749,6 +749,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         exec(code,_globals)
         if _globals:
             return _globals.pop("_cout", None)
+    # import some important packages in ui
     exec("import os,sys,gc,torch\nimport xfusion.enhancement.callbacks as cbk",_globals)
 
     fns = locals()
