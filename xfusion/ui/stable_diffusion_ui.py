@@ -17,24 +17,29 @@ scheduler_list = [
     "HEUN","LMS","LMS KARRAS","DEIS","UNIPC"]
 
 
+def model_selection_frontend_func(fn):
+    with gr.Accordion("Model Selection", open=True):
+        gr.Markdown("# Model Selection")
+        model_selection_inputs = []
+        model_selection_outputs = []
+        with gr.Row():
+            with gr.Column():
+                model_selection_inputs.append(
+                    gr.Textbox(value=default_stable_diffusion_model_url, placeholder="Give me a url of the model!",
+                               label="Model"))
+                model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
+            with gr.Column():
+                model_selection_outputs.append(gr.Textbox(label="Result"))
+                model_selection_btn = gr.Button("Select")
+                model_selection_btn.click(fn=fn, inputs=model_selection_inputs,
+                                          outputs=model_selection_outputs)
+
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
     with gr.Blocks(title=f"Xfusion{GPU_NAME}", theme=theme) as server:
 
-        with gr.Accordion("Model Selection", open=True):
-            gr.Markdown("# Model Selection")
-            model_selection_inputs = []
-            model_selection_outputs = []
-            with gr.Row():
-                with gr.Column():
-                    model_selection_inputs.append(gr.Textbox(value=default_stable_diffusion_model_url,placeholder="Give me a url of the model!", label="Model"))
-                    model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
-                with gr.Column():
-                    model_selection_outputs.append(gr.Textbox(label="Result"))
-                    model_selection_btn = gr.Button("Select")
-                    model_selection_btn.click(fn=fns["model_selection_fn"], inputs=model_selection_inputs,
-                                              outputs=model_selection_outputs)
+        model_selection_frontend_func(fns["model_selection_fn"])
 
         with gr.Accordion("LoRA",open=False):
             gr.Markdown("# LoRA")
