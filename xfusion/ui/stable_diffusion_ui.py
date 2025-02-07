@@ -17,7 +17,7 @@ scheduler_list = [
     "HEUN","LMS","LMS KARRAS","DEIS","UNIPC"]
 
 
-def model_selection_frontend_func(fns):
+def render_model_selection(fns):
     with gr.Accordion("Model Selection", open=True):
         gr.Markdown("# Model Selection")
         model_selection_inputs = []
@@ -34,7 +34,7 @@ def model_selection_frontend_func(fns):
                 model_selection_btn.click(fn=fns["model_selection_fn"], inputs=model_selection_inputs,
                                           outputs=model_selection_outputs)
 
-def lora_frontend_func(fns):
+def render_lora(fns):
     with gr.Accordion("LoRA", open=False):
         gr.Markdown("# LoRA")
         set_lora_inputs = []
@@ -61,7 +61,7 @@ def lora_frontend_func(fns):
                     disable_lora_btn = gr.Button("Disable all LoRA")
                     disable_lora_btn.click(fn=fns["disable_lora_fn"], outputs=lora_outputs)
 
-def text_to_image_frontend_func(fns):
+def render_text_to_image(fns):
     with gr.Accordion("Text To Image", open=True):
         gr.Markdown("# Text To Image")
         t2i_inputs = []
@@ -100,8 +100,8 @@ def text_to_image_frontend_func(fns):
                 t2i_outputs.append(gr.Textbox(label="Result"))
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
-                
-def image_to_image_frontend_func(fns):
+
+def render_image_to_image(fns):
     with gr.Accordion("Image To Image", open=False):
         gr.Markdown("# Image To Image")
         i2i_inputs = []
@@ -143,8 +143,8 @@ def image_to_image_frontend_func(fns):
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
-                
-def inpainting_frontend_func(fns):
+
+def render_inpainting(fns):
     with gr.Accordion("Inpainting", open=False):
         gr.Markdown("# Inpainting")
         inpainting_inputs = []
@@ -187,8 +187,8 @@ def inpainting_frontend_func(fns):
                 inpainting_outputs.append(gr.Textbox(label="Result"))
                 inpainting_btn = gr.Button("Run")
                 inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
-                
-def controlnet_selection_frontend_func(fns):
+
+def render_controlnet_selection(fns):
     controlnet_inputs = []
     controlnet_outputs = []
     with gr.Accordion("Controlnet Selection", open=False):
@@ -203,8 +203,8 @@ def controlnet_selection_frontend_func(fns):
             controlnet_outputs.append(gr.Textbox(label="Result"))
             load_controlnet_button.click(fn=fns["load_controlnet_fn"], outputs=controlnet_outputs)
             offload_controlnet_button.click(fn=fns["offload_controlnet_fn"], outputs=controlnet_outputs)
-            
-def controlnet_text_to_image_frontend_func(fns):
+
+def render_controlnet_text_to_image(fns):
     with gr.Accordion("Controlnet Text To Image", open=False):
         gr.Markdown("# Controlnet Text To Image")
         controlnet_t2i_inputs = []
@@ -261,8 +261,8 @@ def controlnet_text_to_image_frontend_func(fns):
                 controlnet_t2i_btn = gr.Button("Run")
                 controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"], inputs=controlnet_t2i_inputs,
                                          outputs=controlnet_t2i_outputs)
-                
-def controlnet_image_to_image_frontend_func(fns):
+
+def render_controlnet_image_to_image(fns):
     with gr.Accordion("Controlnet Image To Image", open=False):
         gr.Markdown("# Controlnet Image To Image")
         controlnet_i2i_inputs = []
@@ -324,7 +324,7 @@ def controlnet_image_to_image_frontend_func(fns):
                 controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs,
                                          outputs=controlnet_i2i_outputs)
 
-def controlnet_inpainting_frontend_func(fns):
+def render_controlnet_inpainting(fns):
     with gr.Accordion("Controlnet Inpainting", open=False):
         gr.Markdown("# Controlnet Inpainting")
         controlnet_inpainting_inputs = []
@@ -387,8 +387,8 @@ def controlnet_inpainting_frontend_func(fns):
                 controlnet_inpainting_btn = gr.Button("Run")
                 controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
                                                 outputs=controlnet_inpainting_outputs)
-                
-def code_frontend_func(fns):
+
+def render_code(fns):
     with gr.Accordion("Code", open=False):
         gr.Markdown("# Code")
         gr.Markdown(f"- GPUs: {GPU_NAME}")
@@ -405,26 +405,27 @@ def code_frontend_func(fns):
                 code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
 
 
-def stable_diffusion_ui_template(fns):
+def render_stable_diffusion_ui(fns):
     theme = gr.themes.Ocean()
 
     with gr.Blocks(title=f"Xfusion{GPU_NAME}", theme=theme) as server:
 
-        model_selection_frontend_func(fns)
-        lora_frontend_func(fns)
-        text_to_image_frontend_func(fns)
-        image_to_image_frontend_func(fns)
-        inpainting_frontend_func(fns)
-        
+        render_model_selection(fns)
+        render_lora(fns)
+        render_text_to_image(fns)
+        render_image_to_image(fns)
+        render_inpainting(fns)
+
         with gr.Accordion("Controlnet",open=False):
-            controlnet_selection_frontend_func(fns)
-            controlnet_text_to_image_frontend_func(fns)
-            controlnet_image_to_image_frontend_func(fns)
-            controlnet_inpainting_frontend_func(fns)
-            
-        code_frontend_func(fns)
+            render_controlnet_selection(fns)
+            render_controlnet_text_to_image(fns)
+            render_controlnet_image_to_image(fns)
+            render_controlnet_inpainting(fns)
+
+        render_code(fns)
 
     return server
+
 
 def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     """
@@ -808,7 +809,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     fns = locals()
     fns.pop("_globals")
-    server =  stable_diffusion_ui_template(fns)
+    server = render_stable_diffusion_ui(fns)
 
     if kwargs.get("inline") is None: kwargs.update(inline=False)
     if kwargs.get("quiet") is None: kwargs.update(quiet=True)
