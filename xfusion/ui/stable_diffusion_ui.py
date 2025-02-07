@@ -17,7 +17,7 @@ scheduler_list = [
     "HEUN","LMS","LMS KARRAS","DEIS","UNIPC"]
 
 
-def model_selection_frontend_func(fn):
+def model_selection_frontend_func(fns):
     with gr.Accordion("Model Selection", open=True):
         gr.Markdown("# Model Selection")
         model_selection_inputs = []
@@ -31,349 +31,398 @@ def model_selection_frontend_func(fn):
             with gr.Column():
                 model_selection_outputs.append(gr.Textbox(label="Result"))
                 model_selection_btn = gr.Button("Select")
-                model_selection_btn.click(fn=fn, inputs=model_selection_inputs,
+                model_selection_btn.click(fn=fns["model_selection_fn"], inputs=model_selection_inputs,
                                           outputs=model_selection_outputs)
+
+def lora_frontend_func(fns):
+    with gr.Accordion("LoRA", open=False):
+        gr.Markdown("# LoRA")
+        set_lora_inputs = []
+        lora_outputs = []
+        with gr.Row():
+            with gr.Column():
+                set_lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!", label="LoRA"))
+                with gr.Row():
+                    set_lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!", label="LoRA name"))
+                    set_lora_inputs.append(gr.Slider(0, 1, 0.4, step=0.05, label="LoRA strength"))
+                with gr.Row():
+                    delete_lora_btn = gr.Button("Delete LoRA")
+                    set_lora_btn = gr.Button("Set LoRA")
+            with gr.Column():
+                lora_outputs.append(gr.Textbox(label="Result"))
+                delete_lora_btn.click(fn=fns["delete_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
+                set_lora_btn.click(fn=fns["set_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
+                with gr.Row():
+                    show_lora_btn = gr.Button("Show all LoRA")
+                    show_lora_btn.click(fn=fns["show_lora_fn"], outputs=lora_outputs)
+                with gr.Row():
+                    enable_lora_btn = gr.Button("Enable all LoRA")
+                    enable_lora_btn.click(fn=fns["enable_lora_fn"], outputs=lora_outputs)
+                    disable_lora_btn = gr.Button("Disable all LoRA")
+                    disable_lora_btn.click(fn=fns["disable_lora_fn"], outputs=lora_outputs)
+
+def text_to_image_frontend_func(fns):
+    with gr.Accordion("Text To Image", open=True):
+        gr.Markdown("# Text To Image")
+        t2i_inputs = []
+        t2i_outputs = []
+        t2i_scheduler_inputs = []
+        t2i_scheduler_outputs = []
+        with gr.Row():
+            with gr.Accordion("Scheduler", open=False):
+                t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                t2i_scheduler_inputs[0].change(
+                    fn=fns["text_to_image_scheduler_fn"], inputs=t2i_scheduler_inputs, outputs=t2i_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                t2i_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+            with gr.Column():
+                with gr.Row():
+                    t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    t2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    t2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["text_to_image_fn"]).parameters.values())])
+                    t2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({t2i_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {t2i_callback_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                t2i_outputs.append(gr.Textbox(label="Result"))
+                t2i_btn = gr.Button("Run")
+                t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
+                
+def image_to_image_frontend_func(fns):
+    with gr.Accordion("Image To Image", open=False):
+        gr.Markdown("# Image To Image")
+        i2i_inputs = []
+        i2i_outputs = []
+        i2i_scheduler_inputs = []
+        i2i_scheduler_outputs = []
+        with gr.Row():
+            with gr.Accordion("Scheduler", open=False):
+                i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                i2i_scheduler_inputs[0].change(
+                    fn=fns["image_to_image_scheduler_fn"], inputs=i2i_scheduler_inputs, outputs=i2i_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Image"):
+                    i2i_inputs.append(gr.Image(type="pil", label="Image"))
+                i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                i2i_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
+                i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+            with gr.Column():
+                with gr.Row():
+                    i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    i2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["image_to_image_fn"]).parameters.values())])
+                    i2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({i2i_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {i2i_callback_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                i2i_outputs.append(gr.Textbox(label="Result"))
+                i2i_btn = gr.Button("Run")
+                i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
+                
+def inpainting_frontend_func(fns):
+    with gr.Accordion("Inpainting", open=False):
+        gr.Markdown("# Inpainting")
+        inpainting_inputs = []
+        inpainting_outputs = []
+        inpainting_scheduler_inputs = []
+        inpainting_scheduler_outputs = []
+        with gr.Row():
+            with gr.Accordion("Scheduler", open=False):
+                inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
+                inpainting_scheduler_inputs[0].change(
+                    fn=fns["inpainting_scheduler_fn"], inputs=inpainting_scheduler_inputs,
+                    outputs=inpainting_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Inpainting Image"):
+                    inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
+                inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                inpainting_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
+                inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+            with gr.Column():
+                with gr.Row():
+                    inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    inpainting_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["inpainting_fn"]).parameters.values())])
+                    inpainting_inputs.append(
+                        gr.Code(
+                            f"def preprocess({inpainting_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {inpainting_callback_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                inpainting_outputs.append(gr.Textbox(label="Result"))
+                inpainting_btn = gr.Button("Run")
+                inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
+                
+def controlnet_selection_frontend_func(fns):
+    controlnet_inputs = []
+    controlnet_outputs = []
+    with gr.Accordion("Controlnet Selection", open=False):
+        with gr.Row():
+            with gr.Column():
+                controlnet_inputs.append(gr.Textbox(placeholder="Give me a controlnet URL!", label="Controlnet Model"))
+                controlnet_inputs[0].change(fn=fns["set_default_controlnet_for_auto_load_controlnet_fn"],
+                                            inputs=controlnet_inputs[0], outputs=controlnet_outputs)
+                with gr.Row():
+                    load_controlnet_button = gr.Button("Load controlnet")
+                    offload_controlnet_button = gr.Button("Offload controlnet")
+            controlnet_outputs.append(gr.Textbox(label="Result"))
+            load_controlnet_button.click(fn=fns["load_controlnet_fn"], outputs=controlnet_outputs)
+            offload_controlnet_button.click(fn=fns["offload_controlnet_fn"], outputs=controlnet_outputs)
+            
+def controlnet_text_to_image_frontend_func(fns):
+    with gr.Accordion("Controlnet Text To Image", open=False):
+        gr.Markdown("# Controlnet Text To Image")
+        controlnet_t2i_inputs = []
+        controlnet_t2i_outputs = []
+        controlnet_t2i_control_image_preview_inputs = []
+        controlnet_t2i_control_image_preview_outputs = []
+        controlnet_t2i_scheduler_inputs = []
+        controlnet_t2i_scheduler_outputs = []
+        with gr.Row():
+            with gr.Accordion("Scheduler", open=False):
+                controlnet_t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                controlnet_t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                controlnet_t2i_scheduler_inputs[0].change(
+                    fn=fns["controlnet_text_to_image_scheduler_fn"], inputs=controlnet_t2i_scheduler_inputs,
+                    outputs=controlnet_t2i_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Controlnet Image"):
+                    lists_append(gr.Image(type="pil", label="Controlnet Image"),
+                                 [controlnet_t2i_inputs, controlnet_t2i_control_image_preview_inputs])
+                controlnet_t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                controlnet_t2i_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                controlnet_t2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                controlnet_t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                controlnet_t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                controlnet_t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Row():
+                    lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),
+                                 [controlnet_t2i_inputs, controlnet_t2i_control_image_preview_inputs])
+                    lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
+                                 [controlnet_t2i_inputs, controlnet_t2i_control_image_preview_inputs])
+                controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                for component in controlnet_t2i_control_image_preview_inputs:
+                    component.change(fn=fns["controlnet_preview_fn"],
+                                     inputs=controlnet_t2i_control_image_preview_inputs,
+                                     outputs=controlnet_t2i_control_image_preview_outputs)
+            with gr.Column():
+                with gr.Row():
+                    controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    controlnet_t2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    controlnet_t2i_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["controlnet_text_to_image_fn"]).parameters.values())])
+                    controlnet_t2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({controlnet_t2i_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_t2i_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
+                controlnet_t2i_btn = gr.Button("Run")
+                controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"], inputs=controlnet_t2i_inputs,
+                                         outputs=controlnet_t2i_outputs)
+                
+def controlnet_image_to_image_frontend_func(fns):
+    with gr.Accordion("Controlnet Image To Image", open=False):
+        gr.Markdown("# Controlnet Image To Image")
+        controlnet_i2i_inputs = []
+        controlnet_i2i_outputs = []
+        controlnet_i2i_control_image_preview_inputs = []
+        controlnet_i2i_control_image_preview_outputs = []
+        controlnet_i2i_scheduler_inputs = []
+        controlnet_i2i_scheduler_outputs = []
+        with gr.Row():
+            with gr.Accordion("Scheduler", open=False):
+                controlnet_i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                controlnet_i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
+                controlnet_i2i_scheduler_inputs[0].change(
+                    fn=fns["controlnet_image_to_image_scheduler_fn"], inputs=controlnet_i2i_scheduler_inputs,
+                    outputs=controlnet_i2i_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Images"):
+                    with gr.Row():
+                        lists_append(gr.Image(type="pil", label="Controlnet Image"),
+                                     [controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                        controlnet_i2i_inputs.append(gr.Image(type="pil", label="Image"))
+                controlnet_i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                controlnet_i2i_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Row():
+                    lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),
+                                 [controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                    lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
+                                 [controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                controlnet_i2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                for component in controlnet_i2i_control_image_preview_inputs:
+                    component.change(fn=fns["controlnet_preview_fn"],
+                                     inputs=controlnet_i2i_control_image_preview_inputs,
+                                     outputs=controlnet_i2i_control_image_preview_outputs)
+
+            with gr.Column():
+                with gr.Row():
+                    controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    controlnet_i2i_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["controlnet_image_to_image_fn"]).parameters.values())])
+                    controlnet_i2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({controlnet_i2i_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_i2i_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
+                controlnet_i2i_btn = gr.Button("Run")
+                controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs,
+                                         outputs=controlnet_i2i_outputs)
+
+def controlnet_inpainting_frontend_func(fns):
+    with gr.Accordion("Controlnet Inpainting", open=False):
+        gr.Markdown("# Controlnet Inpainting")
+        controlnet_inpainting_inputs = []
+        controlnet_inpainting_outputs = []
+        controlnet_inpainting_control_image_preview_inputs = []
+        controlnet_inpainting_control_image_preview_outputs = []
+        controlnet_inpainting_scheduler_inputs = []
+        controlnet_inpainting_scheduler_outputs = []
+        with gr.Row():
+            with gr.Accordion("Scheduler", open=False):
+                controlnet_inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
+                controlnet_inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
+                controlnet_inpainting_scheduler_inputs[0].change(
+                    fn=fns["controlnet_inpainting_scheduler_fn"], inputs=controlnet_inpainting_scheduler_inputs,
+                    outputs=controlnet_inpainting_scheduler_outputs)
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Images"):
+                    with gr.Column():
+                        lists_append(gr.Image(type="pil", label="Controlnet Image"),
+                                     [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                        controlnet_inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
+                controlnet_inpainting_inputs.append(
+                    gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+                controlnet_inpainting_inputs.append(
+                    gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
+            with gr.Column():
+                controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Row():
+                    lists_append(gr.Slider(0, 255, 100, step=5, label="Low Threshold"),
+                                 [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                    lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
+                                 [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                controlnet_inpainting_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                for component in controlnet_inpainting_control_image_preview_inputs:
+                    component.change(fn=fns["controlnet_preview_fn"],
+                                     inputs=controlnet_inpainting_control_image_preview_inputs,
+                                     outputs=controlnet_inpainting_control_image_preview_outputs)
+
+            with gr.Column():
+                with gr.Row():
+                    controlnet_inpainting_inputs.append(
+                        gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    controlnet_inpainting_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["controlnet_inpainting_fn"]).parameters.values())])
+                    controlnet_inpainting_inputs.append(
+                        gr.Code(
+                            f"def preprocess({controlnet_inpainting_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_inpainting_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
+                controlnet_inpainting_btn = gr.Button("Run")
+                controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
+                                                outputs=controlnet_inpainting_outputs)
+                
+def code_frontend_func(fns):
+    with gr.Accordion("Code", open=False):
+        gr.Markdown("# Code")
+        gr.Markdown(f"- GPUs: {GPU_NAME}")
+        gr.Markdown(f"- Python: {sys.version}")
+        gr.Markdown(f"- OS: {platform.platform()}")
+        code_inputs = []
+        code_outputs = []
+        with gr.Row():
+            with gr.Column():
+                code_inputs.append(gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
+            with gr.Column():
+                code_outputs.append(gr.Textbox(label="Code Result"))
+                code_btn = gr.Button("Run Code")
+                code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
+
 
 def stable_diffusion_ui_template(fns):
     theme = gr.themes.Ocean()
 
     with gr.Blocks(title=f"Xfusion{GPU_NAME}", theme=theme) as server:
 
-        model_selection_frontend_func(fns["model_selection_fn"])
-
-        with gr.Accordion("LoRA",open=False):
-            gr.Markdown("# LoRA")
-            set_lora_inputs = []
-            lora_outputs = []
-            with gr.Row():
-                with gr.Column():
-                    set_lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!", label="LoRA"))
-                    with gr.Row():
-                        set_lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!", label="LoRA name"))
-                        set_lora_inputs.append(gr.Slider(0, 1, 0.4, step=0.05, label="LoRA strength"))
-                    with gr.Row():
-                        delete_lora_btn = gr.Button("Delete LoRA")
-                        set_lora_btn = gr.Button("Set LoRA")
-                with gr.Column():
-                    lora_outputs.append(gr.Textbox(label="Result"))
-                    delete_lora_btn.click(fn=fns["delete_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
-                    set_lora_btn.click(fn=fns["set_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
-                    with gr.Row():
-                        show_lora_btn = gr.Button("Show all LoRA")
-                        show_lora_btn.click(fn=fns["show_lora_fn"], outputs=lora_outputs)
-                    with gr.Row():
-                        enable_lora_btn = gr.Button("Enable all LoRA")
-                        enable_lora_btn.click(fn=fns["enable_lora_fn"], outputs=lora_outputs)
-                        disable_lora_btn = gr.Button("Disable all LoRA")
-                        disable_lora_btn.click(fn=fns["disable_lora_fn"], outputs=lora_outputs)
-
-        with gr.Accordion("Text To Image", open=True):
-            gr.Markdown("# Text To Image")
-            t2i_inputs = []
-            t2i_outputs = []
-            t2i_scheduler_inputs = []
-            t2i_scheduler_outputs = []
-            with gr.Row():
-                with gr.Accordion("Scheduler", open=False):
-                    t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                    t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                    t2i_scheduler_inputs[0].change(
-                        fn=fns["text_to_image_scheduler_fn"],inputs=t2i_scheduler_inputs,outputs=t2i_scheduler_outputs)
-            with gr.Row():
-                with gr.Column():
-                    t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                    t2i_inputs.append(
-                        gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-                with gr.Column():
-                    t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                    t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                    t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                    with gr.Row():
-                        t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                        t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-                with gr.Column():
-                    with gr.Row():
-                        t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                        t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                    with gr.Accordion("Code",open=False):
-                        t2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(inspect.signature(fns["text_to_image_fn"]).parameters.values())])
-                        t2i_inputs.append(
-                            gr.Code(f"def preprocess({t2i_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {t2i_callback_args_name.replace('*','')}",
-                                    language="python",label="Python"))
-                    t2i_outputs.append(gr.Textbox(label="Result"))
-                    t2i_btn = gr.Button("Run")
-                    t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
-
-        with gr.Accordion("Image To Image", open=False):
-            gr.Markdown("# Image To Image")
-            i2i_inputs = []
-            i2i_outputs = []
-            i2i_scheduler_inputs = []
-            i2i_scheduler_outputs = []
-            with gr.Row():
-                with gr.Accordion("Scheduler", open=False):
-                    i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                    i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                    i2i_scheduler_inputs[0].change(
-                        fn=fns["image_to_image_scheduler_fn"], inputs=i2i_scheduler_inputs,outputs=i2i_scheduler_outputs)
-            with gr.Row():
-                with gr.Column():
-                    with gr.Accordion("Image"):
-                        i2i_inputs.append(gr.Image(type="pil", label="Image"))
-                    i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                    i2i_inputs.append(
-                        gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-                with gr.Column():
-                    i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
-                    i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                    i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                    i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                    with gr.Row():
-                        i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
-                        i2i_inputs.append(gr.Slider(512,2048,1024,step=8,label="Height"))
-                with gr.Column():
-                    with gr.Row():
-                        i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                        i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                    with gr.Accordion("Code",open=False):
-                        i2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(inspect.signature(fns["image_to_image_fn"]).parameters.values())])
-                        i2i_inputs.append(
-                            gr.Code(f"def preprocess({i2i_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {i2i_callback_args_name.replace('*','')}",
-                                    language="python", label="Python"))
-                    i2i_outputs.append(gr.Textbox(label="Result"))
-                    i2i_btn = gr.Button("Run")
-                    i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
-
-        with gr.Accordion("Inpainting",open=False):
-            gr.Markdown("# Inpainting")
-            inpainting_inputs = []
-            inpainting_outputs = []
-            inpainting_scheduler_inputs = []
-            inpainting_scheduler_outputs = []
-            with gr.Row():
-                with gr.Accordion("Scheduler", open=False):
-                    inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                    inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
-                    inpainting_scheduler_inputs[0].change(
-                        fn=fns["inpainting_scheduler_fn"], inputs=inpainting_scheduler_inputs,outputs=inpainting_scheduler_outputs)
-            with gr.Row():
-                with gr.Column():
-                    with gr.Accordion("Inpainting Image"):
-                        inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
-                    inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                    inpainting_inputs.append(
-                        gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-                with gr.Column():
-                    inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
-                    inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                    inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                    inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                    with gr.Row():
-                        inpainting_inputs.append(gr.Slider(512,2048,1024,step=8,label="Width"))
-                        inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-                with gr.Column():
-                    with gr.Row():
-                        inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                        inpainting_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                    with gr.Accordion("Code",open=False):
-                        inpainting_callback_args_name = ",".join([str(item).split("=")[0] for item in list(inspect.signature(fns["inpainting_fn"]).parameters.values())])
-                        inpainting_inputs.append(
-                            gr.Code(f"def preprocess({inpainting_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {inpainting_callback_args_name.replace('*','')}",
-                                    language="python", label="Python"))
-                    inpainting_outputs.append(gr.Textbox(label="Result"))
-                    inpainting_btn = gr.Button("Run")
-                    inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
-
+        model_selection_frontend_func(fns)
+        lora_frontend_func(fns)
+        text_to_image_frontend_func(fns)
+        image_to_image_frontend_func(fns)
+        inpainting_frontend_func(fns)
+        
         with gr.Accordion("Controlnet",open=False):
-            controlnet_inputs = []
-            controlnet_outputs = []
-            with gr.Accordion("Controlnet Selection",open=False):
-                with gr.Row():
-                    with gr.Column():
-                        controlnet_inputs.append(gr.Textbox(placeholder="Give me a controlnet URL!",label="Controlnet Model"))
-                        controlnet_inputs[0].change(fn=fns["set_default_controlnet_for_auto_load_controlnet_fn"],inputs=controlnet_inputs[0],outputs=controlnet_outputs)
-                        with gr.Row():
-                            load_controlnet_button = gr.Button("Load controlnet")
-                            offload_controlnet_button = gr.Button("Offload controlnet")
-                    controlnet_outputs.append(gr.Textbox(label="Result"))
-                    load_controlnet_button.click(fn=fns["load_controlnet_fn"],outputs=controlnet_outputs)
-                    offload_controlnet_button.click(fn=fns["offload_controlnet_fn"],outputs=controlnet_outputs)
-            with gr.Accordion("Controlnet Text To Image", open=False):
-                gr.Markdown("# Controlnet Text To Image")
-                controlnet_t2i_inputs = []
-                controlnet_t2i_outputs = []
-                controlnet_t2i_control_image_preview_inputs = []
-                controlnet_t2i_control_image_preview_outputs = []
-                controlnet_t2i_scheduler_inputs = []
-                controlnet_t2i_scheduler_outputs = []
-                with gr.Row():
-                    with gr.Accordion("Scheduler", open=False):
-                        controlnet_t2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                        controlnet_t2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                        controlnet_t2i_scheduler_inputs[0].change(
-                            fn=fns["controlnet_text_to_image_scheduler_fn"], inputs=controlnet_t2i_scheduler_inputs,outputs=controlnet_t2i_scheduler_outputs)
-                with gr.Row():
-                    with gr.Column():
-                        with gr.Accordion("Controlnet Image"):
-                            lists_append(gr.Image(type="pil", label="Controlnet Image"),[controlnet_t2i_inputs,controlnet_t2i_control_image_preview_inputs])
-                        controlnet_t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                        controlnet_t2i_inputs.append(
-                            gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-                    with gr.Column():
-                        controlnet_t2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
-                        controlnet_t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                        controlnet_t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                        controlnet_t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                        with gr.Row():
-                            controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                            controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-                        with gr.Row():
-                            lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),[controlnet_t2i_inputs,controlnet_t2i_control_image_preview_inputs])
-                            lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),[controlnet_t2i_inputs,controlnet_t2i_control_image_preview_inputs])
-                        controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
-                        for component in controlnet_t2i_control_image_preview_inputs:
-                            component.change(fn=fns["controlnet_preview_fn"],
-                                             inputs=controlnet_t2i_control_image_preview_inputs,outputs=controlnet_t2i_control_image_preview_outputs)
-                    with gr.Column():
-                        with gr.Row():
-                            controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                            controlnet_t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                        with gr.Accordion("Code",open=False):
-                            controlnet_t2i_args_name = ",".join([str(item).split("=")[0] for item in list(inspect.signature(fns["controlnet_text_to_image_fn"]).parameters.values())])
-                            controlnet_t2i_inputs.append(
-                                gr.Code(f"def preprocess({controlnet_t2i_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_t2i_args_name.replace('*','')}",
-                                        language="python", label="Python"))
-                        controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
-                        controlnet_t2i_btn = gr.Button("Run")
-                        controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"],inputs=controlnet_t2i_inputs, outputs=controlnet_t2i_outputs)
-            with gr.Accordion("Controlnet Image To Image",open=False):
-                gr.Markdown("# Controlnet Image To Image")
-                controlnet_i2i_inputs = []
-                controlnet_i2i_outputs = []
-                controlnet_i2i_control_image_preview_inputs = []
-                controlnet_i2i_control_image_preview_outputs = []
-                controlnet_i2i_scheduler_inputs = []
-                controlnet_i2i_scheduler_outputs = []
-                with gr.Row():
-                    with gr.Accordion("Scheduler", open=False):
-                        controlnet_i2i_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                        controlnet_i2i_scheduler_outputs.append(gr.Textbox(label="Result"))
-                        controlnet_i2i_scheduler_inputs[0].change(
-                            fn=fns["controlnet_image_to_image_scheduler_fn"], inputs=controlnet_i2i_scheduler_inputs,
-                            outputs=controlnet_i2i_scheduler_outputs)
-                with gr.Row():
-                    with gr.Column():
-                        with gr.Accordion("Images"):
-                            with gr.Row():
-                                lists_append(gr.Image(type="pil", label="Controlnet Image"),[controlnet_i2i_inputs,controlnet_i2i_control_image_preview_inputs])
-                                controlnet_i2i_inputs.append(gr.Image(type="pil", label="Image"))
-                        controlnet_i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                        controlnet_i2i_inputs.append(
-                            gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-                    with gr.Column():
-                        controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
-                        controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
-                        controlnet_i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                        controlnet_i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                        controlnet_i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                        with gr.Row():
-                            controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                            controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-                        with gr.Row():
-                            lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),[controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
-                            lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),[controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
-                        controlnet_i2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
-                        for component in controlnet_i2i_control_image_preview_inputs:
-                            component.change(fn=fns["controlnet_preview_fn"],
-                                             inputs=controlnet_i2i_control_image_preview_inputs,outputs=controlnet_i2i_control_image_preview_outputs)
-
-                    with gr.Column():
-                        with gr.Row():
-                            controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                            controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                        with gr.Accordion("Code",open=False):
-                            controlnet_i2i_args_name = ",".join([str(item).split("=")[0] for item in list(inspect.signature(fns["controlnet_image_to_image_fn"]).parameters.values())])
-                            controlnet_i2i_inputs.append(
-                                gr.Code(f"def preprocess({controlnet_i2i_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_i2i_args_name.replace('*','')}",
-                                        language="python", label="Python"))
-                        controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
-                        controlnet_i2i_btn = gr.Button("Run")
-                        controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs, outputs=controlnet_i2i_outputs)
-            with gr.Accordion("Controlnet Inpainting", open=False):
-                gr.Markdown("# Controlnet Inpainting")
-                controlnet_inpainting_inputs = []
-                controlnet_inpainting_outputs = []
-                controlnet_inpainting_control_image_preview_inputs = []
-                controlnet_inpainting_control_image_preview_outputs = []
-                controlnet_inpainting_scheduler_inputs = []
-                controlnet_inpainting_scheduler_outputs = []
-                with gr.Row():
-                    with gr.Accordion("Scheduler", open=False):
-                        controlnet_inpainting_scheduler_inputs.append(gr.Radio(scheduler_list, label="Scheduler"))
-                        controlnet_inpainting_scheduler_outputs.append(gr.Textbox(label="Result"))
-                        controlnet_inpainting_scheduler_inputs[0].change(
-                            fn=fns["controlnet_inpainting_scheduler_fn"], inputs=controlnet_inpainting_scheduler_inputs,
-                            outputs=controlnet_inpainting_scheduler_outputs)
-                with gr.Row():
-                    with gr.Column():
-                        with gr.Accordion("Images"):
-                            with gr.Column():
-                                lists_append(gr.Image(type="pil", label="Controlnet Image"),
-                                             [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
-                                controlnet_inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
-                        controlnet_inpainting_inputs.append(
-                            gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
-                        controlnet_inpainting_inputs.append(
-                            gr.Textbox(placeholder="Give me a negative prompt!", label="Negative Prompt", lines=4))
-                    with gr.Column():
-                        controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
-                        controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
-                        controlnet_inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
-                        controlnet_inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                        controlnet_inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
-                        with gr.Row():
-                            controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                            controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-                        with gr.Row():
-                            lists_append(gr.Slider(0, 255, 100, step=5, label="Low Threshold"),
-                                         [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
-                            lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
-                                         [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
-                        controlnet_inpainting_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
-                        for component in controlnet_inpainting_control_image_preview_inputs:
-                            component.change(fn=fns["controlnet_preview_fn"],
-                                             inputs=controlnet_inpainting_control_image_preview_inputs,
-                                             outputs=controlnet_inpainting_control_image_preview_outputs)
-
-                    with gr.Column():
-                        with gr.Row():
-                            controlnet_inpainting_inputs.append(
-                                gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                            controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                        with gr.Accordion("Code",open=False):
-                            controlnet_inpainting_args_name = ",".join([str(item).split("=")[0] for item in list(inspect.signature(fns["controlnet_inpainting_fn"]).parameters.values())])
-                            controlnet_inpainting_inputs.append(
-                                gr.Code(f"def preprocess({controlnet_inpainting_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_inpainting_args_name.replace('*','')}",
-                                        language="python", label="Python"))
-                        controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
-                        controlnet_inpainting_btn = gr.Button("Run")
-                        controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
-                                                 outputs=controlnet_inpainting_outputs)
-
-        with gr.Accordion("Code",open=False):
-            gr.Markdown("# Code")
-            gr.Markdown(f"- GPUs: {GPU_NAME}")
-            gr.Markdown(f"- Python: {sys.version}")
-            gr.Markdown(f"- OS: {platform.platform()}")
-            code_inputs = []
-            code_outputs = []
-            with gr.Row():
-                with gr.Column():
-                    code_inputs.append(gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
-                with gr.Column():
-                    code_outputs.append(gr.Textbox(label="Code Result"))
-                    code_btn = gr.Button("Run Code")
-                    code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
+            controlnet_selection_frontend_func(fns)
+            controlnet_text_to_image_frontend_func(fns)
+            controlnet_image_to_image_frontend_func(fns)
+            controlnet_inpainting_frontend_func(fns)
+            
+        code_frontend_func(fns)
 
     return server
 
