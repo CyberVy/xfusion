@@ -13,6 +13,7 @@ setup(
         'diffusers==0.32.2',
         'transformers',
         'compel',
+        'optimum-quanto',
         'opencv-python',
         'tqdm',
     ],
