@@ -11,7 +11,6 @@ setup(
         'torch',
         'gradio==5.13.0',
         'diffusers==0.32.2',
-        'optimum-quanto',
         'transformers',
         'compel',
         'opencv-python',
