@@ -193,14 +193,12 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
         download_kwargs = self.download_kwargs
         telegram_kwargs = self.telegram_kwargs
-        lora_dict = self.lora_dict
         device = self.device
         self.clear()
         object.__getattribute__(self,"__init__")(
             self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
         self.set_download_kwargs(**download_kwargs)
         self.set_telegram_kwargs(**telegram_kwargs)
-        self.lora_dict.update(**lora_dict)
         self.model_name = url
         self.to(device)
 
@@ -213,10 +211,8 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
 
         download_kwargs = self.download_kwargs
         telegram_kwargs = self.telegram_kwargs
-        lora_dict = self.lora_dict
         object.__getattribute__(self,"__init__")(
             self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
         self.set_download_kwargs(**download_kwargs)
         self.set_telegram_kwargs(**telegram_kwargs)
-        self.lora_dict.update(**lora_dict)
         self.model_name = url
