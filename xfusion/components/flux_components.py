@@ -149,8 +149,9 @@ def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None
                                  quantization_config=TransformersBitsAndBytesConfig(**quantization_config) if quantization_config else None,
                                  **kwargs)
 
-    clip_tokenizer, clip_encoder = (load_clip_tokenizer(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs),
-                                    load_clip_encoder(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs))
+    clip_tokenizer = load_clip_tokenizer(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs),
+    clip_encoder =   load_clip_encoder(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
+
     vae = load_flux_vae(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
     scheduler = load_flux_scheduler(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
 
