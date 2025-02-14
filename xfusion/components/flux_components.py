@@ -5,7 +5,6 @@ from .component_const import default_flux_transformer_url
 from .component_const import flux_scheduler_url_list
 from .component_utils import load_t5_tokenizer,load_t5_encoder
 from .component_utils import load_clip_tokenizer,load_clip_encoder
-from .component_utils import get_t5_encoder_files
 from ..download import download_file
 from ..const import HF_HUB_TOKEN
 from ..utils import threads_execute
@@ -149,7 +148,7 @@ def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None
                                  quantization_config=TransformersBitsAndBytesConfig(**quantization_config) if quantization_config else None,
                                  **kwargs)
 
-    clip_tokenizer = load_clip_tokenizer(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs),
+    clip_tokenizer = load_clip_tokenizer(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
     clip_encoder =   load_clip_encoder(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
 
     vae = load_flux_vae(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
