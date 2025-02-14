@@ -2,7 +2,7 @@ from .const import XFUSION_COOKIE,HF_HUB_TOKEN,CIVITAI_TOKEN
 from .const import PROXY_URL_PREFIX,NEED_PROXY
 import requests
 from tqdm import tqdm
-from urllib.parse import urlparse
+from urllib.parse import urlparse,unquote
 import os
 import re
 
@@ -39,7 +39,7 @@ def download_file(url,filename=None,directory=None,mute=False,**kwargs):
     response = requests.get(url.geturl(),stream=True,**kwargs)
     if filename is None:
         filename = urlparse(response.url).path.split("/")[-1]
-        content_disposition = response.headers.get("content-disposition","")
+        content_disposition = unquote(response.headers.get("content-disposition",""))
         if content_disposition:
             match = re.match('.*filename="(.*)".*',content_disposition)
             if match:
