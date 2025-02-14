@@ -116,7 +116,8 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         self._scheduler = self.scheduler
         components = self.components
         components.pop("image_encoder",None)
-        
+        components.pop("feature_extractor", None)
+
         if init_sub_pipelines:
             if self.pipeline_type != 0:
                 self.text_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][0](**components),
