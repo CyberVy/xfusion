@@ -11,7 +11,6 @@ from ..const import HF_HUB_TOKEN
 from ..utils import threads_execute
 from diffusers import FluxPipeline
 from diffusers import AutoencoderKL,FluxTransformer2DModel,FlowMatchEulerDiscreteScheduler
-from optimum.quanto import freeze,qfloat8,quantize
 
 
 def get_flux_transformer_files(directory,
@@ -131,22 +130,13 @@ def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_fil
 def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None,**kwargs):
     uri = default_flux_transformer_url if uri is None else uri
     download_kwargs = {} if download_kwargs is None else download_kwargs
-    def q(model):
-        quantize(model,weights=qfloat8)
-        freeze(model)
 
-    def _get_t5_encoder_files_mute(directory):
-        return get_t5_encoder_files(directory,mute=True,)
-
-    _t5_thread = threads_execute(_get_t5_encoder_files_mute,("./t5_encoder",),_await=False)[0]
+    quantization_config = kwargs.pop("quantization_config",None)
 
     transformer = load_flux_transformer("/transformer",uri=uri,download_kwargs=download_kwargs,
-                                        delete_internet_files=delete_internet_files,**kwargs)
-    threads_execute(q,(transformer,),_await=True)
+                                        delete_internet_files=delete_internet_files,quantization_config=quantization_config,**kwargs)
 
-    _t5_thread.join()
-    t5_tokenizer, t5_encoder = load_t5_tokenizer(download_kwargs=download_kwargs,**kwargs), load_t5_encoder(directory="./t5_encoder",use_local_files=True,**kwargs)
-    threads_execute(q,(t5_encoder,),_await=True)
+    t5_tokenizer, t5_encoder = load_t5_tokenizer(download_kwargs=download_kwargs,**kwargs), load_t5_encoder(download_kwargs=download_kwargs,quantization_config=quantization_config,**kwargs)
 
     clip_tokenizer, clip_encoder = (load_clip_tokenizer(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs),
                                     load_clip_encoder(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs))
