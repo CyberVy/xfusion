@@ -4,7 +4,6 @@ from ..utils import allow_return_error,threads_execute
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..const import GPU_COUNT,GPU_NAME
 from ..components.component_const import default_stable_diffusion_model_url
-import torch
 import sys,platform
 import functools
 import inspect
@@ -479,11 +478,9 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         def wrapper(*args,**kwargs):
             if int(args[-4]) != 0  or len(pipelines) == 1:
                 r =  f(*args,**kwargs)(pipelines[0])
-                torch.cuda.empty_cache()
                 return r
             else:
                 threads_execute(f(*args,**kwargs),pipelines)
-                torch.cuda.empty_cache()
                 return f"{args[-3]} * {len(pipelines)}"
         return wrapper
 
