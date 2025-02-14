@@ -11,6 +11,8 @@ from ..const import HF_HUB_TOKEN
 from ..utils import threads_execute
 from diffusers import FluxPipeline
 from diffusers import AutoencoderKL,FluxTransformer2DModel,FlowMatchEulerDiscreteScheduler
+from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
+from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
 
 
 def get_flux_transformer_files(directory,
@@ -131,12 +133,17 @@ def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None
     uri = default_flux_transformer_url if uri is None else uri
     download_kwargs = {} if download_kwargs is None else download_kwargs
 
-    quantization_config = kwargs.pop("quantization_config",None)
+    quantization_config = kwargs.pop("quantization_config",{"load_in_4bit":True,"bnb_4bit_compute_dtype":torch.float16})
 
     transformer = load_flux_transformer("/transformer",uri=uri,download_kwargs=download_kwargs,
-                                        delete_internet_files=delete_internet_files,quantization_config=quantization_config,**kwargs)
+                                        delete_internet_files=delete_internet_files,
+                                        quantization_config=DiffusersBitsAndBytesConfig(**quantization_config) if quantization_config else None,
+                                        **kwargs)
 
-    t5_tokenizer, t5_encoder = load_t5_tokenizer(download_kwargs=download_kwargs,**kwargs), load_t5_encoder(download_kwargs=download_kwargs,quantization_config=quantization_config,**kwargs)
+    t5_tokenizer = load_t5_tokenizer(download_kwargs=download_kwargs,**kwargs)
+    t5_encoder = load_t5_encoder(download_kwargs=download_kwargs,
+                                 quantization_config=TransformersBitsAndBytesConfig(**quantization_config) if quantization_config else None,
+                                 **kwargs)
 
     clip_tokenizer, clip_encoder = (load_clip_tokenizer(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs),
                                     load_clip_encoder(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs))
