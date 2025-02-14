@@ -174,7 +174,7 @@ def allow_return_error(f:Union[FunctionType | MethodType]):
         try:
             return f(*args,**kwargs)
         except Exception as e:
-            return f"{e}"
+            return f"{e}\n{e.__traceback__.tb_frame}"
     return wrapper
 
 def load_image(
