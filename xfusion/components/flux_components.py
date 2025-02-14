@@ -37,40 +37,44 @@ def get_flux_scheduler_files(directory,**kwargs):
 
 def load_flux_transformer(
         directory=None,uri=default_flux_transformer_url,
-        use_local_files=False, delete_internet_files=False,download_kwargs=None,**kwargs):
+        delete_internet_files=False,download_kwargs=None,**kwargs):
     """
     :param directory: the transformer where to download
     :param uri: the uri of the transformer
-    :param use_local_files:
     :param delete_internet_files:
     :param download_kwargs:
     :param kwargs: passed in FluxTransformer2DModel.from_single_file
     :return:
     """
+    use_internet = True
+    if uri.startswith(".") or uri.startswith("/") or uri.startswith("~"):
+        use_internet = False
     download_kwargs = {} if download_kwargs is None else download_kwargs
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if kwargs.get("token") is None:
         kwargs.update(token=HF_HUB_TOKEN)
 
-    if use_local_files and directory is not None:
-        print("Warning: The parameter 'directory' is the transformer where to download, when 'use_local_files' is true, please make sure it is None. ")
-
     directory = "./transformer" if directory is None else directory
 
-    if use_local_files and uri.startswith("http"):
-        raise ValueError("The uri is not a local file path, a local file path is  required.")
-
-    file_list = []
-    if not use_local_files:
-        file_list = get_flux_transformer_files(directory,uri,**download_kwargs)
-        transformer = FluxTransformer2DModel.from_single_file(file_list[0],**kwargs)
+    if use_internet:
+        # from single file
+        if uri.startswith("http://") or uri.startswith("https://"):
+            file_list = get_flux_transformer_files(directory,uri,**download_kwargs)
+            transformer = FluxTransformer2DModel.from_single_file(file_list[0],**kwargs)
+            if delete_internet_files:
+                os.remove(file_list[0])
+        # from huggingface
+        else:
+            transformer = FluxTransformer2DModel.from_pretrained(uri,subfolder="transformer",**kwargs)
     else:
-        transformer = FluxTransformer2DModel.from_single_file(uri,**kwargs)
+        if uri.endswith(".safetensors"):
+            transformer = FluxTransformer2DModel.from_single_file(uri,**kwargs)
+        else:
+            transformer = FluxTransformer2DModel.from_pretrained(uri,subfolder="transformer",**kwargs)
+
     print("Transformer ready.")
 
-    if not use_local_files and delete_internet_files:
-        os.remove(file_list[0])
     return transformer
 
 def load_flux_vae(directory=None,use_local_files=False,delete_internet_files=False,download_kwargs=None,**kwargs):
