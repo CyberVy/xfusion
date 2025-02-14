@@ -33,6 +33,7 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
 
         caption += f"Sampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSeed: {item}\n\nModel:{pipeline.model_name}"
         threading.Thread(target=lambda: pipeline.send_pil_photo(image, file_name=f"{pipeline.__class__.__name__}.PNG", file_type="PNG", caption=caption)).start()
+    torch.cuda.empty_cache()
     return images
 class FluxPipelineEnhancer(PipelineEnhancerBase):
     pipeline_map = pipeline_map
