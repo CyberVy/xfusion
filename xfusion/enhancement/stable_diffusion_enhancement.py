@@ -148,7 +148,10 @@ def generate_image_and_send_to_telegram(pipeline,prompt,negative_prompt,num,seed
         caption += f"Sampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSize: {image.size}\nSeed: {item}\n\nModel:{pipeline.model_name}"
 
         threading.Thread(target=lambda: pipeline.send_pil_photo(image, file_name=f"{pipeline.__class__.__name__}.PNG", file_type="PNG", caption=caption)).start()
+
+    torch.cuda.empty_cache()
     return images
+
 class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
     pipeline_map = pipeline_map
     scheduler_map = scheduler_map
