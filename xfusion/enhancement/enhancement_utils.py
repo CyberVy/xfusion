@@ -114,24 +114,26 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         self.model_version,self.pipeline_type,self.pipeline_class = self.check_original_pipeline()
         self.model_name = self.name_or_path
         self._scheduler = self.scheduler
-
+        components = self.components
+        components.pop("image_encoder",None)
+        
         if init_sub_pipelines:
             if self.pipeline_type != 0:
-                self.text_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][0](**self.components),
+                self.text_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][0](**components),
                                                                   init_sub_pipelines=False)
                 self.sub_pipelines.update(text_to_image_pipeline=self.text_to_image_pipeline)
             else:
                 self.text_to_image_pipeline = self
 
             if self.pipeline_type != 1:
-                self.image_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][1](**self.components),
+                self.image_to_image_pipeline = self.enhancer_class(self.pipeline_map[self.model_version][1](**components),
                                                                    init_sub_pipelines=False)
                 self.sub_pipelines.update(image_to_image_pipeline=self.image_to_image_pipeline)
             else:
                 self.image_to_image_pipeline = self
 
             if self.pipeline_type != 2:
-                self.inpainting_pipeline =  self.enhancer_class(self.pipeline_map[self.model_version][2](**self.components),
+                self.inpainting_pipeline =  self.enhancer_class(self.pipeline_map[self.model_version][2](**components),
                                                                 init_sub_pipelines=False)
                 self.sub_pipelines.update(inpainting_pipeline=self.inpainting_pipeline)
             else:
