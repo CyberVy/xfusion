@@ -115,8 +115,10 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         self.model_name = self.name_or_path
         self._scheduler = self.scheduler
         components = self.components
-        components.pop("image_encoder",None)
-        components.pop("feature_extractor", None)
+
+        if "flux" in self.__oins__.__class__.__name__.lower():
+            components.pop("image_encoder",None)
+            components.pop("feature_extractor", None)
 
         if init_sub_pipelines:
             if self.pipeline_type != 0:
