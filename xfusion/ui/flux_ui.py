@@ -20,7 +20,7 @@ def render_model_selection(fns):
             with gr.Column():
                 model_selection_outputs.append(gr.Textbox(label="Result"))
                 model_selection_btn = gr.Button("Select")
-                model_selection_btn.click(fn=fns["model_selection_fn"],
+                model_selection_btn.click(fn=fns["model_selection_fn"],inputs=model_selection_inputs,
                                           outputs=model_selection_outputs)
 
 def render_lora(fns):
