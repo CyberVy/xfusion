@@ -1,35 +1,244 @@
 import gradio as gr
-from .ui_utils import safe_block
-from ..utils import allow_return_error
-from PIL import Image
+from ..const import GPU_COUNT,GPU_NAME
+from .ui_utils import safe_block,lock
+from ..utils import allow_return_error,threads_execute
+import functools
+import inspect
+import sys,platform
 
 
-def load_flux_ui(pipeline, _globals=None,**kwargs):
+def render_model_selection(fns):
+    with gr.Accordion("Model Selection", open=True):
+        gr.Markdown("# Model Selection")
+        model_selection_inputs = []
+        model_selection_outputs = []
+        with gr.Row():
+            with gr.Column():
+                model_selection_inputs.append(
+                    gr.Textbox(value="black-forest-labs/FLUX.1-dev", placeholder="Give me a url of the model!",
+                               label="Model"))
+            with gr.Column():
+                model_selection_outputs.append(gr.Textbox(label="Result"))
+                model_selection_btn = gr.Button("Select")
+                model_selection_btn.click(fn=fns["model_selection_fn"],
+                                          outputs=model_selection_outputs)
+
+def render_lora(fns):
+    with gr.Accordion("LoRA", open=False):
+        gr.Markdown("# LoRA")
+        set_lora_inputs = []
+        lora_outputs = []
+        with gr.Row():
+            with gr.Column():
+                set_lora_inputs.append(gr.Textbox(placeholder="Give me a url of LoRA!", label="LoRA"))
+                with gr.Row():
+                    set_lora_inputs.append(gr.Textbox(placeholder="Give the LoRA a name!", label="LoRA name"))
+                    set_lora_inputs.append(gr.Slider(0, 1, 0.4, step=0.05, label="LoRA strength"))
+                with gr.Row():
+                    delete_lora_btn = gr.Button("Delete LoRA")
+                    set_lora_btn = gr.Button("Set LoRA")
+            with gr.Column():
+                lora_outputs.append(gr.Textbox(label="Result"))
+                delete_lora_btn.click(fn=fns["delete_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
+                set_lora_btn.click(fn=fns["set_lora_fn"], inputs=set_lora_inputs, outputs=lora_outputs)
+                with gr.Row():
+                    show_lora_btn = gr.Button("Show all LoRA")
+                    show_lora_btn.click(fn=fns["show_lora_fn"], outputs=lora_outputs)
+                with gr.Row():
+                    enable_lora_btn = gr.Button("Enable all LoRA")
+                    enable_lora_btn.click(fn=fns["enable_lora_fn"], outputs=lora_outputs)
+                    disable_lora_btn = gr.Button("Disable all LoRA")
+                    disable_lora_btn.click(fn=fns["disable_lora_fn"], outputs=lora_outputs)
+
+def render_text_to_image(fns):
+    with gr.Accordion("Text To Image", open=True):
+        gr.Markdown("# Text To Image")
+        t2i_inputs = []
+        t2i_outputs = []
+
+        with gr.Row():
+            with gr.Column():
+                t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+            with gr.Column():
+                t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                with gr.Row():
+                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+            with gr.Column():
+                with gr.Row():
+                    t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    t2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    t2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["text_to_image_fn"]).parameters.values())])
+                    t2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({t2i_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {t2i_callback_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                t2i_outputs.append(gr.Textbox(label="Result"))
+                t2i_btn = gr.Button("Run")
+                t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
+
+def render_code(fns):
+    with gr.Accordion("Code", open=False):
+        gr.Markdown("# Code")
+        gr.Markdown(f"- GPUs: {GPU_NAME}")
+        gr.Markdown(f"- Python: {sys.version}")
+        gr.Markdown(f"- OS: {platform.platform()}")
+        code_inputs = []
+        code_outputs = []
+        with gr.Row():
+            with gr.Column():
+                code_inputs.append(gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
+            with gr.Column():
+                code_outputs.append(gr.Textbox(label="Code Result"))
+                code_btn = gr.Button("Run Code")
+                code_btn.click(fn=fns["run_code_fn"], inputs=code_inputs, outputs=code_outputs)
+
+
+def render_flux_ui(fns):
+    theme = gr.themes.Ocean()
+
+    with gr.Blocks(title=f"Xfusion{GPU_NAME}", theme=theme) as server:
+
+        render_model_selection(fns)
+        render_lora(fns)
+        render_text_to_image(fns)
+
+        render_code(fns)
+
+    return server
+
+
+def load_flux_ui(pipelines, _globals=None,**kwargs):
+    pipelines = [pipelines] if not isinstance(pipelines, list) else pipelines
+    pipelines: list = pipelines[:GPU_COUNT]
+    if len(pipelines) == 0:
+        raise RuntimeError("No available GPU.")
+
+    lock_state = [False, None]
+
+    # the way Gradio pass the arguments to function is based on the position instead of the keyword
+    # progress: args[-1], code: args[-2], num: args[-3], seed: args[-4]
+
+    def allow_code_control(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            code = args[-2]
+            exec_assets = locals()
+            exec(code, _globals, exec_assets)
+            preprocess = exec_assets.get("preprocess")
+            if callable(preprocess):
+                args_and_kwargs = preprocess(*args, **kwargs)
+                return f(*args_and_kwargs[:-1], **args_and_kwargs[-1])
+            else:
+                return f(*args, **kwargs)
+
+        return wrapper
+
+    def auto_gpu_distribute(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            if int(args[-4]) != 0 or len(pipelines) == 1:
+                r = f(*args, **kwargs)(pipelines[0])
+                return r
+            else:
+                threads_execute(f(*args, **kwargs), pipelines)
+                return f"{args[-3]} * {len(pipelines)}"
+
+        return wrapper
+
+    def auto_gpu_loop(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            return [f(*args, **kwargs)(pipeline) for pipeline in pipelines][0]
+
+        return wrapper
 
     @allow_return_error
-    def text_to_image_fn(prompt,
-                      guidance_scale, num_inference_steps,
-                      width, height,
-                      seed, num):
-        return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
-            prompt=prompt,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
-            width=width, height=height,
-            seed=int(seed), num=int(num))
+    @lock(lock_state)
+    @auto_gpu_loop
+    def model_selection_fn(model, progress=gr.Progress(track_tqdm=True)):
+
+        def f(pipeline):
+            pipeline.reload(model)
+            if str(pipeline.device) == "cpu" or True:
+                print(str(pipeline.device))
+                i = pipelines.index(pipeline)
+                print(f"Loading the model into cuda:{i}...")
+                pipeline.to(f"cuda:{i}")
+            return f"{model}"
+
+        return f
 
     @allow_return_error
-    def image_to_image_fn(image,
-                       prompt,
-                       strength,
-                       guidance_scale, num_inference_steps,
-                       seed, num):
-        image = Image.fromarray(image)
-        return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
-            image=image,
-            prompt=prompt,
-            strength=strength,
-            guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
-            seed=int(seed), num=int(num))
+    @lock(lock_state)
+    @auto_gpu_loop
+    def set_lora_fn(url, lora_name, strength, progress=gr.Progress(track_tqdm=True)):
+        def f(pipeline):
+            pipeline.set_lora(url, lora_name, strength)
+            return f"{lora_name}, {strength}"
+
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @auto_gpu_loop
+    def delete_lora_fn(_, lora_name, __):
+        def f(pipeline):
+            pipeline.delete_adapters(lora_name)
+            return f"{lora_name} is deleted."
+
+        return f
+
+    @allow_return_error
+    @auto_gpu_loop
+    def show_lora_fn():
+        def f(pipeline):
+            return str(pipeline.lora_dict)
+
+        return f
+
+    @allow_return_error
+    @auto_gpu_loop
+    def enable_lora_fn():
+        def f(pipeline):
+            pipeline.enable_lora()
+            return f"LoRA Enabled."
+
+        return f
+
+    @allow_return_error
+    @auto_gpu_loop
+    def disable_lora_fn():
+        def f(pipeline):
+            pipeline.disable_lora()
+            return f"LoRA disabled."
+
+        return f
+
+
+    @allow_return_error
+    @lock(lock_state)
+    @allow_code_control
+    @auto_gpu_distribute
+    def text_to_image_fn(
+            prompt,
+            guidance_scale, num_inference_steps,
+            width, height,
+            seed, num,
+            code,
+            progress=gr.Progress(track_tqdm=True),**kwargs):
+
+        def f(pipeline):
+            return pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(
+                prompt=prompt,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+                width=width, height=height,
+                seed=int(seed), num=int(num),**kwargs)
+        return f
+
 
     @allow_return_error
     def run_code_fn(code):
@@ -37,71 +246,26 @@ def load_flux_ui(pipeline, _globals=None,**kwargs):
         if _globals:
             return _globals.pop("_cout", None)
 
+    # import some important packages in ui
+    exec("import os,sys,gc,torch\nimport xfusion.enhancement.callbacks as cbk", _globals)
 
-    with gr.Blocks(title="Xfusion",theme=gr.themes.Ocean()) as server:
+    fns = locals()
+    fns.pop("_globals")
+    server = render_flux_ui(fns)
 
-        gr.Markdown("# Text To Image ")
-        with gr.Row():
-            t2i_inputs = []
-            t2i_outputs = []
-            with gr.Column():
-                t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!",label="Prompt"))
-            with gr.Column():
-                t2i_inputs.append(gr.Slider(0,10,2.5,step=0.1,label="Guidance Scale"))
-                t2i_inputs.append(gr.Slider(0,50,28,step=1,label="Step"))
-                t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
-            with gr.Column():
-                t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                t2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                t2i_outputs.append(gr.Textbox(label="Result"))
-                t2i_btn = gr.Button("Run")
-                t2i_btn.click(fn=text_to_image_fn, inputs=t2i_inputs, outputs=t2i_outputs)
-        gr.Markdown("---")
-
-        gr.Markdown("# Image To Image")
-        with gr.Row():
-            i2i_inputs = []
-            i2i_outputs = []
-            with gr.Column():
-                i2i_inputs.append(gr.Image())
-                i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt"))
-            with gr.Column():
-                i2i_inputs.append(gr.Slider(0, 1, 0.3, step=0.1, label="Strength"))
-                i2i_inputs.append(gr.Slider(0, 10, 3, step=0.1, label="Guidance Scale"))
-                i2i_inputs.append(gr.Slider(0, 50, 28, step=1, label="Step"))
-            with gr.Column():
-                i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
-                i2i_inputs.append(gr.Slider(1,10,1, step=1,label="Num"))
-                i2i_outputs.append(gr.Textbox(label="Result"))
-                i2i_btn = gr.Button("Run")
-                i2i_btn.click(fn=image_to_image_fn, inputs=i2i_inputs, outputs=i2i_outputs)
-        gr.Markdown("---")
-
-        gr.Markdown("# Code")
-        with gr.Row():
-            code_inputs = []
-            code_outputs = []
-            with gr.Column():
-                code_inputs.append(
-                    gr.Code(value="_cout = 'Hello world.'", language="python", lines=5, label="Python"))
-            with gr.Column():
-                code_outputs.append(gr.Textbox(label="Code Result"))
-                code_btn = gr.Button("Run Code")
-                code_btn.click(fn=run_code_fn, inputs=code_inputs, outputs=code_outputs)
-
-    if not kwargs.get("inline"): kwargs.update(inline=False)
-    if not kwargs.get("quiet"): kwargs.update(quiet=True)
+    if kwargs.get("inline") is None: kwargs.update(inline=False)
+    if kwargs.get("quiet") is None: kwargs.update(quiet=True)
     block = kwargs.pop("debug", True)
     server.launch(**kwargs)
 
     if server.share_url:
-        pipeline.send_text(f"* Running on public URL: {server.share_url}")
+        threads_execute(pipelines[0].send_text, (f"* Running on public URL: {server.share_url}",), _await=False)
 
     if block:
         def close():
             server.close()
-            pipeline.clear()
+            for pipeline in pipelines: pipeline.clear()
+
         safe_block(close)
 
     return server
