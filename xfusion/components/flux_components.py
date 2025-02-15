@@ -144,7 +144,7 @@ def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None
                                         **kwargs)
 
     t5_tokenizer = load_t5_tokenizer(download_kwargs=download_kwargs,**kwargs)
-    t5_encoder_future = naive_async(load_t5_encoder)(download_kwargs=download_kwargs,
+    t5_encoder = load_t5_encoder(download_kwargs=download_kwargs,
                                  quantization_config=TransformersBitsAndBytesConfig(**quantization_config) if quantization_config else None,
                                  **kwargs)
 
@@ -155,7 +155,6 @@ def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None
     scheduler = load_flux_scheduler(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
 
     transformer = transformer_future.result()
-    t5_encoder = t5_encoder_future.result()
     pipeline = FluxPipeline(transformer=transformer, vae=vae, scheduler=scheduler,
                             text_encoder=clip_encoder, text_encoder_2=t5_encoder,
                             tokenizer=clip_tokenizer, tokenizer_2=t5_tokenizer)
