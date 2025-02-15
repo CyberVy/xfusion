@@ -2,6 +2,7 @@ import gradio as gr
 from ..const import GPU_COUNT,GPU_NAME
 from .ui_utils import safe_block,lock
 from ..utils import allow_return_error,threads_execute
+from ..utils import convert_mask_image_to_rgb
 import torch
 import functools
 import inspect
@@ -112,6 +113,38 @@ def render_image_to_image(fns):
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
                 i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
+
+def render_inpainting(fns):
+    with gr.Accordion("Inpainting", open=False):
+        gr.Markdown("# Inpainting")
+        inpainting_inputs = []
+        inpainting_outputs = []
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Inpainting Image"):
+                    inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
+                inpainting_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+            with gr.Column():
+                inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
+                inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                with gr.Row():
+                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+            with gr.Column():
+                with gr.Row():
+                    inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    inpainting_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["inpainting_fn"]).parameters.values())])
+                    inpainting_inputs.append(
+                        gr.Code(
+                            f"def preprocess({inpainting_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {inpainting_callback_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                inpainting_outputs.append(gr.Textbox(label="Result"))
+                inpainting_btn = gr.Button("Run")
+                inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
 def render_code(fns):
     with gr.Accordion("Code", open=False):
@@ -278,7 +311,6 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
                 seed=int(seed), num=int(num),**kwargs)
         return f
 
-
     @allow_return_error
     @lock(lock_state)
     @allow_code_control
@@ -304,6 +336,34 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
                 width=width,height=height,
                 seed=int(seed), num=int(num),**kwargs)
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @allow_code_control
+    @auto_gpu_distribute
+    def inpainting_fn(
+            image,
+            prompt,
+            strength,
+            guidance_scale, num_inference_steps,
+            width, height,
+            seed, num,
+            code,
+            progress=gr.Progress(track_tqdm=True), **kwargs):
+
+        _image = image["background"].convert("RGB")
+        mask_image = convert_mask_image_to_rgb(image["layers"][0])
+
+        def f(pipeline):
+            return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
+                image=_image, mask_image=mask_image,
+                prompt=prompt,
+                strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+                width=width, height=height,
+                seed=int(seed), num=int(num), **kwargs)
+
         return f
 
     @allow_return_error
