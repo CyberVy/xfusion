@@ -138,6 +138,7 @@ def render_flux_ui(fns):
         render_model_selection(fns)
         render_lora(fns)
         render_text_to_image(fns)
+        render_image_to_image(fns)
 
         render_code(fns)
 
@@ -252,7 +253,6 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
 
         return f
 
-
     @allow_return_error
     @lock(lock_state)
     @allow_code_control
@@ -272,7 +272,6 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
                 width=width, height=height,
                 seed=int(seed), num=int(num),**kwargs)
         return f
-
 
 
     @allow_return_error
