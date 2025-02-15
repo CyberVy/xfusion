@@ -34,10 +34,7 @@ def download_file(url,filename=None,directory=None,mute=False,**kwargs):
         directory += "/"
 
     if not os.path.exists(directory):
-        try:
-            os.mkdir(directory)
-        except Exception as e:
-            print(e)
+        os.mkdir(directory)
 
     response = requests.get(url.geturl(),stream=True,**kwargs)
     if filename is None:
