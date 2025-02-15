@@ -138,7 +138,7 @@ def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None
 
     quantization_config = kwargs.pop("quantization_config",{"load_in_4bit":True,"bnb_4bit_compute_dtype":torch.float16})
 
-    transformer_future = naive_async(load_flux_transformer)("/transformer",uri=uri,download_kwargs=download_kwargs,
+    transformer = load_flux_transformer("/transformer",uri=uri,download_kwargs=download_kwargs,
                                         delete_internet_files=delete_internet_files,
                                         quantization_config=DiffusersBitsAndBytesConfig(**quantization_config) if quantization_config else None,
                                         **kwargs)
@@ -154,7 +154,6 @@ def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None
     vae = load_flux_vae(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
     scheduler = load_flux_scheduler(download_kwargs=download_kwargs,delete_internet_files=delete_internet_files,**kwargs)
 
-    transformer = transformer_future.result()
     pipeline = FluxPipeline(transformer=transformer, vae=vae, scheduler=scheduler,
                             text_encoder=clip_encoder, text_encoder_2=t5_encoder,
                             tokenizer=clip_tokenizer, tokenizer_2=t5_tokenizer)
