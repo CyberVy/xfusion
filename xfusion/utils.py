@@ -1,7 +1,8 @@
 import os,shutil,gc
 import requests
 import threading
-from functools import wraps,lru_cache
+from concurrent.futures import ThreadPoolExecutor
+import functools
 from PIL.Image import Image,Resampling,merge,fromarray
 import PIL.Image
 import PIL.ImageOps
@@ -10,6 +11,9 @@ import torch
 import numpy as np
 from typing import Tuple,Union,Optional,Callable
 from types import FunctionType,MethodType
+
+
+executor = ThreadPoolExecutor()
 
 
 class EasyInitSubclass:
@@ -168,8 +172,14 @@ def threads_execute(f:Union[FunctionType | MethodType],args:Union[list | tuple],
             thread.start()
     return threads
 
+def naive_async(f):
+    @functools.wraps(f)
+    def wrapper(*args,**kwargs):
+        return executor.submit(f,*args,**kwargs)
+    return wrapper
+
 def allow_return_error(f:Union[FunctionType | MethodType]):
-    @wraps(f)
+    @functools.wraps(f)
     def wrapper(*args,**kwargs):
         try:
             return f(*args,**kwargs)
