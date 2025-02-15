@@ -1,5 +1,6 @@
 import os
 import torch
+from ..utils import naive_async
 from .component_const import t5_tokenizer_url_list,t5_encoder_url_list
 from .component_const import clip_tokenizer_url_list,clip_encoder_url_list
 from ..download import download_file
@@ -22,9 +23,16 @@ def get_t5_tokenizer_files(directory,**kwargs):
 
 def get_t5_encoder_files(directory,**kwargs):
     url_list = t5_encoder_url_list
+    future_list = []
     file_list = []
-    for url in url_list:
-        file_list.append(download_file(url, directory=directory,**kwargs))
+    for i,url in enumerate(url_list):
+        if i != 0:
+            mute = True
+        else:
+            mute = False
+        future_list.append(naive_async(download_file)(url, directory=directory,mute=mute,**kwargs))
+    for future in future_list:
+        file_list.append(future.result())
     return file_list
 
 def load_t5_tokenizer(directory=None, use_local_files=False, delete_internet_files=False,download_kwargs=None,**kwargs):
