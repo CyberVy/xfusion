@@ -172,6 +172,7 @@ def render_flux_ui(fns):
         render_lora(fns)
         render_text_to_image(fns)
         render_image_to_image(fns)
+        render_inpainting(fns)
 
         render_code(fns)
 
