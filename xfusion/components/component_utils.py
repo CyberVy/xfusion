@@ -22,6 +22,11 @@ def get_t5_tokenizer_files(directory,**kwargs):
     return file_list
 
 def get_t5_encoder_files(directory,**kwargs):
+
+    # prevent race condition in thread execution
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
     url_list = t5_encoder_url_list
     future_list = []
     file_list = []
