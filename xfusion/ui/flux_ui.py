@@ -81,6 +81,38 @@ def render_text_to_image(fns):
                 t2i_btn = gr.Button("Run")
                 t2i_btn.click(fn=fns["text_to_image_fn"], inputs=t2i_inputs, outputs=t2i_outputs)
 
+def render_image_to_image(fns):
+    with gr.Accordion("Image To Image", open=False):
+        gr.Markdown("# Image To Image")
+        i2i_inputs = []
+        i2i_outputs = []
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Image"):
+                    i2i_inputs.append(gr.Image(type="pil", label="Image"))
+                i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+            with gr.Column():
+                i2i_inputs.append(gr.Slider(0, 1, 0.4, step=0.1, label="Strength"))
+                i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                with gr.Row():
+                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+            with gr.Column():
+                with gr.Row():
+                    i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    i2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["image_to_image_fn"]).parameters.values())])
+                    i2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({i2i_callback_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {i2i_callback_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                i2i_outputs.append(gr.Textbox(label="Result"))
+                i2i_btn = gr.Button("Run")
+                i2i_btn.click(fn=fns["image_to_image_fn"], inputs=i2i_inputs, outputs=i2i_outputs)
+
 def render_code(fns):
     with gr.Accordion("Code", open=False):
         gr.Markdown("# Code")
@@ -241,6 +273,34 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
                 seed=int(seed), num=int(num),**kwargs)
         return f
 
+
+
+    @allow_return_error
+    @lock(lock_state)
+    @allow_code_control
+    @auto_gpu_distribute
+    def image_to_image_fn(
+            image,
+            prompt,
+            strength,
+            guidance_scale, num_inference_steps,
+            width,height,
+            seed, num,
+            code,
+            progress=gr.Progress(track_tqdm=True),**kwargs):
+
+        if not image:
+            raise ValueError("Please input an image.")
+
+        def f(pipeline):
+            return pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(
+                image=image,
+                prompt=prompt,
+                strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+                width=width,height=height,
+                seed=int(seed), num=int(num),**kwargs)
+        return f
 
     @allow_return_error
     def run_code_fn(code):
