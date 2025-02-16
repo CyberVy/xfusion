@@ -15,7 +15,7 @@ if NEED_PROXY or 1:
     def http_get(url,*args,**kwargs):
         return original_http_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
     fd.http_get = http_get
-    print(f"Files from huggingface will be downloaded via url proxy[${PROXY_URL_PREFIX}].")
+    print(f"Files from huggingface will be downloaded via url proxy[{PROXY_URL_PREFIX}].")
 
 def download_file(url,filename=None,directory=None,mute=False,**kwargs):
 
