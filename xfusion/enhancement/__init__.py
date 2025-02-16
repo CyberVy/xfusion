@@ -12,10 +12,10 @@ def load_enhancer(pipeline_or_model=None,**kwargs):
             if model_version == "3.5":
                 model_version = "3"
             enhancer = SDPipelineEnhancer.from_url(pipeline_or_model,model_version=model_version,**kwargs)
+            enhancer.model_name = pipeline_or_model
         else:
             pipeline = pipeline_or_model
             enhancer = SDPipelineEnhancer(pipeline)
-        enhancer.model_name = pipeline_or_model
         download_kwargs = kwargs.get("download_kwargs")
         telegram_kwargs = kwargs.get("telegram_kwargs")
         if isinstance(download_kwargs, dict):
@@ -27,10 +27,10 @@ def load_enhancer(pipeline_or_model=None,**kwargs):
     elif model_version in ["flux"]:
         if isinstance(pipeline_or_model, str):
             enhancer = FluxPipelineEnhancer.from_url(pipeline_or_model, **kwargs)
+            enhancer.model_name = pipeline_or_model
         else:
             pipeline = pipeline_or_model
             enhancer = FluxPipelineEnhancer(pipeline)
-        enhancer.model_name = pipeline_or_model
         download_kwargs = kwargs.get("download_kwargs")
         telegram_kwargs = kwargs.get("telegram_kwargs")
         if isinstance(download_kwargs, dict):
