@@ -8,7 +8,7 @@ import re
 import functools
 
 
-if NEED_PROXY or 1:
+if NEED_PROXY:
     import huggingface_hub.file_download as fd
     original_http_get = fd.http_get
     @functools.wraps(fd.http_get)
@@ -16,6 +16,7 @@ if NEED_PROXY or 1:
         return original_http_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
     fd.http_get = http_get
     print(f"Files from huggingface will be downloaded via url proxy[{PROXY_URL_PREFIX}].")
+
 
 def download_file(url,filename=None,directory=None,mute=False,**kwargs):
 
