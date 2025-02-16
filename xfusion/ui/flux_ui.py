@@ -275,6 +275,7 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def enable_lora_fn():
         def f(pipeline):
@@ -284,6 +285,7 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def disable_lora_fn():
         def f(pipeline):
