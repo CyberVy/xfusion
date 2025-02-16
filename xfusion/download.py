@@ -5,7 +5,16 @@ from tqdm import tqdm
 from urllib.parse import urlparse,unquote
 import os
 import re
+import functools
 
+
+if NEED_PROXY or 1:
+    import huggingface_hub.file_download as fd
+    @functools.wraps(fd.http_get)
+    def http_get(url,*args,**kwargs):
+        return fd.http_get(f"{PROXY_URL_PREFIX}/{url.geturl()}",*args,**kwargs)
+    fd.http_get = http_get
+    print(f"Files from huggingface will be downloaded via url proxy[${PROXY_URL_PREFIX}].")
 
 def download_file(url,filename=None,directory=None,mute=False,**kwargs):
 
