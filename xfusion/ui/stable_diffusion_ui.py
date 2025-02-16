@@ -533,6 +533,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def enable_lora_fn():
         def f(pipeline):
@@ -541,6 +542,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def disable_lora_fn():
         def f(pipeline):
@@ -549,6 +551,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def text_to_image_scheduler_fn(scheduler):
         def f(pipeline):
@@ -579,6 +582,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def image_to_image_scheduler_fn(scheduler):
         def f(pipeline):
@@ -615,6 +619,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def inpainting_scheduler_fn(scheduler):
         def f(pipeline):
@@ -685,6 +690,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             return convert_image_to_canny(image, low_threshold, high_threshold)
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def controlnet_text_to_image_scheduler_fn(scheduler):
         def f(pipeline):
@@ -723,6 +729,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def controlnet_image_to_image_scheduler_fn(scheduler):
         def f(pipeline):
@@ -764,6 +771,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
+    @lock(lock_state)
     @auto_gpu_loop
     def controlnet_inpainting_scheduler_fn(scheduler):
         def f(pipeline):
