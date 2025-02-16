@@ -14,7 +14,7 @@ if NEED_PROXY:
     # huggingface hub use 'http_get' to download files
     # so it's easy to download files via proxy by editing this function
     original_http_get = fd.http_get
-    @functools.wraps(fd.http_get)
+    @functools.wraps(original_http_get)
     def http_get(url,*args,**kwargs):
         return original_http_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
     fd.http_get = http_get
