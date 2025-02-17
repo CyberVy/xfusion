@@ -36,7 +36,13 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
     def set_lora(self,lora_uri,lora_name,weight=0.4):
         if lora_name not in self.lora_dict:
             download_kwargs = self.download_kwargs.copy()
-            download_kwargs.update(directory="./lora")
+            directory = download_kwargs.get("directory", "./")
+            if directory.endswith("/"):
+                directory += "lora"
+            else:
+                directory += "/lora"
+            download_kwargs.update(directory=directory)
+
             load_lora(self,lora_uri,lora_name,download_kwargs)
 
         self.set_lora_strength(lora_name,weight)
