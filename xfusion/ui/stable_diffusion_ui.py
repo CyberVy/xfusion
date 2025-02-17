@@ -139,7 +139,7 @@ def render_image_to_image(fns):
                         inspect.signature(fns["image_to_image_fn"]).parameters.values())])
                     i2i_inputs.append(
                         gr.Code(
-                            f"def preprocess({i2i_callback_args_name}):\n  kwargs['callback_on_step_end'] = cbk.SDXLCFGCutoffCallback(0.5)\n  return {i2i_callback_args_name.replace('*', '')}",
+                            f"def preprocess({i2i_callback_args_name}):\n  # kwargs['callback_on_step_end'] = cbk.SDXLCFGCutoffCallback(0.5)\n  return {i2i_callback_args_name.replace('*', '')}",
                             language="python", label="Python"))
                 i2i_outputs.append(gr.Textbox(label="Result"))
                 i2i_btn = gr.Button("Run")
@@ -318,7 +318,7 @@ def render_controlnet_image_to_image(fns):
                         inspect.signature(fns["controlnet_image_to_image_fn"]).parameters.values())])
                     controlnet_i2i_inputs.append(
                         gr.Code(
-                            f"def preprocess({controlnet_i2i_args_name}):\n  # kwargs['callback_on_step_end'] = None\n  return {controlnet_i2i_args_name.replace('*', '')}",
+                            f"def preprocess({controlnet_i2i_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_i2i_args_name.replace('*', '')}",
                             language="python", label="Python"))
                 controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
                 controlnet_i2i_btn = gr.Button("Run")
