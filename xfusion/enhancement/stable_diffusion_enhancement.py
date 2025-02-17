@@ -277,14 +277,15 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         if self._controlnet is None:
             download_kwargs = self.download_kwargs.copy()
+            directory = download_kwargs.get("directory", "./")
             if self.model_version == "1.5":
-                directory = download_kwargs.get("directory","./")
+
                 if directory.endswith("/"):
                     directory += "controlnet_sd_v1_v2"
                 else:
                     directory += "/controlnet_sd_v1_v2"
                 download_kwargs.update(directory=directory)
-                
+
                 controlnet_model = controlnet_model if controlnet_model else default_sd_v1_v2_controlnet_model_url
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=download_kwargs,**kwargs).to(self.device)
@@ -298,7 +299,13 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                     StableDiffusionControlNetInpaintPipeline(**self.components,controlnet=self._controlnet),init_sub_pipelines=False
                 )
             elif self.model_version == "xl":
-                download_kwargs.update(directory="./controlnet_sdxl")
+
+                if directory.endswith("/"):
+                    directory += "controlnet_sdxl"
+                else:
+                    directory += "/controlnet_sdxl"
+                download_kwargs.update(directory=directory)
+
                 controlnet_model = controlnet_model if controlnet_model else default_sd_xl_controlnet_model_url
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=download_kwargs,**kwargs).to(self.device)
