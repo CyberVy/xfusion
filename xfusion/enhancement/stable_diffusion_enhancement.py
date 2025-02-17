@@ -284,6 +284,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
                 else:
                     directory += "/controlnet_sd_v1_v2"
                 download_kwargs.update(directory=directory)
+                
                 controlnet_model = controlnet_model if controlnet_model else default_sd_v1_v2_controlnet_model_url
                 self._controlnet = load_stable_diffusion_controlnet(controlnet_model,self.model_version,
                                                                     download_kwargs=download_kwargs,**kwargs).to(self.device)
