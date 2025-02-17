@@ -26,6 +26,8 @@ def load_stable_diffusion_controlnet(controlnet_model,
     if controlnet_model.startswith(".") or controlnet_model.startswith("/") or controlnet_model.startswith("~"):
         use_internet = False
 
+    kwargs.update(cache_dir=download_kwargs.get("directory"))
+
     if use_internet:
         # from Hugging face
         if not (controlnet_model.startswith("http://") or controlnet_model.startswith("https://")):
@@ -117,6 +119,8 @@ def load_stable_diffusion_pipeline(model=None,
         kwargs.update({"torch_dtype": torch.float16})
     if model.startswith(".") or model.startswith("/") or model.startswith("~"):
         use_internet = False
+
+    kwargs.update(cache_dir=download_kwargs.get("directory"))
 
     if use_internet:
         # from Hugging face
