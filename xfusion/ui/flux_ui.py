@@ -17,7 +17,7 @@ def render_model_selection(fns):
         with gr.Row():
             with gr.Column():
                 model_selection_inputs.append(
-                    gr.Textbox(value="black-forest-labs/FLUX.1-dev", placeholder="Give me a url of the model!",
+                    gr.Textbox(value="eramth/flux-4bit", placeholder="Give me a url of the model!",
                                label="Model"))
             with gr.Column():
                 model_selection_outputs.append(gr.Textbox(label="Result"))
