@@ -24,6 +24,8 @@ def load_flux_pipeline(model=None,download_kwargs=None, **kwargs):
         kwargs.update({"torch_dtype": torch.float16})
     if model.startswith(".") or model.startswith("/") or model.startswith("~"):
         use_internet = False
+    
+    kwargs.update(cache_dir=download_kwargs.get("directory"))
 
     if use_internet:
         # from Hugging face
