@@ -7,11 +7,37 @@ from .component_utils import load_t5_tokenizer,load_t5_encoder
 from .component_utils import load_clip_tokenizer,load_clip_encoder
 from ..download import download_file
 from ..const import HF_HUB_TOKEN
-from ..utils import naive_async
 from diffusers import FluxPipeline
 from diffusers import AutoencoderKL,FluxTransformer2DModel,FlowMatchEulerDiscreteScheduler
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
 from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
+
+
+def load_flux_pipeline(model=None,download_kwargs=None, **kwargs):
+    use_internet = True
+    model = "eramth/flux-4bit" if not model else model
+    if download_kwargs is None:
+        download_kwargs = {}
+    if kwargs.get("token") is None:
+        kwargs.update(token=HF_HUB_TOKEN)
+    if kwargs.get("torch_dtype") is None:
+        kwargs.update({"torch_dtype": torch.float16})
+    if model.startswith(".") or model.startswith("/") or model.startswith("~"):
+        use_internet = False
+
+    if use_internet:
+        # from Hugging face
+        if not (model.startswith("http://") or model.startswith("https://")):
+            return FluxPipeline.from_pretrained(model,**kwargs)
+        # todo: single file support
+        else:
+            raise ValueError("Only support load the Flux model from huggingface so far.")
+    else:
+        if not model.endswith(".safetensors"):
+            return FluxPipeline.from_pretrained(model,**kwargs)
+        # todo: single file support
+        else:
+            raise ValueError("Only support load the Flux model from huggingface so far.")
 
 
 def get_flux_transformer_files(directory,
@@ -132,7 +158,7 @@ def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_fil
             os.remove(file)
     return scheduler
 
-def load_flux_pipeline(uri=None,delete_internet_files=False,download_kwargs=None,**kwargs):
+def _load_flux_pipeline_by_components(uri=None,delete_internet_files=False,download_kwargs=None,**kwargs):
     uri = default_flux_transformer_url if uri is None else uri
     download_kwargs = {} if download_kwargs is None else download_kwargs
 
