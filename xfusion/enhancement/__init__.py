@@ -5,6 +5,8 @@ from .flux_enhancement import FluxPipelineEnhancer
 def load_enhancer(pipeline_or_model=None,**kwargs):
     model_version = kwargs.pop("model_version","")
     model_version = str(model_version).lower()
+    download_kwargs = kwargs.pop("download_kwargs")
+    telegram_kwargs = kwargs.pop("telegram_kwargs")
     if model_version in ["","1.5","2","3","3.5","xl","sdxl","pony"]:
         if isinstance(pipeline_or_model,str):
             if model_version in ["sdxl","pony"]:
@@ -16,8 +18,7 @@ def load_enhancer(pipeline_or_model=None,**kwargs):
         else:
             pipeline = pipeline_or_model
             enhancer = SDPipelineEnhancer(pipeline)
-        download_kwargs = kwargs.get("download_kwargs")
-        telegram_kwargs = kwargs.get("telegram_kwargs")
+
         if isinstance(download_kwargs, dict):
             enhancer.set_download_kwargs(**download_kwargs)
         if isinstance(telegram_kwargs,dict):
@@ -31,8 +32,6 @@ def load_enhancer(pipeline_or_model=None,**kwargs):
         else:
             pipeline = pipeline_or_model
             enhancer = FluxPipelineEnhancer(pipeline)
-        download_kwargs = kwargs.get("download_kwargs")
-        telegram_kwargs = kwargs.get("telegram_kwargs")
         if isinstance(download_kwargs, dict):
             enhancer.set_download_kwargs(**download_kwargs)
         if isinstance(telegram_kwargs, dict):
