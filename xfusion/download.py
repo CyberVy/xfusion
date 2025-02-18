@@ -20,9 +20,9 @@ if NEED_PROXY or 1:
 
     original_session_request = session.request
     @functools.wraps(original_session_request)
-    def request(method,url,**kwargs):
+    def request(method,url,*args,**kwargs):
         url = f"{PROXY_URL_PREFIX}/{url}"
-        return original_session_request(method,url,**kwargs)
+        return original_session_request(method,url,*args,**kwargs)
     session.request = request
 
     # huggingface hub use 'http_get' to download files
