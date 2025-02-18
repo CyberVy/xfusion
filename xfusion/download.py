@@ -27,7 +27,7 @@ if NEED_PROXY or 1:
         # a header with content-length is required, which is not supported by cloudflare.
         if not url.startswith(PROXY_URL_PREFIX):
              url = f"{PROXY_URL_PREFIX}/{url}"
-        print(url)
+        print(url,method)
         return original_session_request(method,url,*args,**kwargs)
     session.request = request
 
@@ -35,7 +35,7 @@ if NEED_PROXY or 1:
     # so it's easy to download files via proxy by editing this function
     original_http_get = fd.http_get
     @functools.wraps(original_http_get)
-    def http_get(url,*args,**kwargs):
+    def http_get(url:str,*args,**kwargs):
         if not url.startswith(PROXY_URL_PREFIX):
             url = f"{PROXY_URL_PREFIX}/{url}"
         return original_http_get(url,*args,**kwargs)
