@@ -8,14 +8,13 @@ import re
 import functools
 
 
-if NEED_PROXY or 1:
+if NEED_PROXY:
     import huggingface_hub.file_download as fd
     from huggingface_hub import get_session
     session = get_session()
     original_session_get = session.get
     @functools.wraps(original_session_get)
     def get(url,*args,**kwargs):
-        print(f"{PROXY_URL_PREFIX}/{url}")
         return original_session_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
     session.get = get
 
@@ -24,7 +23,6 @@ if NEED_PROXY or 1:
     original_http_get = fd.http_get
     @functools.wraps(original_http_get)
     def http_get(url,*args,**kwargs):
-        print(f"{PROXY_URL_PREFIX}/{url}")
         return original_http_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
     fd.http_get = http_get
 
