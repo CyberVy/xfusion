@@ -10,7 +10,7 @@ XFUSION_PROXY = os.environ.get("XFUSION_PROXY")
 HF_HUB_TOKEN = os.environ.get("HF_HUB_TOKEN") or "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"
 CIVITAI_TOKEN = os.environ.get("CIVITAI_TOKEN") or "1dab3490177fd9b4985323655f917d0c"
 
-PROXY_URL_PREFIX = os.environ.get("PROXY_URL_PREFIX") or "https://us2.xsolutiontech.com"
+PROXY_URL_PREFIX = os.environ.get("PROXY_URL_PREFIX") or "https://dhp.xsolutiontech.com"
 
 
 def get_origin():
