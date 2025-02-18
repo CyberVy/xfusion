@@ -25,7 +25,7 @@ if NEED_PROXY or 1:
     @functools.wraps(original_session_request)
     def request(method,url,*args,**kwargs):
         # a header with content-length is required, which is not supported by cloudflare.
-        if not url.startswith(PROXY_URL_PREFIX) and not url.startswith("https://dhp.xsolutiontech.com"):
+        if not url.startswith("https://dhp.xsolutiontech.com"):
             url = f"{'https://dhp.xsolutiontech.com'}/{url}"
         print(url)
         return original_session_request(method,url,*args,**kwargs)
