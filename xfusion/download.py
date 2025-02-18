@@ -15,13 +15,16 @@ if NEED_PROXY or 1:
     original_session_get = session.get
     @functools.wraps(original_session_get)
     def get(url,*args,**kwargs):
-        return original_session_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
+        url = f"{PROXY_URL_PREFIX}/{url}"
+        print(url)
+        return original_session_get(url,*args,**kwargs)
     session.get = get
 
     original_session_request = session.request
     @functools.wraps(original_session_request)
     def request(method,url,*args,**kwargs):
         url = f"{PROXY_URL_PREFIX}/{url}"
+        print(url)
         return original_session_request(method,url,*args,**kwargs)
     session.request = request
 
