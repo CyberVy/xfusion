@@ -8,7 +8,7 @@ import re
 import functools
 
 
-if NEED_PROXY:
+if NEED_PROXY or 1:
     import huggingface_hub.file_download as fd
     from huggingface_hub import get_session
     session = get_session()
