@@ -18,6 +18,12 @@ if NEED_PROXY:
         return original_session_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
     session.get = get
 
+    original_session_request = session.request
+    def request(method,url,**kwargs):
+        url = f"{PROXY_URL_PREFIX}/{url}"
+        return original_session_request(method,url,**kwargs)
+    session.request = request
+
     # huggingface hub use 'http_get' to download files
     # so it's easy to download files via proxy by editing this function
     original_http_get = fd.http_get
