@@ -5,7 +5,7 @@ from .flux_enhancement import FluxPipelineEnhancer
 def load_enhancer(pipeline_or_model=None,**kwargs):
     model_version = kwargs.pop("model_version","")
     model_version = str(model_version).lower()
-    download_kwargs = kwargs.pop("download_kwargs",{})
+    download_kwargs = kwargs.get("download_kwargs",{})
     telegram_kwargs = kwargs.pop("telegram_kwargs",{})
     if model_version in ["","1.5","2","3","3.5","xl","sdxl","pony"]:
         if isinstance(pipeline_or_model,str):
