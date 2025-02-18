@@ -239,7 +239,7 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
                     if str(component.device) == "cpu":
                         components_in_cpu = True
             if components_in_cpu:
-                i = pipelines.index(pipeline)
+                i = len(pipelines) - 1 - pipelines.index(pipeline)
                 print(f"Loading the model into cuda:{i}...")
                 pipeline.to(f"cuda:{i}")
             return f"{model}"
