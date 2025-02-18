@@ -10,6 +10,13 @@ import functools
 
 if NEED_PROXY:
     import huggingface_hub.file_download as fd
+    from huggingface_hub import get_session
+    session = get_session()
+    original_session_get = session.get
+    @functools.wraps(original_session_get)
+    def get(url,*args,**kwargs):
+        return original_session_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
+    session.get = get
 
     # huggingface hub use 'http_get' to download files
     # so it's easy to download files via proxy by editing this function
@@ -18,6 +25,7 @@ if NEED_PROXY:
     def http_get(url,*args,**kwargs):
         return original_http_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
     fd.http_get = http_get
+
     print(f"Files from huggingface will be downloaded via url proxy[{PROXY_URL_PREFIX}].")
 
 
