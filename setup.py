@@ -10,7 +10,7 @@ setup(
         'peft',
         'torch',
         'gradio==5.13.0',
-        'diffusers',
+        'diffusers>=0.32.2',
         'bitsandbytes',
         'transformers==4.48.3',
         'compel',
