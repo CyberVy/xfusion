@@ -36,7 +36,7 @@ if NEED_PROXY or 1:
     original_http_get = fd.http_get
     @functools.wraps(original_http_get)
     def http_get(url,*args,**kwargs):
-        if not url.startswith(PROXY_URL_PREFIX) and not url.startswith("https://dhp.xsolutiontech.com"):
+        if not url.startswith(PROXY_URL_PREFIX):
             url = f"{PROXY_URL_PREFIX}/{url}"
         return original_http_get(url,*args,**kwargs)
     fd.http_get = http_get
