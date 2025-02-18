@@ -15,7 +15,7 @@ if NEED_PROXY or 1:
     original_session_get = session.get
     @functools.wraps(original_session_get)
     def get(url,*args,**kwargs):
-        url = f"{PROXY_URL_PREFIX}/{url}"
+        url = f"{PROXY_URL_PREFIX}/{url}" if not url.startswith(PROXY_URL_PREFIX) else url
         print(url)
         return original_session_get(url,*args,**kwargs)
     session.get = get
@@ -23,7 +23,7 @@ if NEED_PROXY or 1:
     original_session_request = session.request
     @functools.wraps(original_session_request)
     def request(method,url,*args,**kwargs):
-        url = f"{PROXY_URL_PREFIX}/{url}"
+        url = f"{PROXY_URL_PREFIX}/{url}" if not url.startswith(PROXY_URL_PREFIX) else url
         print(url)
         return original_session_request(method,url,*args,**kwargs)
     session.request = request
@@ -33,7 +33,8 @@ if NEED_PROXY or 1:
     original_http_get = fd.http_get
     @functools.wraps(original_http_get)
     def http_get(url,*args,**kwargs):
-        return original_http_get(f"{PROXY_URL_PREFIX}/{url}",*args,**kwargs)
+        url = f"{PROXY_URL_PREFIX}/{url}" if not url.startswith(PROXY_URL_PREFIX) else url
+        return original_http_get(url,*args,**kwargs)
     fd.http_get = http_get
 
     print(f"Files from huggingface will be downloaded via url proxy[{PROXY_URL_PREFIX}].")
