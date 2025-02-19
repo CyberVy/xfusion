@@ -182,14 +182,14 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         image = kwargs.get("image")
         if image and isinstance(image, Image.Image):
-            image = normalize_image(image, width * height)
+            image = normalize_image(image, width * height,scale_divisor=8)
             kwargs.update(width=image.width)
             kwargs.update(height=image.height)
             kwargs.update(image=image)
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
-            mask_image = normalize_image(mask_image, width * height)
+            mask_image = normalize_image(mask_image, width * height,scale_divisor=8)
             kwargs.update(mask_image=mask_image)
             kwargs.update(width=mask_image.width)
             kwargs.update(height=mask_image.height)
@@ -205,7 +205,7 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         control_image = kwargs.get("control_image")
         if control_image and isinstance(control_image, Image.Image):
-            control_image = normalize_image(control_image, width * height)
+            control_image = normalize_image(control_image, width * height,scale_divisor=8)
             kwargs.update(control_image=control_image)
 
         return kwargs
