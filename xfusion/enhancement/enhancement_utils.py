@@ -122,6 +122,10 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         self._scheduler = self.scheduler
         components = self.components
 
+        vae = components.get("vae")
+        if vae:
+            vae.enable_tiling()
+
         if "flux" in self.__oins__.__class__.__name__.lower():
             components.pop("image_encoder",None)
             components.pop("feature_extractor", None)
