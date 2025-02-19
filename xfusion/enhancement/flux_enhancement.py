@@ -44,17 +44,20 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
 
         width = kwargs.get("width") or 1024
         height = kwargs.get("height") or 1024
+        kwargs.update(width=width)
+        kwargs.update(height=height)
 
         image = kwargs.get("image")
         if image and isinstance(image, Image.Image):
-            kwargs.update(image=normalize_image(image, width * height,scale_divisor=16))
+            image = normalize_image(image, width * height,scale_divisor=16)
+            kwargs.update(width=image.width)
+            kwargs.update(height=image.height)
+            kwargs.update(image=image)
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
             mask_image = normalize_image(mask_image, width * height,scale_divisor=16)
             kwargs.update(mask_image=mask_image)
-            kwargs.update(width=mask_image.width)
-            kwargs.update(height=mask_image.height)
 
         return kwargs
 
