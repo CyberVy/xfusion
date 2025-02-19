@@ -64,8 +64,8 @@ def render_text_to_image(fns):
                 t2i_inputs.append(gr.Slider(0, 10, 3.5, step=0.1, label="Guidance Scale"))
                 t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 with gr.Row():
-                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=16, label="Width"))
+                    t2i_inputs.append(gr.Slider(512, 2048, 1024, step=16, label="Height"))
             with gr.Column():
                 with gr.Row():
                     t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
@@ -96,8 +96,8 @@ def render_image_to_image(fns):
                 i2i_inputs.append(gr.Slider(0, 10, 3.5, step=0.1, label="Guidance Scale"))
                 i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 with gr.Row():
-                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=16, label="Width"))
+                    i2i_inputs.append(gr.Slider(512, 2048, 1024, step=16, label="Height"))
             with gr.Column():
                 with gr.Row():
                     i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
@@ -128,8 +128,8 @@ def render_inpainting(fns):
                 inpainting_inputs.append(gr.Slider(0, 10, 3.5, step=0.1, label="Guidance Scale"))
                 inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
                 with gr.Row():
-                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
-                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=16, label="Width"))
+                    inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=16, label="Height"))
             with gr.Column():
                 with gr.Row():
                     inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
