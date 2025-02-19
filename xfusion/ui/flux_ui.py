@@ -1,9 +1,8 @@
 import gradio as gr
 from ..const import GPU_COUNT,GPU_NAME
 from .ui_utils import safe_block,lock
-from ..utils import allow_return_error,threads_execute
+from ..utils import allow_return_error,threads_execute,free_memory_to_system
 from ..utils import convert_mask_image_to_rgb
-import torch
 import functools
 import inspect
 import sys,platform
@@ -210,11 +209,11 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
         def wrapper(*args, **kwargs):
             if int(args[-4]) != 0 or len(pipelines) == 1:
                 r = f(*args, **kwargs)(pipelines[0])
-                torch.cuda.empty_cache()
+                free_memory_to_system()
                 return r
             else:
                 threads_execute(f(*args, **kwargs), pipelines)
-                torch.cuda.empty_cache()
+                free_memory_to_system()
                 return f"{args[-3]} * {len(pipelines)}"
 
         return wrapper
