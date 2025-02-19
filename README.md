@@ -21,7 +21,7 @@ pip install -q git+https://github.com/CyberVy/xfusion.git
 from xfusion.enhancement import load_enhancer
 
 telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./"}
+download_kwargs = {"directory":"./xfusion_models"}
 pipeline = load_enhancer(None,model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs)
 server = pipeline.load_ui(globals())
 ```
@@ -33,7 +33,7 @@ from xfusion import load_stable_diffusion_ui
 from xfusion.const import GPU_COUNT
 
 telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./"}
+download_kwargs = {"directory":"./xfusion_models"}
 pipelines = [load_enhancer(None, model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
 ```
@@ -44,7 +44,7 @@ server = load_stable_diffusion_ui(pipelines, _globals=globals())
 from xfusion.enhancement import load_enhancer
 
 telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./"}
+download_kwargs = {"directory":"./xfusion_models"}
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model,model_version="xl, download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs").to("cuda")
 server = pipeline.load_ui(globals())
@@ -58,7 +58,7 @@ from xfusion.ui import load_stable_diffusion_ui
 from xfusion.const import GPU_COUNT
 
 telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./"}
+download_kwargs = {"directory":"./xfusion_models"}
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipelines = [load_enhancer(model, model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
@@ -70,7 +70,7 @@ from xfusion.enhancement import load_enhancer
 import torch
 
 telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./"}
+download_kwargs = {"directory":"./xfusion_models"}
 
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 pipeline = load_enhancer(model,model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs).to("cuda")
