@@ -30,7 +30,7 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
         kwargs_for_telegram.update(prompt=f"\n{kwargs['prompt'][:768]}")
         kwargs_for_telegram.pop("generator",None)
         caption = dict_to_str(kwargs_for_telegram)
-        caption += f"Sampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSeed: {item}\n\nModel:{pipeline.model_name}"
+        caption += f"Sampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSize: {image.size}\nSeed: {item}\n\nModel:{pipeline.model_name}"
         threading.Thread(target=lambda: pipeline.send_pil_photo(image, file_name=f"{pipeline.__class__.__name__}.PNG", file_type="PNG", caption=caption)).start()
     return images
 class FluxPipelineEnhancer(PipelineEnhancerBase):
