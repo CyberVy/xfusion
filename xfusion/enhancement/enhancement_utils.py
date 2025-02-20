@@ -76,7 +76,6 @@ class IPAdapterEnhancerMixin:
             - model.safetensors
         """
         self.__oins__.load_ip_adapter(uri,subfolder,weight_name,image_encoder_folder,
-                                      cache_dir=self.download_kwargs.get("directory"),
                                       token=HF_HUB_TOKEN
                                       **kwargs)
         for pipeline in self.sub_pipelines.values():
