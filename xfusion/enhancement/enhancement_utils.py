@@ -103,6 +103,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
             pipeline.telegram_kwargs = self.telegram_kwargs
             pipeline.download_kwargs = self.download_kwargs
             pipeline.lora_dict = self.lora_dict
+            pipeline.model_name = self.model_name
 
     def __init__(self,__oins__,init_sub_pipelines=True):
         EasyInitSubclass.__init__(self,__oins__)
