@@ -12,7 +12,7 @@ class FromURLMixin:
         raise NotImplementedError(f"{cls} not implement 'from_url'")
 
 
-def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
+def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None,**kwargs):
 
     use_internet = True
     if lora_uri.startswith(".") or lora_uri.startswith("/") or lora_uri.startswith("~"):
@@ -21,9 +21,9 @@ def load_lora(pipeline,lora_uri,lora_name,download_kwargs=None):
         download_kwargs = {}
     if use_internet:
         lora_path = download_file(lora_uri,**download_kwargs)
-        pipeline.load_lora_weights(lora_path,adapter_name=lora_name)
+        pipeline.load_lora_weights(lora_path,adapter_name=lora_name,**kwargs)
     else:
-        pipeline.load_lora_weights(lora_uri,adapter_name=lora_name)
+        pipeline.load_lora_weights(lora_uri,adapter_name=lora_name,**kwargs)
 class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
     # __oins__ here is the pipeline instance to implement.
     __oins__ = None
