@@ -74,7 +74,7 @@ class IPAdapterEnhancerMixin:
             - config.json
             - model.safetensors
         """
-        self.__oins__.load_ip_adapter(self,uri,subfolder,weight_name,image_encoder_folder,**kwargs)
+        self.__oins__.load_ip_adapter(uri,subfolder,weight_name,image_encoder_folder,**kwargs)
         for pipeline in self.sub_pipelines:
             pipeline.register_modules(image_encoder=self.__oins__.image_encoder)
             pipeline.register_modules(feature_extractor=self.__oins__.feature_extractor)
