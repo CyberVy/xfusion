@@ -85,7 +85,7 @@ class IPAdapterEnhancerMixin:
         self.__oins__.set_ip_adapter_scale(weight)
 
     def delete_ip_adapter(self):
-        self.unload_ip_adapter()
+        self.__oins__.unload_ip_adapter()
         for pipeline in self.sub_pipelines.values():
             pipeline.unload_ip_adapter()
         free_memory_to_system()
