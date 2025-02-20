@@ -60,6 +60,33 @@ class LoraEnhancerMixin(DownloadArgumentsMixin,EasyInitSubclass):
         free_memory_to_system()
 
 
+class IPAdapterEnhancerMixin:
+    # __oins__ here is the pipeline instance to implement.
+    __oins__ = None
+    overrides = ["set_ip_adapter","set_ip_adapter_strength","delete_ip_adapter"]
+
+    def set_ip_adapter(self,uri,subfolder,weight_name,image_encoder_folder = "image_encoder",**kwargs):
+        """
+        ip-adapter-directory
+          - sdxl_ip_adapter(subfolder)
+            - ip_adapter_0.safetensor
+          - image_encoder(image_encoder_folder)
+            - config.json
+            - model.safetensors
+        """
+        self.__oins__.load_ip_adapter(self,uri,subfolder,weight_name,image_encoder_folder,**kwargs)
+        for pipeline in self.sub_pipelines:
+            pipeline.register_modules(image_encoder=self.__oins__.image_encoder)
+            pipeline.register_modules(feature_extractor=self.__oins__.feature_extractor)
+
+    def set_ip_adapter_strength(self,weight):
+        self.__oins__.set_ip_adapter_scale(weight)
+
+    def delete_ip_adapter(self):
+        for pipeline in self.sub_pipelines:
+            pipeline.unload_ip_adapter()
+
+
 class ControlnetEnhancerMixin:
     overrides = ["_controlnet",
                  "text_to_image_controlnet_pipeline","image_to_image_controlnet_pipeline","inpainting_controlnet_pipeline",
@@ -81,7 +108,7 @@ class ControlnetEnhancerMixin:
         free_memory_to_system()
 
 
-class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
+class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,IPAdapterEnhancerMixin,TGBotMixin,FromURLMixin,UIMixin,EasyInitSubclass):
     pipeline_map = {}
     scheduler_map = {}
 
