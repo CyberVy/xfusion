@@ -165,7 +165,7 @@ def render_code(fns):
 def render_flux_ui(fns):
     theme = gr.themes.Ocean()
 
-    with gr.Blocks(title=f"Xfusion{GPU_NAME}", theme=theme) as server:
+    with gr.Blocks(title=f"FLUX{GPU_NAME}", theme=theme) as server:
 
         render_model_selection(fns)
         render_lora(fns)
