@@ -75,15 +75,15 @@ class IPAdapterEnhancerMixin:
             - model.safetensors
         """
         self.__oins__.load_ip_adapter(uri,subfolder,weight_name,image_encoder_folder,**kwargs)
-        for pipeline in self.sub_pipelines:
-            pipeline.image_encoder = self.__oins__.image_encoder
-            pipeline.feature_extractor = self.__oins__.feature_extractor
+        for pipeline in self.sub_pipelines.values():
+            pipeline.register_modules(image_encoder=self.__oins__.image_encoder)
+            pipeline.register_modules(feature_extractor=self.__oins__.feature_extractor)
 
     def set_ip_adapter_strength(self,weight):
         self.__oins__.set_ip_adapter_scale(weight)
 
     def delete_ip_adapter(self):
-        for pipeline in self.sub_pipelines:
+        for pipeline in self.sub_pipelines.values():
             pipeline.unload_ip_adapter()
 
 
