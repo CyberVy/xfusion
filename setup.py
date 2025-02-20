@@ -11,7 +11,7 @@ setup(
         'torch',
         'gradio==5.13.0',
         'diffusers>=0.32.2',
-        'bitsandbytes',
+        'bitsandbytes>=0.45.2',
         'transformers==4.48.3',
         'compel',
         'opencv-python',
