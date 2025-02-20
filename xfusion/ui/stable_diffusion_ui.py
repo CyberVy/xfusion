@@ -61,6 +61,30 @@ def render_lora(fns):
                     disable_lora_btn = gr.Button("Disable all LoRA")
                     disable_lora_btn.click(fn=fns["disable_lora_fn"], outputs=lora_outputs)
 
+def render_ip_adapter(fns):
+    with gr.Accordion("IP-Adapter", open=False):
+        gr.Markdown("# IP-Adapter")
+        set_ip_adapter_inputs = []
+        ip_adapter_outputs = []
+        with gr.Row():
+            with gr.Column():
+                set_ip_adapter_inputs.append(gr.Textbox(placeholder="Give me a repo if of IP-Adapter!", label="IP-Adapter"))
+                with gr.Row():
+                    set_ip_adapter_inputs.append(gr.Textbox(value="h94/IP-Adapter",placeholder="Subfolder where the IP-Adapter is.",label="Subfolder"))
+                    set_ip_adapter_inputs.append(gr.Textbox(placeholder="name of the IP-Adapter",label="Name"))
+                    set_ip_adapter_inputs.append(gr.Textbox(value="image_encoder",placeholder="Folder of the image encoder",label="Image encoder folder"))
+                with gr.Row():
+                    delete_ip_adapter_btn = gr.Button("Delete IP-Adapter")
+                    set_ip_adapter_btn = gr.Button("Set IP-Adapter")
+                with gr.Row():
+                    set_ip_adapter_inputs.append(gr.Slider(0, 1, 0.7, step=0.05, label="IP-Adapter strength"))
+                    set_ip_adapter_strength_btn = gr.Button("Set IP-Adapter Strength")
+            with gr.Column():
+                ip_adapter_outputs.append(gr.Textbox(label="Result"))
+                delete_ip_adapter_btn.click(fn=fns["delete_ip_adapter_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
+                set_ip_adapter_btn.click(fn=fns["set_ip_adapter_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
+                set_ip_adapter_strength_btn.click(fn=fns["set_ip_adapter_strength_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
+
 def render_text_to_image(fns):
     with gr.Accordion("Text To Image", open=True):
         gr.Markdown("# Text To Image")
@@ -388,6 +412,7 @@ def render_controlnet_inpainting(fns):
                 controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
                                                 outputs=controlnet_inpainting_outputs)
 
+
 def render_code(fns):
     with gr.Accordion("Code", open=False):
         gr.Markdown("# Code")
@@ -412,6 +437,7 @@ def render_stable_diffusion_ui(fns):
 
         render_model_selection(fns)
         render_lora(fns)
+        render_ip_adapter(fns)
         render_text_to_image(fns)
         render_image_to_image(fns)
         render_inpainting(fns)
@@ -518,7 +544,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     @allow_return_error
     @lock(lock_state)
     @auto_gpu_loop
-    def delete_lora_fn(_,lora_name,__):
+    def delete_lora_fn(url,lora_name,strength):
         def f(pipeline):
             pipeline.delete_adapters(lora_name)
             return f"{lora_name} is deleted."
@@ -552,12 +578,38 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     @allow_return_error
     @lock(lock_state)
     @auto_gpu_loop
+    def set_ip_adapter_fn(uri,subfolder,weight_name,image_encoder_folder,strength,progress=gr.Progress(track_tqdm=True)):
+        def f(pipeline):
+            pipeline.set_ip_adapter(uri,subfolder,weight_name,image_encoder_folder)
+            return f"IP-Adapter {uri} is set, please set a strength then."
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @auto_gpu_loop
+    def delete_ip_adapter_fn(uri,subfolder,weight_name,image_encoder_folder,strength):
+        def f(pipeline):
+            pipeline.delete_ip_adapter()
+            return f"IP-Adapter is deleted."
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @auto_gpu_loop
+    def set_ip_adapter_strength_fn(uri,subfolder,weight_name,image_encoder_folder,strength):
+        def f(pipeline):
+            pipeline.set_ip_adapter_strength(strength)
+            return f"IP-Adapter strength: {strength}"
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @auto_gpu_loop
     def text_to_image_scheduler_fn(scheduler):
         def f(pipeline):
             pipeline.text_to_image_pipeline.set_scheduler(scheduler)
             return f"{scheduler} is set for text to image pipeline."
         return f
-
 
     @allow_return_error
     @lock(lock_state)
