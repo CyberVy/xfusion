@@ -68,22 +68,24 @@ def render_ip_adapter(fns):
         ip_adapter_outputs = []
         with gr.Row():
             with gr.Column():
-                set_ip_adapter_inputs.append(gr.Textbox(placeholder="Give me a repo if of IP-Adapter!", label="IP-Adapter"))
+                set_ip_adapter_inputs.append(gr.Textbox(value="h94/IP-Adapter",placeholder="Give me a repo if of IP-Adapter!", label="IP-Adapter"))
                 with gr.Row():
-                    set_ip_adapter_inputs.append(gr.Textbox(value="h94/IP-Adapter",placeholder="Subfolder where the IP-Adapter is.",label="Subfolder"))
+                    set_ip_adapter_inputs.append(gr.Textbox(placeholder="Subfolder where the IP-Adapter is.",label="Subfolder"))
                     set_ip_adapter_inputs.append(gr.Textbox(placeholder="name of the IP-Adapter",label="Name"))
                     set_ip_adapter_inputs.append(gr.Textbox(value="image_encoder",placeholder="Folder of the image encoder",label="Image encoder folder"))
                 with gr.Row():
                     delete_ip_adapter_btn = gr.Button("Delete IP-Adapter")
                     set_ip_adapter_btn = gr.Button("Set IP-Adapter")
+
+            with gr.Column():
+                ip_adapter_outputs.append(gr.Textbox(label="Result"))
                 with gr.Row():
                     set_ip_adapter_inputs.append(gr.Slider(0, 1, 0.7, step=0.05, label="IP-Adapter strength"))
                     set_ip_adapter_strength_btn = gr.Button("Set IP-Adapter Strength")
-            with gr.Column():
-                ip_adapter_outputs.append(gr.Textbox(label="Result"))
-                delete_ip_adapter_btn.click(fn=fns["delete_ip_adapter_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
                 set_ip_adapter_btn.click(fn=fns["set_ip_adapter_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
                 set_ip_adapter_strength_btn.click(fn=fns["set_ip_adapter_strength_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
+                delete_ip_adapter_btn.click(fn=fns["delete_ip_adapter_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
+
 
 def render_text_to_image(fns):
     with gr.Accordion("Text To Image", open=True):
