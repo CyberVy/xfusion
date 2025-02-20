@@ -192,6 +192,11 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
             mask_image = normalize_image(mask_image, width * height,scale_divisor=8)
             kwargs.update(mask_image=mask_image)
 
+        ip_adapter_image = kwargs.get("ip_adapter_image")
+        if ip_adapter_image and isinstance(ip_adapter_image,Image.Image):
+            ip_adapter_image = normalize_image(ip_adapter_image, width * height,scale_divisor=8)
+            kwargs.update(ip_adapter_image=ip_adapter_image)
+
         if "controlnet" in self.__oinstype__.__name__.lower():
             kwargs.update(self._check_controlnet_inference_kwargs(kwargs))
 
