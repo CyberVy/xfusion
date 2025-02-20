@@ -2,6 +2,7 @@ from ..utils import EasyInitSubclass,delete,free_memory_to_system
 from ..ui.ui_utils import UIMixin
 from ..download import DownloadArgumentsMixin,download_file
 from ..message import TGBotMixin
+from ..const import HF_HUB_TOKEN
 
 
 class FromURLMixin:
@@ -74,7 +75,10 @@ class IPAdapterEnhancerMixin:
             - config.json
             - model.safetensors
         """
-        self.__oins__.load_ip_adapter(uri,subfolder,weight_name,image_encoder_folder,cache_dir=self.download_kwargs.get("directory"),**kwargs)
+        self.__oins__.load_ip_adapter(uri,subfolder,weight_name,image_encoder_folder,
+                                      cache_dir=self.download_kwargs.get("directory"),
+                                      token=HF_HUB_TOKEN
+                                      **kwargs)
         for pipeline in self.sub_pipelines.values():
             pipeline.register_modules(image_encoder=self.__oins__.image_encoder)
             pipeline.register_modules(feature_extractor=self.__oins__.feature_extractor)
@@ -85,6 +89,7 @@ class IPAdapterEnhancerMixin:
     def delete_ip_adapter(self):
         for pipeline in self.sub_pipelines.values():
             pipeline.unload_ip_adapter()
+        free_memory_to_system()
 
 
 class ControlnetEnhancerMixin:
