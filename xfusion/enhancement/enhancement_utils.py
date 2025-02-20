@@ -112,6 +112,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         ControlnetEnhancerMixin.__init__(self)
         self.enhancer_class:"PipelineEnhancerBase" = object.__getattribute__(self,"__class__")
         self.sub_pipelines = {}
+        self.model_name = None
 
         # support empty pipeline
         if __oins__ is None:
