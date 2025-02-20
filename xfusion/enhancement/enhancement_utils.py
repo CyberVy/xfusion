@@ -215,8 +215,10 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
             self.from_url(url,init_sub_pipelines=False,download_kwargs=download_kwargs,**kwargs).__oins__)
         self.set_download_kwargs(**download_kwargs)
         self.set_telegram_kwargs(**telegram_kwargs)
-        self.model_name = url
         self.to(device)
+        self.model_name = url
+        for pipeline in self.sub_pipelines.values():
+            pipeline.model_name = url
 
     def load(self,url,**kwargs):
         if not self.is_empty_pipeline:
@@ -232,3 +234,5 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,TGBotMixin,
         self.set_download_kwargs(**download_kwargs)
         self.set_telegram_kwargs(**telegram_kwargs)
         self.model_name = url
+        for pipeline in self.sub_pipelines.values():
+            pipeline.model_name = url
