@@ -229,7 +229,8 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
     @lock(lock_state)
     @auto_gpu_loop
     def model_selection_fn(model, progress=gr.Progress(track_tqdm=True)):
-
+        for pipeline in  pipelines:
+            pipeline.clear()
         def f(pipeline):
             pipeline.reload(model)
             components_in_cpu = False
