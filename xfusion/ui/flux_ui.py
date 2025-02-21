@@ -227,11 +227,10 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
-    @auto_gpu_loop
     def model_selection_fn(model, progress=gr.Progress(track_tqdm=True)):
-        for pipeline in  pipelines:
+        for pipeline in pipelines:
             pipeline.clear()
-        def f(pipeline):
+        for pipeline in pipelines:
             pipeline.reload(model)
             components_in_cpu = False
             for _,component in pipeline.components.items():
@@ -242,9 +241,7 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
                 i = len(pipelines) - 1 - pipelines.index(pipeline)
                 print(f"Loading the model into cuda:{i}...")
                 pipeline.to(f"cuda:{i}")
-            return f"{model}"
-
-        return f
+        return f"{model}"
 
     @allow_return_error
     @lock(lock_state)
