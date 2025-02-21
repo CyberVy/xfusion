@@ -533,16 +533,21 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     @lock(lock_state)
-    @auto_gpu_loop
     def model_selection_fn(model,model_version,progress=gr.Progress(track_tqdm=True)):
-        def f(pipeline):
+        for pipeline in pipelines:
+            pipeline.clear()
+        for pipeline in pipelines:
             pipeline.reload(model,model_version=model_version)
-            if str(pipeline.device) == "cpu":
-                i = pipelines.index(pipeline)
+            components_in_cpu = False
+            for _, component in pipeline.components.items():
+                if hasattr(component, "device"):
+                    if str(component.device) == "cpu":
+                        components_in_cpu = True
+            if components_in_cpu:
+                i = len(pipelines) - 1 - pipelines.index(pipeline)
                 print(f"Loading the model into cuda:{i}...")
                 pipeline.to(f"cuda:{i}")
-            return f"{model}, {model_version}"
-        return f
+        return f"{model}, {model_version}"
 
     @allow_return_error
     @lock(lock_state)
