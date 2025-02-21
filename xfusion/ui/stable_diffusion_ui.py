@@ -112,11 +112,11 @@ def render_text_to_image(fns):
                     t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                     t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
             with gr.Column():
+                with gr.Accordion("IP-Adapter Image", open=False):
+                    t2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Row():
                     t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                     t2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                with gr.Accordion("IP-Adapter Image",open=False):
-                    t2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Accordion("Code", open=False):
                     t2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
                         inspect.signature(fns["text_to_image_fn"]).parameters.values())])
@@ -157,11 +157,11 @@ def render_image_to_image(fns):
                     i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                     i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
             with gr.Column():
+                with gr.Accordion("IP-Adapter Image", open=False):
+                    i2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Row():
                     i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                     i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                with gr.Accordion("IP-Adapter Image", open=False):
-                    i2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Accordion("Code", open=False):
                     i2i_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
                         inspect.signature(fns["image_to_image_fn"]).parameters.values())])
@@ -203,11 +203,11 @@ def render_inpainting(fns):
                     inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                     inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
             with gr.Column():
+                with gr.Accordion("IP-Adapter Image", open=False):
+                    inpainting_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Row():
                     inpainting_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                     inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                with gr.Accordion("IP-Adapter Image",open=False):
-                    inpainting_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Accordion("Code", open=False):
                     inpainting_callback_args_name = ",".join([str(item).split("=")[0] for item in list(
                         inspect.signature(fns["inpainting_fn"]).parameters.values())])
@@ -278,11 +278,11 @@ def render_controlnet_text_to_image(fns):
                                      inputs=controlnet_t2i_control_image_preview_inputs,
                                      outputs=controlnet_t2i_control_image_preview_outputs)
             with gr.Column():
+                with gr.Accordion("IP-Adapter Image", open=False):
+                    controlnet_t2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Row():
                     controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                     controlnet_t2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                with gr.Accordion("IP-Adapter Image",open=False):
-                    controlnet_t2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Accordion("Code", open=False):
                     controlnet_t2i_args_name = ",".join([str(item).split("=")[0] for item in list(
                         inspect.signature(fns["controlnet_text_to_image_fn"]).parameters.values())])
@@ -342,11 +342,11 @@ def render_controlnet_image_to_image(fns):
                                      outputs=controlnet_i2i_control_image_preview_outputs)
 
             with gr.Column():
+                with gr.Accordion("IP-Adapter Image", open=False):
+                    controlnet_i2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Row():
                     controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                     controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                with gr.Accordion("IP-Adapter Image",open=False):
-                    controlnet_i2i_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Accordion("Code", open=False):
                     controlnet_i2i_args_name = ",".join([str(item).split("=")[0] for item in list(
                         inspect.signature(fns["controlnet_image_to_image_fn"]).parameters.values())])
@@ -633,8 +633,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             prompt, negative_prompt,
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
-            seed, num,
             ip_adapter_image,
+            seed, num,
             code,
             progress=gr.Progress(track_tqdm=True),**kwargs):
 
@@ -667,8 +667,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             strength,
             guidance_scale, num_inference_steps, clip_skip,
             width,height,
-            seed, num,
             ip_adapter_image,
+            seed, num,
             code,
             progress=gr.Progress(track_tqdm=True),**kwargs):
 
@@ -706,8 +706,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             strength,
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
-            seed, num,
             ip_adapter_image,
+            seed, num,
             code,
             progress=gr.Progress(track_tqdm=True),**kwargs):
 
@@ -779,8 +779,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             controlnet_conditioning_scale,guidance_scale, num_inference_steps, clip_skip,
             width, height,
             low_threshold, high_threshold,
-            seed, num,
             ip_adapter_image,
+            seed, num,
             code,
             progress=gr.Progress(track_tqdm=True),**kwargs):
 
@@ -821,8 +821,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             low_threshold, high_threshold,
-            seed, num,
             ip_adapter_image,
+            seed, num,
             code,
             progress=gr.Progress(track_tqdm=True),**kwargs):
 
@@ -865,8 +865,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
             guidance_scale, num_inference_steps, clip_skip,
             width, height,
             low_threshold, high_threshold,
-            seed, num,
             ip_adapter_image,
+            seed, num,
             code,
             progress=gr.Progress(track_tqdm=True),**kwargs):
 
