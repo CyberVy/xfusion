@@ -46,7 +46,7 @@ from xfusion.enhancement import load_enhancer
 telegram_kwargs = {"token":"","chat_id":""}
 download_kwargs = {"directory":"./xfusion_models"}
 model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model,model_version="xl, download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs").to("cuda")
+pipeline = load_enhancer(model,model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs").to("cuda")
 server = pipeline.load_ui(globals())
 ```
 
