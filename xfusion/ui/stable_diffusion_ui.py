@@ -535,7 +535,8 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     @lock(lock_state)
     @auto_gpu_loop
     def model_selection_fn(model,model_version,progress=gr.Progress(track_tqdm=True)):
-
+        for pipeline in pipelines:
+            pipeline.clear()
         def f(pipeline):
             pipeline.reload(model,model_version=model_version)
             if str(pipeline.device) == "cpu":
