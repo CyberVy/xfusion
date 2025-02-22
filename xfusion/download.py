@@ -119,7 +119,7 @@ def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
     total_size = int(response.headers.get('content-length', 0))
 
     if not mute:
-        with open(f"{directory}unfinished.{filename}", 'wb') as file, tqdm(desc=filename,total=total_size, unit='B',unit_scale=True,unit_divisor=1024,) as progress_bar:
+        with open(f"{directory}unfinished.{filename}", 'wb') as file, tqdm(desc=f"{directory}{filename}",total=total_size, unit='B',unit_scale=True,unit_divisor=1024,) as progress_bar:
             for data in response.iter_content(8192 * 2):
                 file.write(data)
                 progress_bar.update(len(data))
