@@ -438,7 +438,7 @@ def render_download_file(fns):
             with gr.Column():
                 download_file_outputs.append(gr.Textbox(label="Result"))
                 download_click = gr.Button("Download")
-                download_click.click(fns["download_file_fn"],inputs=download_file_inputs,outputs=download_file_outputs)
+                download_click.click(fns["download_file_fn"],inputs=download_file_inputs,outputs=download_file_outputs,trigger_mode="multiple")
 
 def render_code(fns):
     with gr.Accordion("Code", open=False):
