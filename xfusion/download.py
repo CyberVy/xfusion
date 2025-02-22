@@ -53,7 +53,7 @@ def get_hf_repo_filename_url_dict(repo_id:str,subfolders=None,token=None) -> dic
     complete_filename_url_dict = {}
     for item in file_name_list:
         file_name = item["rfilename"]
-        complete_filename_url_dict[file_name] = f"https://huggingface.co/eramth/flux-4bit/resolve/main/{file_name}?download=true"
+        complete_filename_url_dict[file_name] = f"https://huggingface.co/{repo_id}/resolve/main/{file_name}?download=true"
 
     if subfolders is None:
         return complete_filename_url_dict
@@ -139,7 +139,7 @@ def download_hf_repo_files(repo_id,directory,*,subfolders=None,token=None):
         download_directory = directory
         download_directory = download_directory + "/".join(filename.split("/")[:-1])
         filename = filename.split("/")[-1]
-        r.append([download_file(url,filename=filename,directory=download_directory),url])
+        r.append(download_file(url,filename=filename,directory=download_directory))
     return r
 
 class DownloadArgumentsMixin:
