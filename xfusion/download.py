@@ -44,8 +44,11 @@ if NEED_PROXY:
     print(f"Files from huggingface will be downloaded via url proxy[{PROXY_URL_PREFIX}].")
 
 
-def download_file(url,filename=None,directory=None,mute=False,**kwargs):
+def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
 
+    if not (url.startswith("http://") or url.startswith("https://")):
+        raise ValueError("A valid URL is required.")
+    
     directory = "./" if directory is None else directory
     url = urlparse(url)
     headers = kwargs.pop("headers",{})
