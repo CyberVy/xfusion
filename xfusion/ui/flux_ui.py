@@ -3,6 +3,7 @@ from ..const import GPU_COUNT,GPU_NAME
 from .ui_utils import safe_block,lock
 from ..utils import allow_return_error,threads_execute,free_memory_to_system
 from ..utils import convert_mask_image_to_rgb
+from ..download import download_file
 import functools
 import inspect
 import sys,platform
@@ -145,6 +146,20 @@ def render_inpainting(fns):
                 inpainting_btn = gr.Button("Run")
                 inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
+def render_download_file(fns):
+    with gr.Accordion("Download File", open=False):
+        gr.Markdown("# Download File")
+        download_file_inputs = []
+        download_file_outputs = []
+        with gr.Row():
+            with gr.Column():
+                download_file_inputs.append(gr.Textbox(placeholder="Give me a url of the target file!",label="File URL"))
+                download_file_inputs.append(gr.Textbox(placeholder="Where you want to store the file.",label="Directory"))
+            with gr.Column():
+                download_file_outputs.append(gr.Textbox(label="Result"))
+                download_click = gr.Button("Download")
+                download_click.click(fns["download_file_fn"],inputs=download_file_inputs,outputs=download_file_outputs)
+
 def render_code(fns):
     with gr.Accordion("Code", open=False):
         gr.Markdown("# Code")
@@ -173,7 +188,9 @@ def render_flux_ui(fns):
         render_image_to_image(fns)
         render_inpainting(fns)
 
-        render_code(fns)
+        with gr.Accordion("Dev Tools", open=False):
+            render_download_file(fns)
+            render_code(fns)
 
     return server
 
@@ -367,7 +384,11 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
         return f
 
     @allow_return_error
-    def run_code_fn(code):
+    def download_file_fn(url, directory, progress=gr.Progress(track_tqdm=True)):
+        return download_file(url, directory=directory)
+
+    @allow_return_error
+    def run_code_fn(code, progress=gr.Progress(track_tqdm=True)):
         exec(code,_globals)
         if _globals:
             return _globals.pop("_cout", None)
