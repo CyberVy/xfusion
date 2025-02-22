@@ -12,6 +12,8 @@ def get_hf_repo_filename_url_dict(repo_id:str,subfolders=None,token=None) -> dic
     headers = {"authorization":token}
     hf_url = "https://huggingface.co"
     hf_url = f"{PROXY_URL_PREFIX}/{hf_url}" if NEED_PROXY else hf_url
+    print(f"{hf_url}/api/models/{repo_id}")
+    print(requests.get(f"{hf_url}/api/models/{repo_id}", headers=headers).text)
     json_info = requests.get(f"{hf_url}/api/models/{repo_id}",headers=headers).json()
     file_name_list =  json_info.get("siblings")
     if file_name_list is None:
