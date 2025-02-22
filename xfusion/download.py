@@ -43,12 +43,36 @@ if NEED_PROXY:
 
     print(f"Files from huggingface will be downloaded via url proxy[{PROXY_URL_PREFIX}].")
 
+def get_hf_repo_filename_url_dict(repo_id:str,subfolders=None,token=None) -> dict:
+    headers = {"authorization":token}
+    json_info = requests.get(f"https://huggingface.co/api/models/{repo_id}",headers=headers).json()
+    file_name_list =  json_info.get("siblings")
+    if file_name_list is None:
+        print(f"The repo {repo_id} is not existing or the repo is private.")
+        return {}
+    complete_filename_url_dict = {}
+    for item in file_name_list:
+        file_name = item["rfilename"]
+        complete_filename_url_dict[file_name] = f"https://huggingface.co/eramth/flux-4bit/resolve/main/{file_name}?download=true"
+
+    if subfolders is None:
+        return complete_filename_url_dict
+
+    subfolders = [subfolders] if not isinstance(subfolders,list) else subfolders
+    filename_url_dict = {}
+    for file_name in complete_filename_url_dict.keys():
+        for subfolder in subfolders:
+            subfolder = f"{subfolder}/" if not subfolder.endswith("/") else subfolder
+            if file_name.startswith(subfolder):
+                filename_url_dict[file_name] = complete_filename_url_dict[file_name]
+
+    return filename_url_dict
 
 def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
 
     if not (url.startswith("http://") or url.startswith("https://")):
         raise ValueError("A valid URL is required.")
-    
+
     directory = "./" if directory is None else directory
     url = urlparse(url)
     headers = kwargs.pop("headers",{})
@@ -107,6 +131,16 @@ def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
     os.rename(f"{directory}unfinished.{filename}",f"{directory}{filename}")
     return f"{directory}{filename}"
 
+def download_hf_repo_files(repo_id,directory,*,subfolders=None,token=None):
+    directory = directory + "/" if not directory.endswith("/") else directory
+    filename_url_dict = get_hf_repo_filename_url_dict(repo_id, subfolders, token)
+    r = []
+    for filename,url in filename_url_dict.items():
+        download_directory = directory
+        download_directory = download_directory + "/".join(filename.split("/")[:-1])
+        filename = filename.split("/")[-1]
+        r.append(download_file(url,filename=filename,directory=download_directory))
+    return r
 
 class DownloadArgumentsMixin:
     overrides = ["download_kwargs","set_download_kwargs"]
