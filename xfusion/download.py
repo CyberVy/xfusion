@@ -5,43 +5,7 @@ from tqdm import tqdm
 from urllib.parse import urlparse,unquote
 import os
 import re
-import functools
 
-
-if NEED_PROXY:
-    import huggingface_hub.file_download as fd
-    from huggingface_hub import get_session
-    session = get_session()
-    original_session_get = session.get
-    @functools.wraps(original_session_get)
-    def get(url,*args,**kwargs):
-        if not url.startswith(PROXY_URL_PREFIX):
-            url = f"{PROXY_URL_PREFIX}/{url}"
-        print(url)
-        return original_session_get(url,*args,**kwargs)
-    session.get = get
-
-    original_session_request = session.request
-    @functools.wraps(original_session_request)
-    def request(method,url,*args,**kwargs):
-        # a header with content-length is required, which is not supported by cloudflare.
-        if not url.startswith(PROXY_URL_PREFIX):
-             url = f"{PROXY_URL_PREFIX}/{url}"
-        print(url,method)
-        return original_session_request(method,url,*args,**kwargs)
-    session.request = request
-
-    # huggingface hub use 'http_get' to download files
-    # so it's easy to download files via proxy by editing this function
-    original_http_get = fd.http_get
-    @functools.wraps(original_http_get)
-    def http_get(url:str,*args,**kwargs):
-        if not url.startswith(PROXY_URL_PREFIX):
-            url = f"{PROXY_URL_PREFIX}/{url}"
-        return original_http_get(url,*args,**kwargs)
-    fd.http_get = http_get
-
-    print(f"Files from huggingface will be downloaded via url proxy[{PROXY_URL_PREFIX}].")
 
 def get_hf_repo_filename_url_dict(repo_id:str,subfolders=None,token=None) -> dict:
     token = token if token is not None else HF_HUB_TOKEN
