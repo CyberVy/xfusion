@@ -139,7 +139,7 @@ def download_hf_repo_files(repo_id,directory,*,subfolders=None,token=None):
         download_directory = directory
         download_directory = download_directory + "/".join(filename.split("/")[:-1])
         filename = filename.split("/")[-1]
-        r.append(download_file(url,filename=filename,directory=download_directory))
+        r.append([download_file(url,filename=filename,directory=download_directory),url])
     return r
 
 class DownloadArgumentsMixin:
