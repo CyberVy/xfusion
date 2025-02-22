@@ -11,7 +11,7 @@ def get_hf_repo_filename_url_dict(repo_id:str,subfolders=None,token=None) -> dic
     headers ={}
     token = token if token is not None else HF_HUB_TOKEN
     headers.update(authorization=f"Bearer {token}")
-    
+
     hf_url = "https://huggingface.co"
     hf_url = f"{PROXY_URL_PREFIX}/{hf_url}" if NEED_PROXY else hf_url
     json_info = requests.get(f"{hf_url}/api/models/{repo_id}",headers=headers).json()
@@ -100,8 +100,9 @@ def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
     os.rename(f"{directory}unfinished.{filename}",f"{directory}{filename}")
     return f"{directory}{filename}"
 
-def download_hf_repo_files(repo_id,directory,*,subfolders=None,token=None):
+def download_hf_repo_files(repo_id:str,directory,*,subfolders=None,token=None):
     directory = directory + "/" if not directory.endswith("/") else directory
+    directory += repo_id.split("/")[-1] + "/"
     filename_url_dict = get_hf_repo_filename_url_dict(repo_id, subfolders, token)
     r = []
     for filename,url in filename_url_dict.items():
