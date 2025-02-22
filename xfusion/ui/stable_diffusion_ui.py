@@ -912,7 +912,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
         return download_file(url,directory=directory)
 
     @allow_return_error
-    def run_code_fn(code):
+    def run_code_fn(code, progress=gr.Progress(track_tqdm=True)):
         exec(code,_globals)
         if _globals:
             return _globals.pop("_cout", None)
