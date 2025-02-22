@@ -199,7 +199,7 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
     pipelines = [pipelines] if not isinstance(pipelines, list) else pipelines
     pipelines: list = pipelines[:GPU_COUNT]
     if len(pipelines) == 0:
-        raise RuntimeError("No available GPU.")
+        print("Warning: No available GPU.")
 
     lock_state = [False, None]
 
