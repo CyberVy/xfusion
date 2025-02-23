@@ -12,7 +12,7 @@ setup(
         'gradio==5.17.0',
         'diffusers>=0.32.2',
         'bitsandbytes>=0.45.2',
-        'transformers==4.48.3',
+        'transformers>=4.48.3',
         'compel',
         'opencv-python',
         'tqdm',
