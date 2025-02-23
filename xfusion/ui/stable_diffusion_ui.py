@@ -2,7 +2,7 @@ import gradio as gr
 from .ui_utils import lists_append,lock,safe_block
 from ..utils import allow_return_error,threads_execute,free_memory_to_system
 from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
-from ..download import download_file
+from ..download import download_file,download_hf_repo_files
 from ..const import GPU_COUNT,GPU_NAME
 from ..components.component_const import default_stable_diffusion_model_url
 import sys,platform
@@ -433,7 +433,7 @@ def render_download_file(fns):
         download_file_outputs = []
         with gr.Row():
             with gr.Column():
-                download_file_inputs.append(gr.Textbox(placeholder="Give me a url of the target file!",label="File URL"))
+                download_file_inputs.append(gr.Textbox(placeholder="Give me a url or HF repo id!",label="File URL"))
                 download_file_inputs.append(gr.Textbox(placeholder="Where you want to store the file.",label="Directory"))
             with gr.Column():
                 download_file_outputs.append(gr.Textbox(label="Result"))
@@ -909,7 +909,10 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
 
     @allow_return_error
     def download_file_fn(url,directory,progress=gr.Progress(track_tqdm=True)):
-        return download_file(url,directory=directory)
+        if url.startswith("http://") or url.startswith("https://"):
+            return download_file(url, directory=directory)
+        else:
+            return download_hf_repo_files(url, directory=directory)
 
     @allow_return_error
     def run_code_fn(code, progress=gr.Progress(track_tqdm=True)):
