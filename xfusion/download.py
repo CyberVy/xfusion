@@ -42,7 +42,7 @@ def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
     if not (url.startswith("http://") or url.startswith("https://")):
         raise ValueError("A valid URL is required.")
 
-    directory = "./" if directory is None else directory
+    directory = "./" if not directory else directory
     url = urlparse(url)
     headers = kwargs.pop("headers",{})
 
