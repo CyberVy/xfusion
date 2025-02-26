@@ -26,7 +26,7 @@ def render_model_selection(fns):
         with gr.Row():
             with gr.Column():
                 model_selection_inputs.append(
-                    gr.Textbox(value=default_stable_diffusion_model_url, placeholder="Give me a url of the model!",
+                    gr.Textbox(value="eramth/realism-sdxl", placeholder="Give me a url of the model!",
                                label="Model"))
                 model_selection_inputs.append(gr.Textbox(placeholder="Model version", label="Model Version"))
             with gr.Column():
