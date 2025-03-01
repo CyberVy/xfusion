@@ -81,7 +81,7 @@ def render_ip_adapter(fns):
             with gr.Column():
                 ip_adapter_outputs.append(gr.Textbox(label="Result"))
                 with gr.Row():
-                    set_ip_adapter_inputs.append(gr.Slider(0, 1, 0.7, step=0.05, label="IP-Adapter strength"))
+                    set_ip_adapter_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="IP-Adapter strength"))
                     set_ip_adapter_strength_btn = gr.Button("Set IP-Adapter Strength")
                 set_ip_adapter_btn.click(fn=fns["set_ip_adapter_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
                 set_ip_adapter_strength_btn.click(fn=fns["set_ip_adapter_strength_fn"], inputs=set_ip_adapter_inputs, outputs=ip_adapter_outputs)
