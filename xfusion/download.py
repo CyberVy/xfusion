@@ -1,5 +1,4 @@
-from .const import XFUSION_COOKIE,HF_HUB_TOKEN,CIVITAI_TOKEN
-from .const import PROXY_URL_PREFIX,NEED_PROXY
+from . import const
 import requests
 from tqdm import tqdm
 from urllib.parse import urlparse,unquote
@@ -9,11 +8,11 @@ import re
 
 def get_hf_repo_filename_url_dict(repo_id:str,subfolders=None,token=None) -> dict:
     headers ={}
-    token = token if token is not None else HF_HUB_TOKEN
+    token = token if token is not None else const.HF_HUB_TOKEN
     headers.update(authorization=f"Bearer {token}")
 
     hf_url = "https://huggingface.co"
-    hf_url = f"{PROXY_URL_PREFIX}/{hf_url}" if NEED_PROXY else hf_url
+    hf_url = f"{const.PROXY_URL_PREFIX}/{hf_url}" if const.NEED_PROXY else hf_url
     json_info = requests.get(f"{hf_url}/api/models/{repo_id}",headers=headers).json()
     file_name_list =  json_info.get("siblings")
     if file_name_list is None:
@@ -47,19 +46,19 @@ def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
     headers = kwargs.pop("headers",{})
 
     if headers.get("cookie") is None:
-        headers.update(cookie=XFUSION_COOKIE)
+        headers.update(cookie=const.XFUSION_COOKIE)
 
     if url.hostname == "huggingface.co":
         if headers.get("authorization") is None:
-            headers.update(authorization=f"Bearer {HF_HUB_TOKEN}")
+            headers.update(authorization=f"Bearer {const.HF_HUB_TOKEN}")
 
-        url = urlparse(f"{PROXY_URL_PREFIX}/{url.geturl()}") if NEED_PROXY and PROXY_URL_PREFIX else url
+        url = urlparse(f"{const.PROXY_URL_PREFIX}/{url.geturl()}") if const.NEED_PROXY and const.PROXY_URL_PREFIX else url
 
     elif url.hostname == "civitai.com":
         if headers.get("authorization") is None:
-            headers.update(authorization=f"Bearer {CIVITAI_TOKEN}")
+            headers.update(authorization=f"Bearer {const.CIVITAI_TOKEN}")
 
-        url = urlparse(f"{PROXY_URL_PREFIX}/{url.geturl()}") if NEED_PROXY and PROXY_URL_PREFIX else url
+        url = urlparse(f"{const.PROXY_URL_PREFIX}/{url.geturl()}") if const.NEED_PROXY and const.PROXY_URL_PREFIX else url
 
     kwargs.update(headers=headers)
 
