@@ -6,7 +6,7 @@ from .component_const import SD_V1_CONFIG_PATH,SD_V2_CONFIG_PATH,SD_3_CONFIG_PAT
 from .component_const import SD_V1_V2_CONTROLNET_CONFIG_PATH,SD_XL_CONTROLNET_CONFIG_PATH
 from .component_utils import infer_model_version
 from ..download import download_file
-from ..const import HF_HUB_TOKEN
+from .. import const
 import requests
 import torch
 import os
@@ -17,7 +17,7 @@ def load_stable_diffusion_controlnet(controlnet_model,
     use_internet = True
     model_version = str(model_version).lower()
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if download_kwargs is None:
@@ -114,7 +114,7 @@ def load_stable_diffusion_pipeline(model=None,
     if download_kwargs is None:
         download_kwargs = {}
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if model.startswith(".") or model.startswith("/") or model.startswith("~"):
