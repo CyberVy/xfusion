@@ -1,4 +1,4 @@
-from .const import HF_HUB_TOKEN
+from . import const
 import requests
 
 
@@ -14,7 +14,7 @@ def inference_api(prompt,model,token=None,**kwargs):
         ...
     :return:
     """
-    token = token if token is not None else HF_HUB_TOKEN
+    token = token if token is not None else const.HF_HUB_TOKEN
     API_URL = f"https://api-inference.huggingface.co/models/{model}"
     headers = {"Authorization": f"Bearer {token}", "x-use-cache":"False"}
     try:
