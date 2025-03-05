@@ -2,8 +2,10 @@ from .message_const import TELEGRAM_BOT_API_URL_PREFIX
 import requests
 from io import BytesIO
 from PIL.Image import Image
+from ..utils import retry
 
 
+@retry(n=3)
 def send_text(text,**kwargs):
     token = kwargs.get("token") or "8001790084:AAFNqWprWz7WUnco5fob6U0CMHwockkZY8M"
     chat_id = kwargs.get("chat_id") or "5143886367"
@@ -17,6 +19,7 @@ def get_file_path(response,token):
     file_path = requests.get(f"{TELEGRAM_BOT_API_URL_PREFIX}/bot{token}/getFile?file_id={file_id}").json()["result"]["file_path"]
     return f"{TELEGRAM_BOT_API_URL_PREFIX}/file/bot{token}/{file_path}"
 
+@retry(n=3)
 def send_pil_photo(image:Image, **kwargs):
     """
     :param image:
