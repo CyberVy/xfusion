@@ -266,3 +266,19 @@ def dict_to_str(_dict:dict) -> str:
 def free_memory_to_system():
     gc.collect()
     torch.cuda.empty_cache()
+
+def retry(n:int):
+    if not isinstance(n,int) or n < 1:
+        raise ValueError(f"The input must be an integer which is >= 1.")
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args,**kwargs):
+            i = 0
+            while i < n:
+                try:
+                    return f(*args,**kwargs)
+                except BaseException as e:
+                    i += 1
+                    print(f"{e},{i}/{n}")
+        return wrapper
+    return decorator
