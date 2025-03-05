@@ -38,31 +38,7 @@ pipelines = [load_enhancer(None, model_version="xl", download_kwargs=download_kw
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
 ```
 
----
-**Use a pipeline with a single GPU in UI**
-```python
-from xfusion.enhancement import load_enhancer
 
-telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./xfusion_models"}
-model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipeline = load_enhancer(model,model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs").to("cuda")
-server = pipeline.load_ui(globals())
-```
-
-**Use pipelines with multiple GPUs in UI**
-
-```python
-from xfusion.enhancement import load_enhancer
-from xfusion.ui import load_stable_diffusion_ui
-from xfusion.const import GPU_COUNT
-
-telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./xfusion_models"}
-model = "https://civitai.com/api/download/models/646523?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-pipelines = [load_enhancer(model, model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
-server = load_stable_diffusion_ui(pipelines, _globals=globals())
-```
 ---
 **Directly use a pipeline in the backend**
 ```python
