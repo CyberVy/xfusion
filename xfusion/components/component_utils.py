@@ -4,7 +4,7 @@ from ..utils import naive_async
 from .component_const import t5_tokenizer_url_list,t5_encoder_url_list
 from .component_const import clip_tokenizer_url_list,clip_encoder_url_list
 from ..download import download_file
-from ..const import HF_HUB_TOKEN
+from .. import const
 from transformers import T5EncoderModel,T5Tokenizer,CLIPTextModel,CLIPTokenizer
 from diffusers import AutoencoderKL
 from diffusers.loaders.single_file_utils import load_state_dict,infer_diffusers_model_type
@@ -51,7 +51,7 @@ def load_t5_tokenizer(directory=None, use_local_files=False, delete_internet_fil
     """
     download_kwargs = {} if download_kwargs is None else download_kwargs
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
 
     directory = "./t5_tokenizer" if directory is None else directory
     file_list = []
@@ -79,7 +79,7 @@ def load_t5_encoder(directory=None, use_local_files=False, delete_internet_files
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
 
     directory = "./t5_encoder" if directory is None else directory
     file_list = []
@@ -146,7 +146,7 @@ def load_clip_tokenizer(directory=None,use_local_files=False,delete_internet_fil
     """
     download_kwargs = {} if download_kwargs is None else download_kwargs
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
 
     directory = "./clip_tokenizer" if directory is None else directory
     file_list = []
@@ -167,7 +167,7 @@ def load_clip_encoder(directory=None,use_local_files=False,delete_internet_files
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
 
     directory = "./clip_encoder" if directory is None else directory
     file_list = []
