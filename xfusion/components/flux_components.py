@@ -6,7 +6,7 @@ from .component_const import flux_scheduler_url_list
 from .component_utils import load_t5_tokenizer,load_t5_encoder
 from .component_utils import load_clip_tokenizer,load_clip_encoder
 from ..download import download_file
-from ..const import HF_HUB_TOKEN
+from .. import const
 from diffusers import FluxPipeline
 from diffusers import AutoencoderKL,FluxTransformer2DModel,FlowMatchEulerDiscreteScheduler
 from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
@@ -19,12 +19,12 @@ def load_flux_pipeline(model=None,download_kwargs=None, **kwargs):
     if download_kwargs is None:
         download_kwargs = {}
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if model.startswith(".") or model.startswith("/") or model.startswith("~"):
         use_internet = False
-    
+
     kwargs.update(cache_dir=download_kwargs.get("directory"))
 
     if use_internet:
@@ -80,7 +80,7 @@ def load_flux_transformer(
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
 
     directory = "./transformer" if directory is None else directory
 
@@ -117,7 +117,7 @@ def load_flux_vae(directory=None,use_local_files=False,delete_internet_files=Fal
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
 
     directory = "./vae" if directory is None else directory
     file_list = []
@@ -145,7 +145,7 @@ def load_flux_scheduler(directory=None,use_local_files=False,delete_internet_fil
     if kwargs.get("torch_dtype") is None:
         kwargs.update({"torch_dtype": torch.float16})
     if kwargs.get("token") is None:
-        kwargs.update(token=HF_HUB_TOKEN)
+        kwargs.update(token=const.HF_HUB_TOKEN)
 
     directory = "./scheduler" if directory is None else directory
     file_list = []
