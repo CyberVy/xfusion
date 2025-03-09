@@ -123,7 +123,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,IPAdapterEn
                  "sync_sub_pipelines_mixin_kwargs",
                  "check_original_pipeline","check_inference_kwargs",
                  "set_scheduler","reset_scheduler",
-                 "clear","reload","load"]
+                 "to","clear","reload","load"]
 
     @property
     def is_empty_pipeline(self):
@@ -209,6 +209,10 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,IPAdapterEn
 
     def reset_scheduler(self):
         self.scheduler = self._scheduler
+
+    def to(self, *args, **kwargs):
+        self.__oins__.to(*args, **kwargs)
+        return self
 
     def clear(self):
         if not hasattr(self,"components"):
