@@ -179,7 +179,6 @@ def render_controlnet_text_to_image(fns):
                 controlnet_t2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
                 controlnet_t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                 controlnet_t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                controlnet_t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
                 with gr.Row():
                     controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                     controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
@@ -229,7 +228,6 @@ def render_controlnet_image_to_image(fns):
                 controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
                 controlnet_i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                 controlnet_i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                controlnet_i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
                 with gr.Row():
                     controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                     controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
@@ -281,7 +279,6 @@ def render_controlnet_inpainting(fns):
                 controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
                 controlnet_inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
                 controlnet_inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
-                controlnet_inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
                 with gr.Row():
                     controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
                     controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
