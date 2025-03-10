@@ -1,15 +1,17 @@
 from .enhancement_utils import PipelineEnhancerBase
 from ..components.flux_components import load_flux_pipeline
 from ..ui.flux_ui import load_flux_ui
-from ..utils import normalize_image,dict_to_str
+from ..utils import normalize_image,dict_to_str,free_memory_to_system
 from diffusers import FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline
+from diffusers import FluxControlPipeline,FluxControlImg2ImgPipeline,FluxControlInpaintPipeline
 from PIL import Image
 import torch
 import threading
 from random import randint
 
 
-pipeline_map = {"flux": (FluxPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline)}
+pipeline_map = {"flux": (FluxPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline,
+                         FluxControlPipeline,FluxControlImg2ImgPipeline,FluxControlInpaintPipeline)}
 
 
 def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhancer=True,**kwargs):
@@ -75,6 +77,22 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                                                    width=width, height=height,
                                                    num=num,seed=seed,
                                                    use_enhancer=use_enhancer,**kwargs)
+
+    def load_controlnet(self,controlnet_model=None):
+        if controlnet_model is None:
+            controlnet_model = "https://huggingface.co/black-forest-labs/FLUX.1-Canny-dev-lora/resolve/main/flux1-canny-dev-lora.safetensors?download=true"
+        self.set_lora(controlnet_model,"controlnet",1)
+        components = self.components
+        components.pop("image_encoder", None)
+        components.pop("feature_extractor", None)
+        self.text_to_image_controlnet_pipeline = self.enhancer_class(FluxControlPipeline(**components),init_sub_pipelines=False)
+        self.image_to_image_controlnet_pipeline = self.enhancer_class(FluxControlImg2ImgPipeline(**components),init_sub_pipelines=False)
+        self.inpainting_controlnet_pipeline = self.enhancer_class(FluxControlInpaintPipeline(**components),init_sub_pipelines=False)
+        
+    def offload_controlnet(self):
+        # self.delete_adapters("controlnet")
+        print("offload controlnet is not implemented now.")
+        free_memory_to_system()
 
     @classmethod
     def from_url(cls,url=None,init_sub_pipelines=True,**kwargs):
