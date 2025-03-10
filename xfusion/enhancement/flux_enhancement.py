@@ -1,7 +1,7 @@
 from .enhancement_utils import PipelineEnhancerBase
 from ..components.flux_components import load_flux_pipeline
 from ..ui.flux_ui import load_flux_ui
-from ..utils import normalize_image,dict_to_str
+from ..utils import normalize_image,dict_to_str,free_memory_to_system
 from diffusers import FluxPipeline,FluxImg2ImgPipeline,FluxInpaintPipeline
 from PIL import Image
 import torch
@@ -75,6 +75,16 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                                                    width=width, height=height,
                                                    num=num,seed=seed,
                                                    use_enhancer=use_enhancer,**kwargs)
+
+    def load_controlnet(self,controlnet_model=None):
+        if controlnet_model is None:
+            controlnet_model = "https://huggingface.co/black-forest-labs/FLUX.1-Canny-dev-lora/resolve/main/flux1-canny-dev-lora.safetensors?download=true"
+        self.set_lora(controlnet_model,"controlnet",1)
+
+    def offload_controlnet(self):
+        # self.delete_adapters("controlnet")
+        print("offload controlnet is not implemented now.")
+        free_memory_to_system()
 
     @classmethod
     def from_url(cls,url=None,init_sub_pipelines=True,**kwargs):
