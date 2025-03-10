@@ -1,8 +1,8 @@
 import gradio as gr
 from ..const import GPU_COUNT,GPU_NAME
-from .ui_utils import safe_block,lock
+from .ui_utils import safe_block,lock,lists_append
 from ..utils import allow_return_error,threads_execute,free_memory_to_system
-from ..utils import convert_mask_image_to_rgb
+from ..utils import convert_mask_image_to_rgb,convert_image_to_canny
 from ..download import download_file,download_hf_repo_files
 import functools
 import inspect
@@ -146,6 +146,173 @@ def render_inpainting(fns):
                 inpainting_btn = gr.Button("Run")
                 inpainting_btn.click(fn=fns["inpainting_fn"], inputs=inpainting_inputs, outputs=inpainting_outputs)
 
+def render_controlnet_selection(fns):
+    controlnet_inputs = []
+    controlnet_outputs = []
+    with gr.Accordion("Controlnet Selection", open=False):
+        with gr.Row():
+            with gr.Column():
+                controlnet_inputs.append(gr.Textbox(placeholder="Give me a controlnet URL!", label="Controlnet Model"))
+                controlnet_inputs[0].change(fn=fns["set_default_controlnet_for_auto_load_controlnet_fn"],
+                                            inputs=controlnet_inputs[0], outputs=controlnet_outputs)
+                with gr.Row():
+                    load_controlnet_button = gr.Button("Load controlnet")
+                    offload_controlnet_button = gr.Button("Offload controlnet")
+            controlnet_outputs.append(gr.Textbox(label="Result"))
+            load_controlnet_button.click(fn=fns["load_controlnet_fn"], outputs=controlnet_outputs)
+            offload_controlnet_button.click(fn=fns["offload_controlnet_fn"], outputs=controlnet_outputs)
+
+def render_controlnet_text_to_image(fns):
+    with gr.Accordion("Controlnet Text To Image", open=False):
+        gr.Markdown("# Controlnet Text To Image")
+        controlnet_t2i_inputs = []
+        controlnet_t2i_outputs = []
+        controlnet_t2i_control_image_preview_inputs = []
+        controlnet_t2i_control_image_preview_outputs = []
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Controlnet Image"):
+                    lists_append(gr.Image(type="pil", label="Controlnet Image"),
+                                 [controlnet_t2i_inputs, controlnet_t2i_control_image_preview_inputs])
+                controlnet_t2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+            with gr.Column():
+                controlnet_t2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                controlnet_t2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                controlnet_t2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                controlnet_t2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    controlnet_t2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Row():
+                    lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),
+                                 [controlnet_t2i_inputs, controlnet_t2i_control_image_preview_inputs])
+                    lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
+                                 [controlnet_t2i_inputs, controlnet_t2i_control_image_preview_inputs])
+                controlnet_t2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                for component in controlnet_t2i_control_image_preview_inputs:
+                    component.change(fn=fns["controlnet_preview_fn"],
+                                     inputs=controlnet_t2i_control_image_preview_inputs,
+                                     outputs=controlnet_t2i_control_image_preview_outputs)
+            with gr.Column():
+                with gr.Row():
+                    controlnet_t2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    controlnet_t2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    controlnet_t2i_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["controlnet_text_to_image_fn"]).parameters.values())])
+                    controlnet_t2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({controlnet_t2i_args_name}):\n  # kwargs['callback_on_step_end'] = cbk.SDXLControlnetCFGCutoffCallback(0.5)\n  return {controlnet_t2i_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                controlnet_t2i_outputs.append(gr.Textbox(label="Result"))
+                controlnet_t2i_btn = gr.Button("Run")
+                controlnet_t2i_btn.click(fn=fns["controlnet_text_to_image_fn"], inputs=controlnet_t2i_inputs,
+                                         outputs=controlnet_t2i_outputs)
+
+def render_controlnet_image_to_image(fns):
+    with gr.Accordion("Controlnet Image To Image", open=False):
+        gr.Markdown("# Controlnet Image To Image")
+        controlnet_i2i_inputs = []
+        controlnet_i2i_outputs = []
+        controlnet_i2i_control_image_preview_inputs = []
+        controlnet_i2i_control_image_preview_outputs = []
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Images"):
+                    with gr.Row():
+                        lists_append(gr.Image(type="pil", label="Controlnet Image"),
+                                     [controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                        controlnet_i2i_inputs.append(gr.Image(type="pil", label="Image"))
+                controlnet_i2i_inputs.append(gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+            with gr.Column():
+                controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                controlnet_i2i_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    controlnet_i2i_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Row():
+                    lists_append((gr.Slider(0, 255, 100, step=5, label="Low Threshold")),
+                                 [controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                    lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
+                                 [controlnet_i2i_inputs, controlnet_i2i_control_image_preview_inputs])
+                controlnet_i2i_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                for component in controlnet_i2i_control_image_preview_inputs:
+                    component.change(fn=fns["controlnet_preview_fn"],
+                                     inputs=controlnet_i2i_control_image_preview_inputs,
+                                     outputs=controlnet_i2i_control_image_preview_outputs)
+
+            with gr.Column():
+                with gr.Row():
+                    controlnet_i2i_inputs.append(gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    controlnet_i2i_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    controlnet_i2i_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["controlnet_image_to_image_fn"]).parameters.values())])
+                    controlnet_i2i_inputs.append(
+                        gr.Code(
+                            f"def preprocess({controlnet_i2i_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_i2i_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                controlnet_i2i_outputs.append(gr.Textbox(label="Result"))
+                controlnet_i2i_btn = gr.Button("Run")
+                controlnet_i2i_btn.click(fn=fns["controlnet_image_to_image_fn"], inputs=controlnet_i2i_inputs,
+                                         outputs=controlnet_i2i_outputs)
+
+def render_controlnet_inpainting(fns):
+    with gr.Accordion("Controlnet Inpainting", open=False):
+        gr.Markdown("# Controlnet Inpainting")
+        controlnet_inpainting_inputs = []
+        controlnet_inpainting_outputs = []
+        controlnet_inpainting_control_image_preview_inputs = []
+        controlnet_inpainting_control_image_preview_outputs = []
+        with gr.Row():
+            with gr.Column():
+                with gr.Accordion("Images"):
+                    with gr.Column():
+                        lists_append(gr.Image(type="pil", label="Controlnet Image"),
+                                     [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                        controlnet_inpainting_inputs.append(gr.ImageMask(type="pil", label="Inpainting Image"))
+                controlnet_inpainting_inputs.append(
+                    gr.Textbox(placeholder="Give me a prompt!", label="Prompt", lines=5))
+            with gr.Column():
+                controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.5, step=0.05, label="Controlnet Scale"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 1, 0.8, step=0.1, label="Strength"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 10, 2.5, step=0.1, label="Guidance Scale"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 50, 20, step=1, label="Step"))
+                controlnet_inpainting_inputs.append(gr.Slider(0, 10, 0, step=1, label="CLIP Skip"))
+                with gr.Row():
+                    controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Width"))
+                    controlnet_inpainting_inputs.append(gr.Slider(512, 2048, 1024, step=8, label="Height"))
+                with gr.Row():
+                    lists_append(gr.Slider(0, 255, 100, step=5, label="Low Threshold"),
+                                 [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                    lists_append(gr.Slider(0, 255, 200, step=5, label="High Threshold"),
+                                 [controlnet_inpainting_inputs, controlnet_inpainting_control_image_preview_inputs])
+                controlnet_inpainting_control_image_preview_outputs.append(gr.Image(label="Control Image Preview"))
+                for component in controlnet_inpainting_control_image_preview_inputs:
+                    component.change(fn=fns["controlnet_preview_fn"],
+                                     inputs=controlnet_inpainting_control_image_preview_inputs,
+                                     outputs=controlnet_inpainting_control_image_preview_outputs)
+
+            with gr.Column():
+                with gr.Row():
+                    controlnet_inpainting_inputs.append(
+                        gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
+                    controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
+                with gr.Accordion("Code", open=False):
+                    controlnet_inpainting_args_name = ",".join([str(item).split("=")[0] for item in list(
+                        inspect.signature(fns["controlnet_inpainting_fn"]).parameters.values())])
+                    controlnet_inpainting_inputs.append(
+                        gr.Code(
+                            f"def preprocess({controlnet_inpainting_args_name}):\n  kwargs['callback_on_step_end'] = None\n  return {controlnet_inpainting_args_name.replace('*', '')}",
+                            language="python", label="Python"))
+                controlnet_inpainting_outputs.append(gr.Textbox(label="Result"))
+                controlnet_inpainting_btn = gr.Button("Run")
+                controlnet_inpainting_btn.click(fn=fns["controlnet_inpainting_fn"], inputs=controlnet_inpainting_inputs,
+                                                outputs=controlnet_inpainting_outputs)
+
 def render_download_file(fns):
     with gr.Accordion("Download File", open=False):
         gr.Markdown("# Download File")
@@ -188,6 +355,12 @@ def render_flux_ui(fns):
         render_image_to_image(fns)
         render_inpainting(fns)
 
+        with gr.Accordion("Controlnet",open=False):
+            render_controlnet_selection(fns)
+            render_controlnet_text_to_image(fns)
+            render_controlnet_image_to_image(fns)
+            render_controlnet_inpainting(fns)
+
         with gr.Accordion("Dev Tools", open=False):
             render_download_file(fns)
             render_code(fns)
@@ -219,6 +392,24 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
             else:
                 return f(*args, **kwargs)
 
+        return wrapper
+
+    def auto_load_controlnet(f):
+        @functools.wraps(f)
+        def wrapper(*args,**kwargs):
+            for pipeline in pipelines:
+                if "controlnet" not in pipeline.get_list_adapters():
+                    pipeline.load_controlnet()
+            return f(*args,**kwargs)
+        return wrapper
+
+    def auto_offload_controlnet(f):
+        @functools.wraps(f)
+        def wrapper(*args,**kwargs):
+            for pipeline in pipelines:
+                if "controlnet" in pipeline.get_list_adapters():
+                    pipeline.offload_controlnet()
+            return f(*args,**kwargs)
         return wrapper
 
     def auto_gpu_distribute(f):
@@ -375,6 +566,143 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
         def f(pipeline):
             return pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(
                 image=_image, mask_image=mask_image,
+                prompt=prompt,
+                strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+                width=width, height=height,
+                seed=int(seed), num=int(num), **kwargs)
+
+        return f
+
+
+    @allow_return_error
+    @auto_gpu_loop
+    def set_default_controlnet_for_auto_load_controlnet_fn(controlnet_model):
+        def f(pipeline):
+            pipeline.load_controlnet = functools.partial(pipeline.load_controlnet, controlnet_model=controlnet_model)
+            if controlnet_model:
+                return f"{controlnet_model} is set as the default controlnet model."
+            else:
+                return f"Using the default controlnet model."
+
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @auto_gpu_loop
+    def load_controlnet_fn(progress=gr.Progress(track_tqdm=True)):
+        def f(pipeline):
+            pipeline.load_controlnet()
+            return f"Controlnet is loaded."
+
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @auto_gpu_loop
+    def offload_controlnet_fn():
+        def f(pipeline):
+            pipeline.offload_controlnet()
+            return f"Controlnet is offloaded."
+
+        return f
+
+    @allow_return_error
+    def controlnet_preview_fn(image, low_threshold, high_threshold):
+        if image:
+            return convert_image_to_canny(image, low_threshold, high_threshold)
+
+
+    @allow_return_error
+    @lock(lock_state)
+    @allow_code_control
+    @auto_load_controlnet
+    @auto_gpu_distribute
+    def controlnet_text_to_image_fn(
+            image,
+            prompt,
+            controlnet_conditioning_scale, guidance_scale, num_inference_steps,
+            width, height,
+            low_threshold, high_threshold,
+            seed, num,
+            code,
+            progress=gr.Progress(track_tqdm=True), **kwargs):
+
+        if not image:
+            raise ValueError("Please input an image.")
+
+        image = convert_image_to_canny(image, low_threshold, high_threshold)
+
+        def f(pipeline):
+            pipeline.set_lora_strength("controlnet",controlnet_conditioning_scale)
+            return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
+                image=image,
+                prompt=prompt,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+                width=width, height=height,
+                seed=int(seed), num=int(num), **kwargs)
+
+        return f
+
+    @allow_return_error
+    @lock(lock_state)
+    @allow_code_control
+    @auto_load_controlnet
+    @auto_gpu_distribute
+    def controlnet_image_to_image_fn(
+            control_image, image,
+            prompt,
+            controlnet_conditioning_scale, strength,
+            guidance_scale, num_inference_steps,
+            width, height,
+            low_threshold, high_threshold,
+            seed, num,
+            code,
+            progress=gr.Progress(track_tqdm=True), **kwargs):
+
+        if not image and not control_image:
+            raise ValueError("Please input the images.")
+
+        control_image = control_image if control_image else image
+        image = image if image else control_image
+        control_image = convert_image_to_canny(control_image, low_threshold, high_threshold)
+
+        def f(pipeline):
+            pipeline.set_lora_strength("controlnet",controlnet_conditioning_scale)
+            return pipeline.image_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
+                control_image=control_image, image=image,
+                prompt=prompt,
+                strength=strength,
+                guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
+                width=width, height=height,
+                seed=int(seed), num=int(num), **kwargs)
+        return f
+
+    @lock(lock_state)
+    @allow_code_control
+    @auto_load_controlnet
+    @auto_gpu_distribute
+    def controlnet_inpainting_fn(
+            control_image, image,
+            prompt,
+            controlnet_conditioning_scale, strength,
+            guidance_scale, num_inference_steps,
+            width, height,
+            low_threshold, high_threshold,
+            seed, num,
+            code,
+            progress=gr.Progress(track_tqdm=True), **kwargs):
+
+        _image = image["background"].convert("RGB")
+        mask_image = convert_mask_image_to_rgb(image["layers"][0])
+
+        control_image = control_image if control_image else _image
+        control_image = convert_image_to_canny(control_image, low_threshold, high_threshold)
+
+        def f(pipeline):
+            pipeline.set_lora_strength("controlnet", controlnet_conditioning_scale)
+            return pipeline.inpainting_controlnet_pipeline.generate_image_and_send_to_telegram(
+                control_image=control_image, image=_image, mask_image=mask_image,
                 prompt=prompt,
                 strength=strength,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
