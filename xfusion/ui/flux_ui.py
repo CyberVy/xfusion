@@ -633,7 +633,7 @@ def load_flux_ui(pipelines, _globals=None,**kwargs):
         def f(pipeline):
             pipeline.set_lora_strength("controlnet",controlnet_conditioning_scale)
             return pipeline.text_to_image_controlnet_pipeline.generate_image_and_send_to_telegram(
-                image=image,
+                control_image=image,
                 prompt=prompt,
                 guidance_scale=guidance_scale, num_inference_steps=num_inference_steps,
                 width=width, height=height,
