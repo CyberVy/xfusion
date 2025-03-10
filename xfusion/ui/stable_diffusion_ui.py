@@ -408,12 +408,12 @@ def render_controlnet_inpainting(fns):
                                      outputs=controlnet_inpainting_control_image_preview_outputs)
 
             with gr.Column():
+                with gr.Accordion("IP-Adapter Image", open=False):
+                    controlnet_inpainting_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Row():
                     controlnet_inpainting_inputs.append(
                         gr.Textbox(value="0", placeholder="Give me an integer.", label="Seed"))
                     controlnet_inpainting_inputs.append(gr.Slider(1, 10, 1, step=1, label="Num"))
-                with gr.Accordion("IP-Adapter Image",open=False):
-                    controlnet_inpainting_inputs.append(gr.Image(type="pil", label="IP-Adapter Image"))
                 with gr.Accordion("Code", open=False):
                     controlnet_inpainting_args_name = ",".join([str(item).split("=")[0] for item in list(
                         inspect.signature(fns["controlnet_inpainting_fn"]).parameters.values())])
