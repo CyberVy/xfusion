@@ -38,9 +38,11 @@ pipelines = [load_enhancer(None, model_version="xl", download_kwargs=download_kw
 server = load_stable_diffusion_ui(pipelines, _globals=globals())
 ```
 
-
 ---
 **Directly use a pipeline in the backend**
+<details>
+<summary>Code</summary>
+
 ```python
 from xfusion.enhancement import load_enhancer
 import torch
@@ -69,6 +71,8 @@ height = None
 
 images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.Generator(pipeline.device).manual_seed(seed),width=width,height=height,num_inference_steps=num_inference_steps,guidance_scale=guidance_scale,clip_skip=clip_skip).images
 ```
+</details>
+
 ---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
