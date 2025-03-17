@@ -61,6 +61,22 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
             mask_image = normalize_image(mask_image, width * height,scale_divisor=16)
             kwargs.update(mask_image=mask_image)
 
+        if "controlnet" in (self.get_list_adapters().get("transformer") or []):
+            kwargs.update(self._check_controlnet_inference_kwargs(kwargs))
+
+        return kwargs
+
+    def _check_controlnet_inference_kwargs(self,kwargs):
+        width = kwargs.get("width")
+        height = kwargs.get("height")
+
+        control_image = kwargs.get("control_image")
+        if control_image and isinstance(control_image, Image.Image):
+            control_image = normalize_image(control_image, width * height,scale_divisor=16)
+            kwargs.update(width=control_image.width)
+            kwargs.update(height=control_image.height)
+            kwargs.update(control_image=control_image)
+
         return kwargs
 
     def __call__(self, *args, **kwargs):
@@ -79,15 +95,23 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
                                                    use_enhancer=use_enhancer,**kwargs)
 
     def load_controlnet(self,controlnet_model=None):
-        if controlnet_model is None:
-            controlnet_model = "https://huggingface.co/black-forest-labs/FLUX.1-Canny-dev-lora/resolve/main/flux1-canny-dev-lora.safetensors?download=true"
-        self.set_lora(controlnet_model,"controlnet",1)
-        components = self.components
-        components.pop("image_encoder", None)
-        components.pop("feature_extractor", None)
-        self.text_to_image_controlnet_pipeline = self.enhancer_class(FluxControlPipeline(**components),init_sub_pipelines=False)
-        self.image_to_image_controlnet_pipeline = self.enhancer_class(FluxControlImg2ImgPipeline(**components),init_sub_pipelines=False)
-        self.inpainting_controlnet_pipeline = self.enhancer_class(FluxControlInpaintPipeline(**components),init_sub_pipelines=False)
+        if "controlnet" not in (self.get_list_adapters().get("transformer") or []):
+            if controlnet_model is None:
+                controlnet_model = "https://huggingface.co/black-forest-labs/FLUX.1-Canny-dev-lora/resolve/main/flux1-canny-dev-lora.safetensors?download=true"
+            self.set_lora(controlnet_model,"controlnet",1)
+            components = self.components
+            components.pop("image_encoder", None)
+            components.pop("feature_extractor", None)
+            self.text_to_image_controlnet_pipeline = self.enhancer_class(FluxControlPipeline(**components),init_sub_pipelines=False)
+            self.image_to_image_controlnet_pipeline = self.enhancer_class(FluxControlImg2ImgPipeline(**components),init_sub_pipelines=False)
+            self.inpainting_controlnet_pipeline = self.enhancer_class(FluxControlInpaintPipeline(**components),init_sub_pipelines=False)
+
+            self.sub_pipelines.update(text_to_image_controlnet_pipeline=self.text_to_image_controlnet_pipeline)
+            self.sub_pipelines.update(image_to_image_controlnet_pipeline=self.image_to_image_controlnet_pipeline)
+            self.sub_pipelines.update(inpainting_controlnet_pipeline=self.inpainting_controlnet_pipeline)
+            self.sync_sub_pipelines_mixin_kwargs()
+        else:
+            print(f"Controlnet is already implemented.")
 
     def offload_controlnet(self):
         # self.delete_adapters("controlnet")
