@@ -209,6 +209,8 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
         control_image = kwargs.get("control_image")
         if control_image and isinstance(control_image, Image.Image):
             control_image = normalize_image(control_image, width * height,scale_divisor=8)
+            kwargs.update(width=control_image.width)
+            kwargs.update(height=control_image.height)
             kwargs.update(control_image=control_image)
 
         return kwargs
