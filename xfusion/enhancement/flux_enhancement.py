@@ -29,7 +29,7 @@ def generate_image_and_send_to_telegram(pipeline,prompt,num,seed=None,use_enhanc
         images.append(image)
 
         kwargs_for_telegram = kwargs.copy()
-        kwargs_for_telegram.update(prompt=f"\n{kwargs['prompt'][:768]}")
+        kwargs_for_telegram.update(prompt=f"\n{kwargs['prompt'][:512]}")
         kwargs_for_telegram.pop("generator",None)
         caption = dict_to_str(kwargs_for_telegram)
         caption += f"Sampler: {pipeline.scheduler.config._class_name}\nLoRa: {pipeline.lora_dict}\nSize: {image.size}\nSeed: {item}\n\nModel: {pipeline.model_name}"
