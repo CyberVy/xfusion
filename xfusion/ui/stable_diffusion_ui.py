@@ -932,6 +932,7 @@ def load_stable_diffusion_ui(pipelines, _globals=None,**kwargs):
     server.launch(**kwargs)
 
     if server.share_url:
+        print(f"* Running on public URL: {server.share_url}")
         threads_execute(pipelines[0].send_text,(f"* Running on public URL: {server.share_url}",),_await=False)
 
     if block:
