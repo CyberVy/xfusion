@@ -4,6 +4,7 @@ from xfusion import load_stable_diffusion_ui,load_flux_ui
 from xfusion.const import GPU_COUNT
 
 telegram_kwargs = {"token":os.environ.get("TG_TOKEN",""),"chat_id":os.environ.get("TG_ID","")}
+print(telegram_kwargs)
 download_kwargs = {"directory":os.environ.get("DOWNLOAD_PATH","/xfusion_models")}
 pipelines = [load_enhancer(None,model_version=os.environ.get("MODEL_VERSION",""),download_kwargs=download_kwargs,telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
 
