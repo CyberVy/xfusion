@@ -14,5 +14,5 @@ for arg in "$@"; do
   fi
 done
 
-curl -Lo ./start.py "https://raw.githubusercontent.com/CyberVy/xfusion/refs/heads/main/start.py"
+curl -Lo start.py "https://raw.githubusercontent.com/CyberVy/xfusion/refs/heads/main/start.py"
 python3 ./start.py
