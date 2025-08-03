@@ -33,9 +33,6 @@ python start.py
 ```
 
 **Jupyter Notebook**
-```
-!pip install -q git+https://github.com/CyberVy/xfusion.git
-```
 ```python3
 import os
 os.environ["CIVITAI_TOKEN"] = ""
@@ -100,6 +97,7 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
+
 
 
 
