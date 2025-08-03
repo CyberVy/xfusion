@@ -9,7 +9,7 @@ setup(
         "requests",
         'peft',
         'torch',
-        'gradio==5.17.0',
+        'gradio',
         'diffusers>=0.32.2',
         'bitsandbytes>=0.45.3',
         'transformers>=4.48.3',
