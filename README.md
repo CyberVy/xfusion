@@ -15,6 +15,10 @@ Xfusion is a Python library specializing in assembling open-source AI models, wi
 ```bash
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
+or
+```
+curl -fsSL https://github.com/CyberVy/xfusion/raw/refs/heads/main/install.sh | bash
+```
 # Code Example
 
 **Start with bash**
@@ -88,4 +92,5 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
+
 
