@@ -20,7 +20,7 @@ or
 curl -fsSL https://github.com/CyberVy/xfusion/raw/refs/heads/main/install.sh | bash
 ```
 # Code Example
-
+---
 **Qucik start with bash**
 ```
 curl -Lso start.py "https://github.com/CyberVy/xfusion/raw/refs/heads/main/start.py"
@@ -31,7 +31,7 @@ export TG_ID
 export MODEL_VERSION
 python start.py
 ```
-
+---
 **Jupyter Notebook**
 ```python3
 import os
