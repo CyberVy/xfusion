@@ -21,7 +21,7 @@ curl -fsSL https://github.com/CyberVy/xfusion/raw/refs/heads/main/install.sh | b
 ```
 # Code Example
 
-**Start with bash**
+**Qucik start with bash**
 ```
 curl -Lso start.py "https://github.com/CyberVy/xfusion/raw/refs/heads/main/start.py"
 export CIVITAI_TOKEN
@@ -30,6 +30,36 @@ export TG_TOKEN
 export TG_ID
 export MODEL_VERSION
 python start.py
+```
+
+**Jupyter Notebook**
+```
+!pip install -q git+https://github.com/CyberVy/xfusion.git
+```
+```python3
+import os
+os.environ["CIVITAI_TOKEN"] = ""
+os.environ["HF_HUB_TOKEN"] = ""
+os.environ["TG_TOKEN"] = ""
+os.environ["TG_ID"] = ""
+os.environ["DOWNLOAD_PATH"] = ""
+os.environ["MODEL_VERSION"] = ""
+```
+
+```python3
+import os
+from xfusion import load_enhancer
+from xfusion import load_stable_diffusion_ui,load_flux_ui
+from xfusion.const import GPU_COUNT
+
+telegram_kwargs = {"token":os.environ.get("TG_TOKEN",""),"chat_id":os.environ.get("TG_ID","")}
+download_kwargs = {"directory":os.environ.get("DOWNLOAD_PATH","/xfusion_models")}
+pipelines = [load_enhancer(None,model_version=os.environ.get("MODEL_VERSION",""),download_kwargs=download_kwargs,telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
+
+if os.environ.get("MODEL_VERSION","") in ["", "1.5", "2", "3", "3.5", "xl", "sdxl", "pony"]:
+    server = load_stable_diffusion_ui(pipelines,_globals=globals(),pwa=True)
+elif os.environ.get("MODEL_VERSION","") in ["flux"]:
+    server = load_flux_ui(pipelines,_globals=globals(),pwa=True)
 ```
 
 **Use UI with a single GPU**
@@ -92,5 +122,6 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
+
 
 
