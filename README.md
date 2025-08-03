@@ -62,28 +62,6 @@ elif os.environ.get("MODEL_VERSION","") in ["flux"]:
     server = load_flux_ui(pipelines,_globals=globals(),pwa=True)
 ```
 
-**Use UI with a single GPU**
-```python
-from xfusion.enhancement import load_enhancer
-
-telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./xfusion_models"}
-pipeline = load_enhancer(None,model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs)
-server = pipeline.load_ui(globals())
-```
-**Use UI with multiple GPUs/A single GPU is also supported**
-
-```python
-from xfusion import load_enhancer
-from xfusion import load_stable_diffusion_ui
-from xfusion.const import GPU_COUNT
-
-telegram_kwargs = {"token":"","chat_id":""}
-download_kwargs = {"directory":"./xfusion_models"}
-pipelines = [load_enhancer(None, model_version="xl", download_kwargs=download_kwargs, telegram_kwargs=telegram_kwargs) for i in range(GPU_COUNT)]
-server = load_stable_diffusion_ui(pipelines, _globals=globals())
-```
-
 ---
 **Directly use a pipeline in the backend**
 <details>
@@ -122,6 +100,7 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
+
 
 
 
