@@ -20,7 +20,7 @@ or
 curl -fsSL https://github.com/CyberVy/xfusion/raw/refs/heads/main/install.sh | bash
 ```
 # Code Example
----
+
 **Qucik start with bash**
 ```
 curl -Lso start.py "https://github.com/CyberVy/xfusion/raw/refs/heads/main/start.py"
@@ -97,6 +97,7 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
+
 
 
 
