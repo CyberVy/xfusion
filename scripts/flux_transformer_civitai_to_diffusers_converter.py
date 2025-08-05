@@ -36,7 +36,7 @@ def convert_flux_transformer_into_4bit_and_upload_to_hf(repo_id,repo_name,target
     if target_dtype is None:
         target_dtype = torch.float16
 
-    quantization_config = {"load_in_4bit":True,"bnb_4bit_compute_dtype":target_dtype,"bnb_4bit_quant_dtype":"nf4"}
+    quantization_config = {"load_in_4bit":True,"bnb_4bit_compute_dtype":target_dtype,"bnb_4bit_quant_type":"nf4"}
     quantization_config = DiffusersBitsAndBytesConfig(**quantization_config)
     transformer_4bit = FluxTransformer2DModel.from_pretrained(repo_id,torch_dtype=target_dtype,cache_dir="/flux-transformer-converter",quantization_config=quantization_config)
     r =  transformer_4bit.push_to_hub(repo_name,token=token)
