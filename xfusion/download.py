@@ -9,7 +9,8 @@ import re
 def get_hf_repo_filename_url_dict(repo_id:str,subfolders=None,token=None) -> dict:
     headers ={}
     token = token if token is not None else const.HF_HUB_TOKEN
-    headers.update(authorization=f"Bearer {token}")
+    if token:
+        headers.update(authorization=f"Bearer {token}")
 
     hf_url = "https://huggingface.co"
     hf_url = f"{const.PROXY_URL_PREFIX}/{hf_url}" if const.NEED_PROXY else hf_url
@@ -50,13 +51,15 @@ def download_file(url:str,filename=None,directory=None,mute=False,**kwargs):
 
     if url.hostname == "huggingface.co":
         if headers.get("authorization") is None:
-            headers.update(authorization=f"Bearer {const.HF_HUB_TOKEN}")
+            if const.HF_HUB_TOKEN:
+                headers.update(authorization=f"Bearer {const.HF_HUB_TOKEN}")
 
         url = urlparse(f"{const.PROXY_URL_PREFIX}/{url.geturl()}") if const.NEED_PROXY and const.PROXY_URL_PREFIX else url
 
     elif url.hostname == "civitai.com":
         if headers.get("authorization") is None:
-            headers.update(authorization=f"Bearer {const.CIVITAI_TOKEN}")
+            if const.CIVITAI_TOKEN:
+                headers.update(authorization=f"Bearer {const.CIVITAI_TOKEN}")
 
         url = urlparse(f"{const.PROXY_URL_PREFIX}/{url.geturl()}") if const.NEED_PROXY and const.PROXY_URL_PREFIX else url
 
