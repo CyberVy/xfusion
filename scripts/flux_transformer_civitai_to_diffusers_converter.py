@@ -1,3 +1,8 @@
+# Require diffusers==0.32.2, 
+# please do not use the latest version, 
+# which only supports quantization for float16, bfloat16 and float32 model.
+
+
 import os
 os.environ["CIVITAI_TOKEN"] = "CIVITAI_TOKEN"
 token = "HF_HUB_TOKEN"
