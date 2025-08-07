@@ -29,7 +29,7 @@ export HF_HUB_TOKEN=""
 export TG_TOKEN=""
 export TG_ID=""
 export MODEL_VERSION=""
-python start.py=""
+python start.py
 ```
 ---
 **Jupyter Notebook**
@@ -97,6 +97,7 @@ images = pipeline(prompt=prompt,negative_prompt=negative_prompt,generator=torch.
 ---
 # Acknowledgments
 Xfusion leverages the Diffusers library and is inspired by the incredible work of the open-source community.
+
 
 
 
