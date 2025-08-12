@@ -1,31 +1,33 @@
-name: Upload Python Package
+name: Release Python Package
 
 on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-
 jobs:
-  release-build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
-      - name: Build release distributions
+      - name: Install build tools
         run: |
-          # NOTE: put your own distribution build steps here.
-          python -m pip install build
-          python -m build
+          python -m pip install --upgrade pip
+          pip install build
 
-      - name: Upload distributions
-        uses: actions/upload-artifact@v4
+      - name: Build wheel and sdist
+        run: python -m build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: release-dists
-          path: dist/
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
