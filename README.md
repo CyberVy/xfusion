@@ -1,4 +1,4 @@
-# Hello Xfusion!
+# Hello xfusion!
 xfusion is a Python library specializing in assembling open-source AI models, with a particular focus on models like Stable Diffusion, Flux, and others.
 
 # Features
