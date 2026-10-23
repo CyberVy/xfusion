@@ -11,12 +11,26 @@ Xfusion is a Python library specializing in assembling open-source AI models, wi
 - Stable Diffusion 1.5/2/3/3.5/XL
 - Flux
 
+# Requirements
+- **OS**: Linux only (macOS / Windows are not supported for execution due to CUDA and bitsandbytes runtime dependencies)
+- **GPU**: NVIDIA GPU with CUDA support
+- **Python**: >= 3.10
+
 # Installation
+
+### Using uv (Recommended)
+```bash
+git clone https://github.com/CyberVy/xfusion.git
+cd xfusion
+uv sync
+```
+
+### Using pip
 ```bash
 pip install -q git+https://github.com/CyberVy/xfusion.git
 ```
 or
-```
+```bash
 curl -fsSL https://github.com/CyberVy/xfusion/raw/refs/heads/main/install.sh | bash
 ```
 # Code Example

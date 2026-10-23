@@ -1,0 +1,33 @@
+[project]
+name = "xfusion"
+version = "0.1.0"
+description = "Xfusion"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Eramth Ru", email = "contanct@xsolutiontech.com" }]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "requests",
+    "gradio",
+    "diffusers>=0.32.2",
+    "transformers>=4.48.3",
+    "opencv-python",
+    "tqdm",
+    # Linux & NVIDIA CUDA GPU only
+    "torch; sys_platform == 'linux'",
+    "bitsandbytes>=0.45.3; sys_platform == 'linux'",
+    "peft; sys_platform == 'linux'",
+    "compel; sys_platform == 'linux'",
+]
+
+[project.urls]
+Homepage = "https://xsolutiontech.com"
+Repository = "https://github.com/CyberVy/xfusion"
+
+[build-system]
+requires = ["uv_build>=0.10.12,<0.11"]
+build-backend = "uv_build"
