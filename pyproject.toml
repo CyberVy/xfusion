@@ -20,6 +20,7 @@ dependencies = [
     "transformers>=4.48.3",
     "opencv-python>=4.8.0,<4.11.0",
     "tqdm",
+    "scipy>=1.11.0",
     # Linux & NVIDIA CUDA GPU only
     "torch; sys_platform == 'linux'",
     "bitsandbytes>=0.45.3; sys_platform == 'linux'",
