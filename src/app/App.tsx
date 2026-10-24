@@ -2,16 +2,12 @@
 
 import { useState, useEffect } from "react"
 import {
-    Txt2ImgView,
-    Img2ImgView,
-    InpaintView,
+    WorkspaceView,
     ModelManageView,
     GalleryView,
     GlobalSettingButton,
     LaunchAnimation,
     WandIcon,
-    ImageIcon,
-    BrushIcon,
     CubeIcon,
     GalleryIcon
 } from "@/blocks"
@@ -19,11 +15,11 @@ import { ViewSwitcher } from "@/components"
 import { settings_controller } from "@/core/controllers/settings_controller"
 import { mount_debug_controllers } from "@/core/controllers/mount"
 
-type ActiveView = "txt2img" | "img2img" | "inpaint" | "models" | "gallery"
+type ActiveView = "create" | "models" | "gallery"
 
 export default function App() {
     const [show_launch_animation, set_show_launch_animation] = useState(true)
-    const [active_view, set_active_view] = useState<ActiveView>("txt2img")
+    const [active_view, set_active_view] = useState<ActiveView>("create")
 
     useEffect(() => {
         mount_debug_controllers()
@@ -55,25 +51,11 @@ export default function App() {
                     }
                     views={[
                         {
-                            id: "txt2img",
+                            id: "create",
                             icon: <WandIcon width={22} height={22} />,
-                            label: "Txt2Img",
+                            label: "Create",
                             swipe_enabled: false,
-                            content: <Txt2ImgView />
-                        },
-                        {
-                            id: "img2img",
-                            icon: <ImageIcon width={22} height={22} />,
-                            label: "Img2Img",
-                            swipe_enabled: false,
-                            content: <Img2ImgView />
-                        },
-                        {
-                            id: "inpaint",
-                            icon: <BrushIcon width={22} height={22} />,
-                            label: "Inpaint",
-                            swipe_enabled: false,
-                            content: <InpaintView />
+                            content: <WorkspaceView />
                         },
                         {
                             id: "models",

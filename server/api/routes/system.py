@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from ..schemas import SystemInfoResponse
-from ..manager import manager, AVAILABLE_SCHEDULERS
+from ..manager import manager
 from ...const import GPU_COUNT, GPU_NAME
 
 router = APIRouter(prefix="/api/v1/system", tags=["System"])
@@ -26,5 +26,5 @@ async def get_system_info():
         current_model=manager.current_model,
         model_version=manager.model_version,
         loras=manager.get_loras(),
-        schedulers=AVAILABLE_SCHEDULERS,
+        schedulers=manager.get_schedulers(),
     )

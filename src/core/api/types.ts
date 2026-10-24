@@ -42,6 +42,12 @@ export interface InpaintParams {
     scheduler?: string | null
 }
 
+export interface GenerationResponse {
+    status: string
+    images: { image_base64: string; seed: number; width: number; height: number }[]
+    elapsed_seconds: number
+}
+
 export interface GeneratedImageItem {
     id: string
     image_base64: string

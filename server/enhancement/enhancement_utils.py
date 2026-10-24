@@ -204,7 +204,7 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,IPAdapterEn
                 self.scheduler = self.scheduler_map[scheduler_type.upper()][0].from_config(
                     self.scheduler.config, **self.scheduler_map[scheduler_type.upper()][1])
             else:
-                raise BaseException(f"{scheduler_type} is not supported yet.")
+                raise ValueError(f"{scheduler_type} is not supported yet.")
 
     def reset_scheduler(self):
         self.scheduler = self._scheduler

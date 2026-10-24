@@ -69,6 +69,8 @@ class SchedulerSetRequest(BaseModel):
 class GeneratedImage(BaseModel):
     image_base64: str = Field(..., description="Base64 encoded image with data URI prefix")
     seed: int = Field(..., description="Random seed used for generation")
+    width: int = Field(..., description="Output image width")
+    height: int = Field(..., description="Output image height")
 
 
 class GenerationResponse(BaseModel):

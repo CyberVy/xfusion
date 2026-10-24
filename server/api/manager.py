@@ -2,7 +2,9 @@ import os
 import io
 import time
 import base64
+import random
 import asyncio
+import functools
 from typing import List, Dict, Optional, Tuple, Any
 from PIL import Image
 
@@ -12,14 +14,6 @@ try:
 except (ImportError, AttributeError):
     load_enhancer = None
 from ..utils import free_memory_to_system, convert_mask_image_to_rgb
-
-AVAILABLE_SCHEDULERS = [
-    "DPM++ 2M", "DPM++ 2M KARRAS", "DPM++ 2M SDE", "DPM++ 2M SDE KARRAS",
-    "DPM++ 2S A", "DPM++ 2S A KARRAS", "DPM++ SDE", "DPM++ SDE KARRAS",
-    "DPM2", "DPM2 KARRAS", "DPM2 A", "DPM2 A KARRAS",
-    "EULER", "EULER A",
-    "HEUN", "LMS", "LMS KARRAS", "DEIS", "UNIPC"
-]
 
 
 def pil_to_base64_data_uri(image: Image.Image, format: str = "PNG") -> str:
@@ -140,142 +134,94 @@ class PipelineManager:
                     p.inpainting_pipeline.set_scheduler(scheduler)
             return {"status": "success", "scheduler": scheduler, "pipeline_type": pipeline_type}
 
-    async def generate_txt2img(self, req) -> Tuple[List[Dict[str, Any]], float]:
+    def get_schedulers(self) -> List[str]:
+        if not self.pipelines:
+            return []
+        return list(getattr(self.pipelines[0], "scheduler_map", {}))
+
+    async def _generate(self, pipeline_attr: str, kwargs: Dict[str, Any], seed: Optional[int], num: Optional[int],
+                        scheduler: Optional[str]) -> Tuple[List[Dict[str, Any]], float]:
         async with self.lock:
             if not self.pipelines:
                 raise RuntimeError("No model loaded. Please load a model first.")
 
-            pipeline = self.pipelines[0]
+            sub_pipeline = getattr(self.pipelines[0], pipeline_attr)
+            if self.model_version == "flux":
+                kwargs.pop("negative_prompt", None)
+                kwargs.pop("clip_skip", None)
+            if scheduler:
+                sub_pipeline.set_scheduler(scheduler)
+
+            # Seeds stay within 31 bits so JavaScript clients can round-trip them exactly.
+            num = num or 1
+            seeds = [seed + i for i in range(num)] if seed else [random.randint(1, 2 ** 31 - 1) for _ in range(num)]
+
             start_time = time.time()
-
-            kwargs = {
-                "prompt": req.prompt,
-                "negative_prompt": req.negative_prompt,
-                "guidance_scale": req.guidance_scale,
-                "num_inference_steps": req.num_inference_steps,
-                "clip_skip": req.clip_skip,
-                "width": req.width,
-                "height": req.height,
-                "seed": req.seed,
-                "num": req.num or 1,
-            }
-
-            if req.scheduler:
-                pipeline.text_to_image_pipeline.set_scheduler(req.scheduler)
-
-            # Run inference in executor thread to prevent blocking the event loop
             loop = asyncio.get_running_loop()
-            images = await loop.run_in_executor(
-                None,
-                lambda: pipeline.text_to_image_pipeline.generate_image_and_send_to_telegram(**kwargs)
-            )
+            result = []
+            for item_seed in seeds:
+                images = await loop.run_in_executor(
+                    None,
+                    functools.partial(sub_pipeline.generate_image_and_send_to_telegram, seed=item_seed, num=1, **kwargs)
+                )
+                for img in images:
+                    result.append({
+                        "image_base64": pil_to_base64_data_uri(img),
+                        "seed": item_seed,
+                        "width": img.width,
+                        "height": img.height,
+                    })
 
             elapsed = time.time() - start_time
             free_memory_to_system()
-
-            result = []
-            for i, img in enumerate(images):
-                result.append({
-                    "image_base64": pil_to_base64_data_uri(img),
-                    "seed": (req.seed or 0) + i
-                })
             return result, elapsed
+
+    async def generate_txt2img(self, req) -> Tuple[List[Dict[str, Any]], float]:
+        kwargs = {
+            "prompt": req.prompt,
+            "negative_prompt": req.negative_prompt,
+            "guidance_scale": req.guidance_scale,
+            "num_inference_steps": req.num_inference_steps,
+            "clip_skip": req.clip_skip,
+            "width": req.width,
+            "height": req.height,
+        }
+        return await self._generate("text_to_image_pipeline", kwargs, req.seed, req.num, req.scheduler)
 
     async def generate_img2img(self, req) -> Tuple[List[Dict[str, Any]], float]:
-        async with self.lock:
-            if not self.pipelines:
-                raise RuntimeError("No model loaded. Please load a model first.")
-
-            pipeline = self.pipelines[0]
-            start_time = time.time()
-
-            input_image = decode_image_data(req.image).convert("RGB")
-
-            kwargs = {
-                "image": input_image,
-                "prompt": req.prompt,
-                "negative_prompt": req.negative_prompt,
-                "strength": req.strength,
-                "guidance_scale": req.guidance_scale,
-                "num_inference_steps": req.num_inference_steps,
-                "clip_skip": req.clip_skip,
-                "seed": req.seed,
-                "num": req.num or 1,
-            }
-            if req.width:
-                kwargs["width"] = req.width
-            if req.height:
-                kwargs["height"] = req.height
-            if req.scheduler:
-                pipeline.image_to_image_pipeline.set_scheduler(req.scheduler)
-
-            loop = asyncio.get_running_loop()
-            images = await loop.run_in_executor(
-                None,
-                lambda: pipeline.image_to_image_pipeline.generate_image_and_send_to_telegram(**kwargs)
-            )
-
-            elapsed = time.time() - start_time
-            free_memory_to_system()
-
-            result = []
-            for i, img in enumerate(images):
-                result.append({
-                    "image_base64": pil_to_base64_data_uri(img),
-                    "seed": (req.seed or 0) + i
-                })
-            return result, elapsed
+        kwargs = {
+            "image": decode_image_data(req.image).convert("RGB"),
+            "prompt": req.prompt,
+            "negative_prompt": req.negative_prompt,
+            "strength": req.strength,
+            "guidance_scale": req.guidance_scale,
+            "num_inference_steps": req.num_inference_steps,
+            "clip_skip": req.clip_skip,
+            "width": req.width,
+            "height": req.height,
+        }
+        return await self._generate("image_to_image_pipeline", kwargs, req.seed, req.num, req.scheduler)
 
     async def generate_inpaint(self, req) -> Tuple[List[Dict[str, Any]], float]:
-        async with self.lock:
-            if not self.pipelines:
-                raise RuntimeError("No model loaded. Please load a model first.")
+        mask_raw = decode_image_data(req.mask_image)
+        if mask_raw.mode == "RGBA":
+            mask_image = convert_mask_image_to_rgb(mask_raw)
+        else:
+            mask_image = mask_raw.convert("RGB")
 
-            pipeline = self.pipelines[0]
-            start_time = time.time()
-
-            input_image = decode_image_data(req.image).convert("RGB")
-            mask_raw = decode_image_data(req.mask_image)
-            if mask_raw.mode == "RGBA":
-                mask_image = convert_mask_image_to_rgb(mask_raw)
-            else:
-                mask_image = mask_raw.convert("RGB")
-
-            kwargs = {
-                "image": input_image,
-                "mask_image": mask_image,
-                "prompt": req.prompt,
-                "negative_prompt": req.negative_prompt,
-                "strength": req.strength,
-                "guidance_scale": req.guidance_scale,
-                "num_inference_steps": req.num_inference_steps,
-                "clip_skip": req.clip_skip,
-                "seed": req.seed,
-                "num": req.num or 1,
-            }
-            if req.width:
-                kwargs["width"] = req.width
-            if req.height:
-                kwargs["height"] = req.height
-            if req.scheduler:
-                pipeline.inpainting_pipeline.set_scheduler(req.scheduler)
-
-            loop = asyncio.get_running_loop()
-            images = await loop.run_in_executor(
-                None,
-                lambda: pipeline.inpainting_pipeline.generate_image_and_send_to_telegram(**kwargs)
-            )
-
-            elapsed = time.time() - start_time
-            free_memory_to_system()
-
-            result = []
-            for i, img in enumerate(images):
-                result.append({
-                    "image_base64": pil_to_base64_data_uri(img),
-                    "seed": (req.seed or 0) + i
-                })
-            return result, elapsed
+        kwargs = {
+            "image": decode_image_data(req.image).convert("RGB"),
+            "mask_image": mask_image,
+            "prompt": req.prompt,
+            "negative_prompt": req.negative_prompt,
+            "strength": req.strength,
+            "guidance_scale": req.guidance_scale,
+            "num_inference_steps": req.num_inference_steps,
+            "clip_skip": req.clip_skip,
+            "width": req.width,
+            "height": req.height,
+        }
+        return await self._generate("inpainting_pipeline", kwargs, req.seed, req.num, req.scheduler)
 
 
 manager = PipelineManager()

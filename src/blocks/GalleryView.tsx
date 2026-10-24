@@ -1,7 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { NaiveButton, FullscreenModalContainer, AnimationContainer, BodyPortal } from "@/components"
+import {
+    NaiveButton,
+    FullscreenModalContainer,
+    AnimationContainer,
+    BodyPortal,
+    view_switcher_controller
+} from "@/components"
 import { CloseIcon } from "@/components/icons"
 import { GalleryIcon, DownloadIcon, TrashIcon, WandIcon } from "./icons"
 import { generation_controller } from "@/core/controllers"
@@ -24,14 +30,10 @@ export function GalleryView() {
     }
 
     const handle_reuse_prompt = (item: GeneratedImageItem) => {
-        generation_controller.set_params({
-            prompt: item.prompt,
-            negative_prompt: item.negative_prompt,
-            width: item.width,
-            height: item.height,
-            seed: item.seed
-        })
+        generation_controller.reuse_settings(item)
+        generation_controller.select_image(item)
         set_inspected_item(null)
+        view_switcher_controller.switch_view("create", "xfusion_switcher")
     }
 
     return (
@@ -49,7 +51,7 @@ export function GalleryView() {
                 <div className="flex flex-col items-center justify-center min-h-[50vh] text-center text-black/30 dark:text-white/30 text-xs">
                     <GalleryIcon width={48} height={48} className="mb-2 opacity-40" />
                     <p className="text-sm font-medium">No artworks generated yet</p>
-                    <p className="mt-1 max-w-xs">Generate your first image with Txt2Img or Img2Img to see it here.</p>
+                    <p className="mt-1 max-w-xs">Images you generate are saved on this device and listed here.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -71,7 +73,7 @@ export function GalleryView() {
                                     <button
                                         type="button"
                                         onClick={(e) => handle_delete(e, item.id)}
-                                        className="p-1 rounded-full bg-black/40 hover:bg-rose-500 transition"
+                                        className="p-1 rounded-full bg-black/40 hover:bg-black/70 transition"
                                         title="Delete"
                                     >
                                         <TrashIcon width={13} height={13} />
