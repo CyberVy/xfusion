@@ -170,36 +170,39 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         width = kwargs.get("width")
         height = kwargs.get("height")
-
-        if self.model_version in ["xl", "3"]:
-            if width is None:
-                width = 1024
-            if height is None:
-                height = 1024
-        else:
-            if width is None:
-                width = 512
-            if height is None:
-                height = 512
-
-        kwargs.update(width=width)
-        kwargs.update(height=height)
-
         image = kwargs.get("image")
+
         if image and isinstance(image, Image.Image):
-            image = normalize_image(image, width * height,scale_divisor=8)
-            kwargs.update(width=image.width)
-            kwargs.update(height=image.height)
-            kwargs.update(image=image)
+            if width is None and height is None:
+                width = image.width - (image.width % 8)
+                height = image.height - (image.height % 8)
+                if image.size != (width, height):
+                    image = image.resize((width, height), Image.Resampling.LANCZOS)
+            else:
+                target_w = width or (1024 if self.model_version in ["xl", "3"] else 512)
+                target_h = height or (1024 if self.model_version in ["xl", "3"] else 512)
+                image = normalize_image(image, target_w * target_h, scale_divisor=8)
+                width = image.width
+                height = image.height
+            kwargs.update(width=width, height=height, image=image)
+        else:
+            if self.model_version in ["xl", "3"]:
+                width = width or 1024
+                height = height or 1024
+            else:
+                width = width or 512
+                height = height or 512
+            kwargs.update(width=width, height=height)
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
-            mask_image = normalize_image(mask_image, width * height,scale_divisor=8)
+            if mask_image.size != (width, height):
+                mask_image = mask_image.resize((width, height), Image.Resampling.LANCZOS)
             kwargs.update(mask_image=mask_image)
 
         ip_adapter_image = kwargs.get("ip_adapter_image")
-        if ip_adapter_image and isinstance(ip_adapter_image,Image.Image):
-            ip_adapter_image = normalize_image(ip_adapter_image, width * height,scale_divisor=8)
+        if ip_adapter_image and isinstance(ip_adapter_image, Image.Image):
+            ip_adapter_image = normalize_image(ip_adapter_image, width * height, scale_divisor=8)
             kwargs.update(ip_adapter_image=ip_adapter_image)
 
         if "controlnet" in self.__oinstype__.__name__.lower():
@@ -207,16 +210,20 @@ class SDPipelineEnhancer(SDCLIPEnhancerMixin,PipelineEnhancerBase):
 
         return kwargs
 
-    def _check_controlnet_inference_kwargs(self,kwargs):
+    def _check_controlnet_inference_kwargs(self, kwargs):
         width = kwargs.get("width")
         height = kwargs.get("height")
 
         control_image = kwargs.get("control_image")
         if control_image and isinstance(control_image, Image.Image):
-            control_image = normalize_image(control_image, width * height,scale_divisor=8)
-            kwargs.update(width=control_image.width)
-            kwargs.update(height=control_image.height)
-            kwargs.update(control_image=control_image)
+            if width is None and height is None:
+                width = control_image.width - (control_image.width % 8)
+                height = control_image.height - (control_image.height % 8)
+                if control_image.size != (width, height):
+                    control_image = control_image.resize((width, height), Image.Resampling.LANCZOS)
+            elif control_image.size != (width, height):
+                control_image = control_image.resize((width, height), Image.Resampling.LANCZOS)
+            kwargs.update(width=width, height=height, control_image=control_image)
 
         return kwargs
 
