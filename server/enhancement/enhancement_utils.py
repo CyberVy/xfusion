@@ -197,12 +197,15 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,IPAdapterEn
         raise NotImplementedError(f"{object.__getattribute__(self, '__class__')} not implement 'check_inference_kwargs'")
 
     def set_scheduler(self,scheduler_type,**kwargs):
+        base_scheduler = getattr(self, "_scheduler", self.scheduler)
+        config = getattr(base_scheduler, "config", self.scheduler.config)
         if not isinstance(scheduler_type,str):
-            self.scheduler = scheduler_type.from_config(self.scheduler.config,**kwargs)
+            self.scheduler = scheduler_type.from_config(config,**kwargs)
         else:
             if scheduler_type.upper() in self.scheduler_map:
-                self.scheduler = self.scheduler_map[scheduler_type.upper()][0].from_config(
-                    self.scheduler.config, **self.scheduler_map[scheduler_type.upper()][1])
+                scheduler_cls, default_kwargs = self.scheduler_map[scheduler_type.upper()]
+                final_kwargs = {**default_kwargs, **kwargs}
+                self.scheduler = scheduler_cls.from_config(config, **final_kwargs)
             else:
                 raise ValueError(f"{scheduler_type} is not supported yet.")
 
