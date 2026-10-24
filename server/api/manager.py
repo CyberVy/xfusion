@@ -77,6 +77,9 @@ class PipelineManager:
                 )
                 for _ in range(num_gpus)
             ]
+            if GPU_COUNT > 0:
+                for i, p in enumerate(self.pipelines):
+                    p.to(f"cuda:{i}")
             self.model_version = model_version
             self.current_model = model_url
             print("Pipelines successfully initialized.")
@@ -99,8 +102,7 @@ class PipelineManager:
                 for _ in range(num_gpus)
             ]
 
-            # Distribute across GPUs if multiple exist
-            if GPU_COUNT > 1:
+            if GPU_COUNT > 0:
                 for i, p in enumerate(self.pipelines):
                     p.to(f"cuda:{i}")
 

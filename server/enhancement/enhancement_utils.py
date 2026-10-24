@@ -214,6 +214,9 @@ class PipelineEnhancerBase(ControlnetEnhancerMixin,LoraEnhancerMixin,IPAdapterEn
 
     def to(self, *args, **kwargs):
         self.__oins__.to(*args, **kwargs)
+        for sub_p in getattr(self, "sub_pipelines", {}).values():
+            if sub_p is not self and hasattr(sub_p, "__oins__") and sub_p.__oins__ is not None:
+                sub_p.__oins__.to(*args, **kwargs)
         return self
 
     def clear(self):
