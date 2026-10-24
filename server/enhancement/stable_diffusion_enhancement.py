@@ -70,15 +70,17 @@ def get_embeds_from_pipeline(pipeline,prompt,negative_prompt):
     tokenizers = [tokenizer for tokenizer in tokenizers if tokenizer]
     text_encoders = [text_encoder for text_encoder in text_encoders if text_encoder]
     try:
+        model_ver = getattr(pipeline, "model_version", None)
+        oins = getattr(pipeline, "__oins__", None)
         for cls in pipeline_map["1.5"]:
-            if isinstance(pipeline,cls):
+            if model_ver == "1.5" or isinstance(pipeline, cls) or (oins is not None and isinstance(oins, cls)):
                 compel = Compel(tokenizers,text_encoders,truncate_long_prompts=False)
                 conditioning = compel(prompt)
                 negative_conditioning = compel(negative_prompt)
                 [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
                 return {"prompt_embeds":conditioning,"negative_prompt_embeds":negative_conditioning}
         for cls in pipeline_map["xl"]:
-            if isinstance(pipeline, cls):
+            if model_ver in ["xl", "pony"] or isinstance(pipeline, cls) or (oins is not None and isinstance(oins, cls)):
                 compel = Compel(tokenizers,text_encoders,
                                 returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,
                                 requires_pooled=[False,True],truncate_long_prompts=False)
@@ -100,18 +102,20 @@ class SDCLIPEnhancerMixin:
         self.tokenizers, self.text_encoders = get_tokenizers_and_text_encoders_from_pipeline(self)
 
     def skip_clip_layer(self,n):
-        text_encoders = [text_encoder for text_encoder in self.text_encoders if text_encoder]
-        if isinstance(n,int) and  n >= 1:
-            for text_encoder in text_encoders:
-                if not hasattr(text_encoder.text_model.encoder,"backup_layers"):
-                    text_encoder.text_model.encoder.backup_layers = text_encoder.text_model.encoder.layers
-                text_encoder.text_model.encoder.layers = text_encoder.text_model.encoder.backup_layers[:-n]
-        elif n is None or n == 0:
-            for text_encoder in text_encoders:
-                if hasattr(text_encoder.text_model.encoder,"backup_layers"):
-                    text_encoder.text_model.encoder.layers = text_encoder.text_model.encoder.backup_layers
-        else:
+        if n is not None and not (isinstance(n, int) and n >= 0):
             raise ValueError("An integer >=0 is required.")
+        text_encoders = [text_encoder for text_encoder in self.text_encoders if text_encoder]
+        for text_encoder in text_encoders:
+            encoder = getattr(getattr(text_encoder, "text_model", None), "encoder", None) or getattr(text_encoder, "encoder", None)
+            if encoder is None or not hasattr(encoder, "layers"):
+                continue
+            if isinstance(n, int) and n >= 1:
+                if not hasattr(encoder, "backup_layers"):
+                    encoder.backup_layers = encoder.layers
+                encoder.layers = encoder.backup_layers[:-n]
+            elif n is None or n == 0:
+                if hasattr(encoder, "backup_layers"):
+                    encoder.layers = encoder.backup_layers
 
     def get_embeds_from_pipeline(self,prompt,negative_prompt,clip_skip=None):
         self.skip_clip_layer(clip_skip)
