@@ -35,7 +35,11 @@ export function ResultPanel() {
                 {state.is_generating && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-black/60 dark:text-white/60">
                         <RefreshIcon width={28} height={28} className="animate-spin" />
-                        <span className="text-sm">Generating...</span>
+                        <span className="text-sm text-center px-6">
+                            {state.progress?.active
+                                ? `Step ${state.progress.step} / ${state.progress.total_steps} · image ${state.progress.image_index + 1} / ${state.progress.image_count}`
+                                : "Generating..."}
+                        </span>
                     </div>
                 )}
             </div>

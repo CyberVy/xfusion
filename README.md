@@ -14,9 +14,9 @@ Designed with a modern **Client-Server Decoupled Architecture**:
 xfusion/
 ├── src/                  # Frontend Client (React 19 + Nextkit blocks & components)
 │   ├── app/              # Entry point & ViewSwitcher layout
-│   ├── blocks/           # UI Blocks (Txt2Img, Img2Img, Inpaint, Models & LoRA, Gallery)
+│   ├── blocks/           # UI Blocks (Create workspace, Models, Gallery)
 │   ├── components/       # Atomic UI primitives & composite modal containers
-│   └── core/             # Reactive controllers (SettingsController, GenerationController)
+│   └── core/             # Reactive controllers (Settings, Model, Generation)
 ├── server/               # Python API Backend & Diffusion Engine
 │   ├── api/              # FastAPI application, route handlers, Pydantic schemas, and manager
 │   ├── enhancement/      # Diffusers pipeline enhancers (LoRA, IP-Adapter, ControlNet)
@@ -121,17 +121,28 @@ The frontend client communicates with your backend API over HTTP with built-in C
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/v1/system/health` | Service health status & model loaded state |
-| `GET` | `/api/v1/system/info` | GPU status, device names, active model & available schedulers |
-| `POST` | `/api/v1/models/load` | Load or switch base diffusion model |
-| `GET` | `/api/v1/models/current` | Retrieve currently active base model info |
-| `POST` | `/api/v1/lora/load` | Attach / load a LoRA adapter with weight |
-| `POST` | `/api/v1/lora/delete` | Remove an active LoRA adapter |
-| `GET` | `/api/v1/lora/list` | List all active LoRA adapters |
-| `POST` | `/api/v1/scheduler/set` | Change numerical sampler (DPM++ 2M, Euler, etc.) |
-| `POST` | `/api/v1/generate/txt2img` | Generate image from text prompt |
-| `POST` | `/api/v1/generate/img2img` | Transform an image from input image & prompt |
-| `POST` | `/api/v1/generate/inpaint` | Inpaint image using mask and prompt |
+| `GET` | `/api/v1/system/health` | Service health status and whether a model is loaded |
+| `GET` | `/api/v1/system/info` | GPU, active model, LoRA, scheduler, ControlNet, IP-Adapter, Python, and OS |
+| `POST` | `/api/v1/models/load` | Load or switch the base model. `model_version` may be `1.5`, `2`, `xl`, `pony`, `3`, `3.5`, `flux`, or empty to auto-detect |
+| `GET` | `/api/v1/models/current` | Retrieve the currently active base model |
+| `POST` | `/api/v1/lora/load` | Load a LoRA adapter with a strength |
+| `POST` | `/api/v1/lora/strength` | Change the strength of a loaded LoRA |
+| `POST` | `/api/v1/lora/enabled` | Enable or disable every loaded LoRA |
+| `POST` | `/api/v1/lora/delete` | Remove a LoRA adapter |
+| `GET` | `/api/v1/lora/list` | List loaded LoRA adapters and whether they are enabled |
+| `POST` | `/api/v1/ip-adapter/load` | Load an IP-Adapter (not available for FLUX) |
+| `POST` | `/api/v1/ip-adapter/strength` | Change the loaded IP-Adapter strength |
+| `POST` | `/api/v1/ip-adapter/delete` | Unload the IP-Adapter |
+| `POST` | `/api/v1/controlnet/load` | Load a ControlNet. An empty model uses the built-in default |
+| `POST` | `/api/v1/controlnet/offload` | Offload the ControlNet |
+| `POST` | `/api/v1/controlnet/preview` | Render the Canny edge map for a control image |
+| `POST` | `/api/v1/scheduler/set` | Set the sampler on txt2img, img2img, or inpaint. FLUX has no selectable scheduler |
+| `GET` | `/api/v1/generate/progress` | Current step and image index while a generation request is running |
+| `POST` | `/api/v1/generate/txt2img` | Generate 1–10 images from a prompt |
+| `POST` | `/api/v1/generate/img2img` | Transform a source image |
+| `POST` | `/api/v1/generate/inpaint` | Inpaint a masked area |
+
+Generation requests accept optional `control_image`, `controlnet_conditioning_scale`, `low_threshold`, `high_threshold`, and `ip_adapter_image`. A control image is converted to a Canny map on the server, and ControlNet is loaded automatically when one is sent. Each returned image includes the seed and the actual width and height. When more than one GPU is loaded, the requested images are split across them. Request and response fields are defined in `server/api/schemas.py` and rendered at `/docs`.
 
 ---
 

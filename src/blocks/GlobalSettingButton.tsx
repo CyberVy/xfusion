@@ -166,6 +166,20 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                             {system_info?.current_model || "None Loaded"}
                                         </span>
                                     </div>
+                                    {system_info?.python_version && (
+                                        <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+                                            <span className="text-black/60 dark:text-white/60">Python</span>
+                                            <span className="font-mono">{system_info.python_version}</span>
+                                        </div>
+                                    )}
+                                    {system_info?.os_platform && (
+                                        <div className="flex justify-between gap-4 py-1 border-b border-black/5 dark:border-white/5">
+                                            <span className="shrink-0 text-black/60 dark:text-white/60">OS</span>
+                                            <span className="font-mono text-right truncate">
+                                                {system_info.os_platform}
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
                                         <span className="text-black/60 dark:text-white/60">Architecture Version</span>
                                         <span className="font-mono uppercase">

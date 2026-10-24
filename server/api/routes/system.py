@@ -1,3 +1,6 @@
+import platform
+import sys
+
 from fastapi import APIRouter
 from ..schemas import SystemInfoResponse
 from ..manager import manager
@@ -26,5 +29,10 @@ async def get_system_info():
         current_model=manager.current_model,
         model_version=manager.model_version,
         loras=manager.get_loras(),
+        loras_enabled=manager.loras_enabled,
         schedulers=manager.get_schedulers(),
+        controlnet_loaded=manager.controlnet_is_loaded(),
+        ip_adapter=manager.ip_adapter,
+        python_version=sys.version.split()[0],
+        os_platform=platform.platform(),
     )

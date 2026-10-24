@@ -4,7 +4,7 @@ import { create_logger } from "@/infra/logger"
 import { ApiClient } from "../api/client"
 import { settings_controller } from "./settings_controller"
 import { model_controller } from "./model_controller"
-import type { GeneratedImageItem, GenerationResponse } from "../api/types"
+import type { GeneratedImageItem, GenerationProgress, GenerationResponse } from "../api/types"
 
 const logger = create_logger("GenerationController")
 
@@ -17,14 +17,24 @@ export interface GenerationParams {
     width: number
     height: number
     seed: number | null
+    num: number
     scheduler: string
     img2img_strength: number
     inpaint_strength: number
+    controlnet_scale: number
+    canny_low: number
+    canny_high: number
+}
+
+export interface GenerationExtrasInput {
+    control_image?: string | null
+    ip_adapter_image?: string | null
 }
 
 export interface GenerationState extends GenerationParams {
     is_generating: boolean
     error: string | null
+    progress: GenerationProgress | null
     history: GeneratedImageItem[]
     selected_image: GeneratedImageItem | null
 }
@@ -32,6 +42,7 @@ export interface GenerationState extends GenerationParams {
 export const INITIAL_GENERATION_STATE: GenerationState = {
     is_generating: false,
     error: null,
+    progress: null,
     history: [],
     selected_image: null,
 
@@ -43,9 +54,13 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     width: 1024,
     height: 1024,
     seed: null,
+    num: 1,
     scheduler: "DPM++ 2M KARRAS",
     img2img_strength: 0.75,
-    inpaint_strength: 0.8
+    inpaint_strength: 0.8,
+    controlnet_scale: 0.5,
+    canny_low: 100,
+    canny_high: 200
 }
 
 export class GenerationController extends BaseController<GenerationState> {
@@ -119,30 +134,35 @@ export class GenerationController extends BaseController<GenerationState> {
         this.dispatchEvent(new CustomEvent("change"))
     }
 
-    public generate_txt2img(): Promise<void> {
+    public generate_txt2img(extras?: GenerationExtrasInput): Promise<void> {
         if (!this.state.prompt.trim()) {
             this.update_state({ error: "Please enter a prompt" })
             this.dispatchEvent(new CustomEvent("change"))
             return Promise.resolve()
         }
-        const { width, height } = this.state
         return this.run_generation("txt2img", (api_url, common) =>
-            ApiClient.generate_txt2img(api_url, { ...common, width, height })
+            ApiClient.generate_txt2img(api_url, { ...common, ...this.extra_params(extras) })
         )
     }
 
-    public generate_img2img(image_base64: string): Promise<void> {
+    public generate_img2img(image_base64: string, extras?: GenerationExtrasInput): Promise<void> {
         const strength = this.state.img2img_strength
         return this.run_generation("img2img", (api_url, common) =>
-            ApiClient.generate_img2img(api_url, { ...common, image: image_base64, strength })
+            ApiClient.generate_img2img(api_url, {
+                ...common,
+                ...this.extra_params(extras),
+                image: image_base64,
+                strength
+            })
         )
     }
 
-    public generate_inpaint(image_base64: string, mask_base64: string): Promise<void> {
+    public generate_inpaint(image_base64: string, mask_base64: string, extras?: GenerationExtrasInput): Promise<void> {
         const strength = this.state.inpaint_strength
         return this.run_generation("inpaint", (api_url, common) =>
             ApiClient.generate_inpaint(api_url, {
                 ...common,
+                ...this.extra_params(extras),
                 image: image_base64,
                 mask_image: mask_base64,
                 strength
@@ -159,8 +179,26 @@ export class GenerationController extends BaseController<GenerationState> {
             guidance_scale: s.guidance_scale,
             num_inference_steps: s.num_inference_steps,
             clip_skip: s.clip_skip,
+            width: s.width,
+            height: s.height,
+            num: s.num,
             seed: s.seed,
             scheduler: schedulers.includes(s.scheduler) ? s.scheduler : null
+        }
+    }
+
+    private extra_params(extras?: GenerationExtrasInput) {
+        const s = this.state
+        return {
+            ...(extras?.control_image
+                ? {
+                      control_image: extras.control_image,
+                      controlnet_conditioning_scale: s.controlnet_scale,
+                      low_threshold: s.canny_low,
+                      high_threshold: s.canny_high
+                  }
+                : {}),
+            ...(extras?.ip_adapter_image ? { ip_adapter_image: extras.ip_adapter_image } : {})
         }
     }
 
@@ -173,11 +211,26 @@ export class GenerationController extends BaseController<GenerationState> {
     ): Promise<void> {
         if (this.state.is_generating) return
         const api_url = settings_controller.get_value("api_url", "http://localhost:8000")
-        const { prompt, negative_prompt } = this.state
+        const { prompt, negative_prompt, num_inference_steps, num } = this.state
 
-        this.update_state({ is_generating: true, error: null })
+        this.update_state({
+            is_generating: true,
+            error: null,
+            progress: { active: true, step: 0, total_steps: num_inference_steps, image_index: 0, image_count: num }
+        })
         this.dispatchEvent(new CustomEvent("status_change"))
         this.dispatchEvent(new CustomEvent("change"))
+
+        const poll = window.setInterval(() => {
+            ApiClient.get_progress(api_url)
+                .then((progress) => {
+                    if (!this.state.is_generating) return
+                    this.update_state({ progress })
+                    this.dispatchEvent(new CustomEvent("status_change"))
+                    this.dispatchEvent(new CustomEvent("change"))
+                })
+                .catch(() => undefined)
+        }, 500)
 
         try {
             const res = await request(api_url, this.common_request_params())
@@ -202,12 +255,15 @@ export class GenerationController extends BaseController<GenerationState> {
 
             this.update_state({
                 is_generating: false,
+                progress: null,
                 history: [...new_items, ...this.state.history],
                 selected_image: new_items[0] || this.state.selected_image
             })
             this.dispatchEvent(new CustomEvent("history_change"))
         } catch (err: any) {
-            this.update_state({ is_generating: false, error: err.message || "Generation failed" })
+            this.update_state({ is_generating: false, progress: null, error: err.message || "Generation failed" })
+        } finally {
+            window.clearInterval(poll)
         }
         this.dispatchEvent(new CustomEvent("status_change"))
         this.dispatchEvent(new CustomEvent("change"))
