@@ -42,22 +42,32 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
         PipelineEnhancerBase.__init__(self,__oins__,init_sub_pipelines=init_sub_pipelines)
 
     def check_inference_kwargs(self,kwargs):
-
-        width = kwargs.get("width") or 1024
-        height = kwargs.get("height") or 1024
-        kwargs.update(width=width)
-        kwargs.update(height=height)
-
+        width = kwargs.get("width")
+        height = kwargs.get("height")
         image = kwargs.get("image")
+
         if image and isinstance(image, Image.Image):
-            image = normalize_image(image, width * height,scale_divisor=16)
-            kwargs.update(width=image.width)
-            kwargs.update(height=image.height)
-            kwargs.update(image=image)
+            if width is None and height is None:
+                width = image.width - (image.width % 16)
+                height = image.height - (image.height % 16)
+                if image.size != (width, height):
+                    image = image.resize((width, height), Image.Resampling.LANCZOS)
+            else:
+                target_w = width or 1024
+                target_h = height or 1024
+                image = normalize_image(image, target_w * target_h, scale_divisor=16)
+                width = image.width
+                height = image.height
+            kwargs.update(width=width, height=height, image=image)
+        else:
+            width = width or 1024
+            height = height or 1024
+            kwargs.update(width=width, height=height)
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
-            mask_image = normalize_image(mask_image, width * height,scale_divisor=16)
+            if mask_image.size != (width, height):
+                mask_image = mask_image.resize((width, height), Image.Resampling.LANCZOS)
             kwargs.update(mask_image=mask_image)
 
         if "controlnet" in (self.get_list_adapters().get("transformer") or []):
@@ -71,10 +81,14 @@ class FluxPipelineEnhancer(PipelineEnhancerBase):
 
         control_image = kwargs.get("control_image")
         if control_image and isinstance(control_image, Image.Image):
-            control_image = normalize_image(control_image, width * height,scale_divisor=16)
-            kwargs.update(width=control_image.width)
-            kwargs.update(height=control_image.height)
-            kwargs.update(control_image=control_image)
+            if width is None and height is None:
+                width = control_image.width - (control_image.width % 16)
+                height = control_image.height - (control_image.height % 16)
+                if control_image.size != (width, height):
+                    control_image = control_image.resize((width, height), Image.Resampling.LANCZOS)
+            elif control_image.size != (width, height):
+                control_image = control_image.resize((width, height), Image.Resampling.LANCZOS)
+            kwargs.update(width=width, height=height, control_image=control_image)
 
         return kwargs
 
