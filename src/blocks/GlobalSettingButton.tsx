@@ -4,25 +4,35 @@ import { useState, useCallback, useEffect } from "react"
 import { NaiveButton, BodyPortal, AnimationContainer, FullscreenModalContainer, StringInput } from "@/components"
 import { SettingIcon, CloseIcon } from "@/components/icons"
 import { RefreshIcon, TrashIcon } from "./icons"
-import { settings_controller, generation_controller } from "@/core/controllers"
+import { settings_controller, generation_controller, model_controller } from "@/core/controllers"
 import { useKeyedController, useController } from "@/components/hooks"
+import type { GenerationState, ModelState } from "@/core/controllers"
 
 export type GlobalSettingButtonProps = {
     className?: string
 }
 
+const select_history_count = (s: GenerationState) => s.history.length
+const select_system_info = (s: ModelState) => s.system_info
+
 export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps) {
     const api_url = useKeyedController(settings_controller, "api_url", "http://localhost:8000")
-    const gen_state = useController(generation_controller, {
-        events: ["system_info_change", "history_change"]
+    const history_count = useController(generation_controller, {
+        events: ["history_change"],
+        selector: select_history_count
     })
+    const system_info = useController(model_controller, { events: ["change"], selector: select_system_info })
 
     const [is_open, set_is_open] = useState(false)
     const [is_checking, set_is_checking] = useState(false)
     const [connection_status, set_connection_status] = useState<"connected" | "disconnected" | "checking">("checking")
+    const [is_confirming_clear, set_is_confirming_clear] = useState(false)
 
     const handle_open = useCallback(() => set_is_open(true), [])
-    const handle_close = useCallback(() => set_is_open(false), [])
+    const handle_close = useCallback(() => {
+        set_is_open(false)
+        set_is_confirming_clear(false)
+    }, [])
     const handle_toggle = useCallback(() => set_is_open((prev) => !prev), [])
 
     const verify_connection = useCallback(async () => {
@@ -30,9 +40,6 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
         set_connection_status("checking")
         const ok = await settings_controller.check_connection()
         set_connection_status(ok ? "connected" : "disconnected")
-        if (ok) {
-            await generation_controller.refresh_system_info()
-        }
         set_is_checking(false)
     }, [])
 
@@ -47,9 +54,12 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
     }
 
     const handle_clear_history = async () => {
-        if (window.confirm("Are you sure you want to clear all generation history?")) {
-            await generation_controller.clear_history()
+        if (!is_confirming_clear) {
+            set_is_confirming_clear(true)
+            return
         }
+        set_is_confirming_clear(false)
+        await generation_controller.clear_history()
     }
 
     return (
@@ -91,21 +101,19 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-sm font-medium">Inference API Endpoint</label>
                                     <span
-                                        className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                                        className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium border ${
                                             connection_status === "connected"
-                                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                                                : connection_status === "checking"
-                                                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                                                  : "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+                                                ? "border-black/20 dark:border-white/25"
+                                                : "border-black/10 dark:border-white/10 text-black/50 dark:text-white/50"
                                         }`}
                                     >
                                         <span
                                             className={`size-1.5 rounded-full ${
                                                 connection_status === "connected"
-                                                    ? "bg-emerald-500"
+                                                    ? "bg-black dark:bg-white"
                                                     : connection_status === "checking"
-                                                      ? "bg-amber-500 animate-pulse"
-                                                      : "bg-rose-500"
+                                                      ? "bg-black/40 dark:bg-white/40 animate-pulse"
+                                                      : "border border-black/40 dark:border-white/40"
                                             }`}
                                         />
                                         {connection_status === "connected"
@@ -150,25 +158,28 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                 <div className="space-y-2 text-xs">
                                     <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
                                         <span className="text-black/60 dark:text-white/60">GPU Count</span>
-                                        <span className="font-mono">{gen_state.system_info?.gpu_count ?? 0}</span>
+                                        <span className="font-mono">{system_info?.gpu_count ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
                                         <span className="text-black/60 dark:text-white/60">Active Model</span>
                                         <span className="font-mono text-right max-w-xs truncate">
-                                            {gen_state.system_info?.current_model || "None Loaded"}
+                                            {system_info?.current_model || "None Loaded"}
                                         </span>
                                     </div>
                                     <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
                                         <span className="text-black/60 dark:text-white/60">Architecture Version</span>
                                         <span className="font-mono uppercase">
-                                            {gen_state.system_info?.model_version || "N/A"}
+                                            {system_info?.model_version || "N/A"}
                                         </span>
                                     </div>
-                                    {gen_state.system_info?.gpu_names && gen_state.system_info.gpu_names.length > 0 && (
+                                    {system_info?.gpu_names && system_info.gpu_names.length > 0 && (
                                         <div className="flex flex-col py-1">
                                             <span className="text-black/60 dark:text-white/60 mb-1">Devices:</span>
-                                            {gen_state.system_info.gpu_names.map((name, i) => (
-                                                <span key={i} className="font-mono text-[11px] text-black/80 dark:text-white/80">
+                                            {system_info.gpu_names.map((name, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="font-mono text-[11px] text-black/80 dark:text-white/80"
+                                                >
                                                     [{i}] {name}
                                                 </span>
                                             ))}
@@ -186,16 +197,20 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                     <div>
                                         <div className="text-xs font-medium">Generation History</div>
                                         <div className="text-[11px] text-black/50 dark:text-white/50">
-                                            {gen_state.history.length} images saved in client database
+                                            {history_count} images saved in client database
                                         </div>
                                     </div>
                                     <NaiveButton
-                                        className="px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs font-medium"
+                                        className={`px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-40 ${
+                                            is_confirming_clear
+                                                ? "bg-black text-white border-transparent dark:bg-white dark:text-black"
+                                                : "border-black/15 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/8"
+                                        }`}
                                         on_click={handle_clear_history}
-                                        disabled={gen_state.history.length === 0}
+                                        disabled={history_count === 0}
                                     >
                                         <TrashIcon width={13} height={13} className="mr-1" />
-                                        Clear
+                                        {is_confirming_clear ? "Tap again to clear" : "Clear"}
                                     </NaiveButton>
                                 </div>
                             </div>

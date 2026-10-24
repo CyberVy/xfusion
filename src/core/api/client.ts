@@ -1,9 +1,4 @@
-import type {
-    Txt2ImgParams,
-    Img2ImgParams,
-    InpaintParams,
-    SystemInfo
-} from "./types"
+import type { Txt2ImgParams, Img2ImgParams, InpaintParams, SystemInfo, GenerationResponse } from "./types"
 
 export class ApiClient {
     private static clean_base_url(url: string): string {
@@ -29,11 +24,7 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async load_model(
-        base_url: string,
-        model: string,
-        model_version: string = "xl"
-    ): Promise<any> {
+    public static async load_model(base_url: string, model: string, model_version: string = "xl"): Promise<any> {
         const url = `${this.clean_base_url(base_url)}/api/v1/models/load`
         const res = await fetch(url, {
             method: "POST",
@@ -59,7 +50,10 @@ export class ApiClient {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url: lora_url, lora_name, strength })
         })
-        if (!res.ok) throw new Error(await res.text())
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            throw new Error(err.detail || "Failed to load LoRA")
+        }
         return res.json()
     }
 
@@ -70,26 +64,14 @@ export class ApiClient {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ lora_name })
         })
-        if (!res.ok) throw new Error(await res.text())
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            throw new Error(err.detail || "Failed to delete LoRA")
+        }
         return res.json()
     }
 
-    public static async set_scheduler(
-        base_url: string,
-        scheduler: string,
-        pipeline_type: string = "txt2img"
-    ): Promise<any> {
-        const url = `${this.clean_base_url(base_url)}/api/v1/scheduler/set`
-        const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ scheduler, pipeline_type })
-        })
-        if (!res.ok) throw new Error(await res.text())
-        return res.json()
-    }
-
-    public static async generate_txt2img(base_url: string, params: Txt2ImgParams): Promise<any> {
+    public static async generate_txt2img(base_url: string, params: Txt2ImgParams): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/txt2img`
         const res = await fetch(url, {
             method: "POST",
@@ -103,7 +85,7 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async generate_img2img(base_url: string, params: Img2ImgParams): Promise<any> {
+    public static async generate_img2img(base_url: string, params: Img2ImgParams): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/img2img`
         const res = await fetch(url, {
             method: "POST",
@@ -117,7 +99,7 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async generate_inpaint(base_url: string, params: InpaintParams): Promise<any> {
+    public static async generate_inpaint(base_url: string, params: InpaintParams): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/inpaint`
         const res = await fetch(url, {
             method: "POST",
