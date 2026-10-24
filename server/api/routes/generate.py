@@ -4,11 +4,18 @@ from ..schemas import (
     Img2ImgRequest,
     InpaintRequest,
     GenerationResponse,
+    GenerationProgress,
     GeneratedImage
 )
 from ..manager import manager
 
 router = APIRouter(prefix="/api/v1/generate", tags=["Generation"])
+
+
+@router.get("/progress", response_model=GenerationProgress)
+async def generation_progress():
+    """Current denoising step. Safe to poll while a generation request is in flight."""
+    return GenerationProgress(**manager.progress)
 
 
 @router.post("/txt2img", response_model=GenerationResponse)

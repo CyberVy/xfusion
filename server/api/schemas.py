@@ -2,7 +2,15 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 
 
-class Txt2ImgRequest(BaseModel):
+class GenerationExtras(BaseModel):
+    control_image: Optional[str] = Field(default=None, description="Control image; converted to Canny on the server")
+    controlnet_conditioning_scale: Optional[float] = Field(default=0.5, description="ControlNet scale")
+    low_threshold: Optional[int] = Field(default=100, description="Canny low threshold")
+    high_threshold: Optional[int] = Field(default=200, description="Canny high threshold")
+    ip_adapter_image: Optional[str] = Field(default=None, description="IP-Adapter reference image")
+
+
+class Txt2ImgRequest(GenerationExtras):
     prompt: str = Field(..., description="Prompt describing the image to generate")
     negative_prompt: Optional[str] = Field(default="", description="Negative prompt")
     guidance_scale: Optional[float] = Field(default=7.0, description="Guidance scale / CFG scale")
@@ -11,11 +19,11 @@ class Txt2ImgRequest(BaseModel):
     width: Optional[int] = Field(default=1024, description="Image width")
     height: Optional[int] = Field(default=1024, description="Image height")
     seed: Optional[int] = Field(default=None, description="Random seed (None for random)")
-    num: Optional[int] = Field(default=1, description="Number of images to generate")
+    num: Optional[int] = Field(default=1, ge=1, le=10, description="Number of images to generate")
     scheduler: Optional[str] = Field(default=None, description="Scheduler name (e.g. DPM++ 2M KARRAS)")
 
 
-class Img2ImgRequest(BaseModel):
+class Img2ImgRequest(GenerationExtras):
     image: str = Field(..., description="Input image as Base64 Data URL or HTTP URL")
     prompt: str = Field(..., description="Prompt describing the modification")
     negative_prompt: Optional[str] = Field(default="", description="Negative prompt")
@@ -26,11 +34,11 @@ class Img2ImgRequest(BaseModel):
     width: Optional[int] = Field(default=None, description="Output width (None to preserve)")
     height: Optional[int] = Field(default=None, description="Output height (None to preserve)")
     seed: Optional[int] = Field(default=None, description="Random seed")
-    num: Optional[int] = Field(default=1, description="Number of images to generate")
+    num: Optional[int] = Field(default=1, ge=1, le=10, description="Number of images to generate")
     scheduler: Optional[str] = Field(default=None, description="Scheduler name")
 
 
-class InpaintRequest(BaseModel):
+class InpaintRequest(GenerationExtras):
     image: str = Field(..., description="Original image as Base64 Data URL or HTTP URL")
     mask_image: str = Field(..., description="Mask image as Base64 Data URL or HTTP URL")
     prompt: str = Field(..., description="Prompt for inpainting")
@@ -42,13 +50,13 @@ class InpaintRequest(BaseModel):
     width: Optional[int] = Field(default=None, description="Width")
     height: Optional[int] = Field(default=None, description="Height")
     seed: Optional[int] = Field(default=None, description="Random seed")
-    num: Optional[int] = Field(default=1, description="Number of images to generate")
+    num: Optional[int] = Field(default=1, ge=1, le=10, description="Number of images to generate")
     scheduler: Optional[str] = Field(default=None, description="Scheduler name")
 
 
 class ModelLoadRequest(BaseModel):
     model: str = Field(..., description="Hugging Face repo ID, local path, or Civitai download URL")
-    model_version: Optional[str] = Field(default="xl", description="Model architecture version (e.g., 1.5, xl, 3, flux)")
+    model_version: Optional[str] = Field(default="xl", description="Model architecture version (e.g., 1.5, xl, pony, 3, 3.5, flux, or empty to auto-detect)")
 
 
 class LoraLoadRequest(BaseModel):
@@ -59,6 +67,37 @@ class LoraLoadRequest(BaseModel):
 
 class LoraDeleteRequest(BaseModel):
     lora_name: str = Field(..., description="Name of the LoRA adapter to remove")
+
+
+class LoraStrengthRequest(BaseModel):
+    lora_name: str
+    strength: float = Field(..., ge=0, le=1)
+
+
+class LoraEnabledRequest(BaseModel):
+    enabled: bool
+
+
+class IpAdapterLoadRequest(BaseModel):
+    uri: str
+    subfolder: str = ""
+    weight_name: str
+    image_encoder_folder: str = "image_encoder"
+    strength: float = Field(default=0.5, ge=0, le=1)
+
+
+class IpAdapterStrengthRequest(BaseModel):
+    strength: float = Field(..., ge=0, le=1)
+
+
+class ControlnetLoadRequest(BaseModel):
+    model: Optional[str] = None
+
+
+class ControlnetPreviewRequest(BaseModel):
+    image: str
+    low_threshold: int = 100
+    high_threshold: int = 200
 
 
 class SchedulerSetRequest(BaseModel):
@@ -80,6 +119,14 @@ class GenerationResponse(BaseModel):
     metadata: Dict[str, Any] = {}
 
 
+class GenerationProgress(BaseModel):
+    active: bool = False
+    step: int = 0
+    total_steps: int = 0
+    image_index: int = 0
+    image_count: int = 0
+
+
 class SystemInfoResponse(BaseModel):
     status: str
     gpu_count: int
@@ -87,4 +134,9 @@ class SystemInfoResponse(BaseModel):
     current_model: Optional[str] = None
     model_version: Optional[str] = None
     loras: Dict[str, float] = {}
+    loras_enabled: bool = True
     schedulers: List[str] = []
+    controlnet_loaded: bool = False
+    ip_adapter: Optional[Dict[str, Any]] = None
+    python_version: str = ""
+    os_platform: str = ""
