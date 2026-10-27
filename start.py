@@ -6,5 +6,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
     reload = os.environ.get("DEBUG", "false").lower() in ["true", "1"]
 
-    print(f"Starting XFusion API Server on {host}:{port} ...")
+    print(f"Starting xfusion API Server on {host}:{port} ...")
     uvicorn.run("server.api.server:app", host=host, port=port, reload=reload)

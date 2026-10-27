@@ -1,7 +1,7 @@
 [project]
 name = "xfusion"
 version = "0.2.0"
-description = "Xfusion API Backend & Generation Engine"
+description = "xfusion API Backend & Generation Engine"
 readme = "README.md"
 license = "MIT"
 authors = [{ name = "Eramth Ru", email = "contanct@xsolutiontech.com" }]

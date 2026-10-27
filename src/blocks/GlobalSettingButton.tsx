@@ -145,7 +145,7 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                     </NaiveButton>
                                 </div>
                                 <p className="text-[11px] text-black/40 dark:text-white/40 mt-2">
-                                    Provide the HTTP/HTTPS address where your Python XFusion backend is running (e.g.
+                                    Provide the HTTP/HTTPS address where your Python xfusion backend is running (e.g.
                                     local GPU or cloud server).
                                 </p>
                             </div>
