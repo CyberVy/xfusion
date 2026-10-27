@@ -64,13 +64,24 @@ resolve_remote_dir() {
     fi
 
     log_info "Detecting remote agent workspace..."
-    local remote_pwd
-    remote_pwd=$(rexec "pwd" 2>/dev/null | tr -d '\r\n')
+    local remote_pwd=""
+    for _ in 1 2 3; do
+        remote_pwd=$(rexec "pwd" 2>/dev/null | grep -E '^/' | tail -n 1 | tr -d '\r\n')
+        if [ -n "$remote_pwd" ]; then
+            break
+        fi
+        sleep 1
+    done
 
-    if [ -n "$remote_pwd" ]; then
-        REMOTE_DIR="$remote_pwd/xfusion"
+    if [ -z "$remote_pwd" ]; then
+        log_error "Failed to detect remote agent working directory. Please ensure the agent is connected or set REMOTE_DIR in .env."
+        exit 1
+    fi
+
+    if [ "$(basename "$remote_pwd")" = "xfusion" ]; then
+        REMOTE_DIR="$remote_pwd"
     else
-        REMOTE_DIR="~/xfusion"
+        REMOTE_DIR="$remote_pwd/xfusion"
     fi
 
     REMOTE_LOG_FILE="${REMOTE_LOG_FILE:-$REMOTE_DIR/.server.log}"
