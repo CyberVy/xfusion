@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Remote Server Daemon & Lifecycle Manager for XFusion.
+Remote Server Daemon & Lifecycle Manager for xfusion.
 Controls background execution of start.py, PID tracking, health polling, and clean shutdown.
 Fully path-agnostic: uses paths relative to project root by default.
 """
@@ -73,7 +73,7 @@ def is_process_running(pid: int) -> bool:
 def check_health(port: int = DEFAULT_PORT, timeout_sec: float = 2.0) -> bool:
     url = f"http://127.0.0.1:{port}/api/v1/system/health"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "XFusion-Daemon"})
+        req = urllib.request.Request(url, headers={"User-Agent": "xfusion-Daemon"})
         with urllib.request.urlopen(req, timeout=timeout_sec) as res:
             if res.status == 200:
                 data = json.loads(res.read().decode())
@@ -122,7 +122,7 @@ def cmd_start(args: argparse.Namespace) -> int:
     env["HOST"] = "0.0.0.0"
     env["PYTHONUNBUFFERED"] = "1"
 
-    print(f"[INFO] Launching XFusion Backend on port {port}...")
+    print(f"[INFO] Launching xfusion Backend on port {port}...")
     proc = subprocess.Popen(
         [sys.executable, start_script],
         cwd=project_root,
@@ -206,7 +206,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     healthy = check_health(port) if running else False
 
     print("=" * 45)
-    print("XFusion Backend Status")
+    print("xfusion Backend Status")
     print("=" * 45)
     print(f"Project Root:   {get_project_root()}")
     print(f"PID File:       {pid_file}")
@@ -235,7 +235,7 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 def cmd_check_env(_args: argparse.Namespace) -> int:
     print("=" * 45)
-    print("XFusion Environment Check")
+    print("xfusion Environment Check")
     print("=" * 45)
     print(f"Python Executable: {sys.executable}")
     print(f"Python Version:    {sys.version.split()[0]}")
@@ -264,7 +264,7 @@ def cmd_check_env(_args: argparse.Namespace) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="XFusion Server Daemon Manager")
+    parser = argparse.ArgumentParser(description="xfusion Server Daemon Manager")
     parser.add_argument(
         "action",
         choices=["start", "stop", "restart", "status", "check-env"],

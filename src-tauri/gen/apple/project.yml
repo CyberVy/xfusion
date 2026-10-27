@@ -10,7 +10,7 @@ configs:
 settingGroups:
   app:
     base:
-      PRODUCT_NAME: XFusion
+      PRODUCT_NAME: xfusion
       PRODUCT_BUNDLE_IDENTIFIER: com.cybervy.xfusion
 targetTemplates:
   app:

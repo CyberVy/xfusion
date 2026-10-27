@@ -1,6 +1,6 @@
 {
-  "name": "XFusion",
-  "short_name": "XFusion",
+  "name": "xfusion",
+  "short_name": "xfusion",
   "start_url": "/",
   "display": "standalone",
   "icons": [

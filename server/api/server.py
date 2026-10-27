@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="XFusion Inference API",
+    title="xfusion Inference API",
     description="High-performance decoupled backend for diffusion inference, designed for CDN/Web clients.",
     version="0.2.0",
     lifespan=lifespan,
@@ -48,7 +48,7 @@ app.include_router(generate_router)
 @app.get("/")
 async def root():
     return {
-        "name": "XFusion Inference API",
+        "name": "xfusion Inference API",
         "version": "0.2.0",
         "docs": "/docs",
         "health": "/api/v1/system/health"

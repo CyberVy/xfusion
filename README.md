@@ -1,4 +1,4 @@
-# XFusion
+# xfusion
 
 A decoupled, high-performance generative AI platform specializing in assembling open-source diffusion models (Stable Diffusion, FLUX, etc.).
 
