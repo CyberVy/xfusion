@@ -15,7 +15,7 @@ export class ApiClient {
     public static async check_health(base_url: string): Promise<boolean> {
         try {
             const url = `${this.clean_base_url(base_url)}/api/v1/system/health`
-            const res = await fetch(url, { method: "GET" })
+            const res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(10_000) })
             if (!res.ok) return false
             const data = await res.json()
             return data.status === "healthy"
@@ -26,7 +26,7 @@ export class ApiClient {
 
     public static async get_system_info(base_url: string): Promise<SystemInfo> {
         const url = `${this.clean_base_url(base_url)}/api/v1/system/info`
-        const res = await fetch(url)
+        const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
         if (!res.ok) throw new Error(`Failed to fetch system info: ${res.statusText}`)
         return res.json()
     }
@@ -36,7 +36,8 @@ export class ApiClient {
         const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ model, model_version })
+            body: JSON.stringify({ model, model_version }),
+            signal: AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({ detail: res.statusText }))
