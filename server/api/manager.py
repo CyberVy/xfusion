@@ -64,22 +64,25 @@ class PipelineManager:
 
         model_version = os.environ.get("MODEL_VERSION", "")
         model_url = os.environ.get("MODEL_URL", None)
+        if not model_url:
+            print("Note: No MODEL_URL provided, skipping auto-initialization.")
+            return
+
         num_gpus = max(GPU_COUNT, 1)
 
         print(f"Initializing {num_gpus} pipeline(s) for model_version='{model_version}'...")
         try:
-            self.pipelines = [
-                load_enhancer(
+            self.pipelines = []
+            for i in range(num_gpus):
+                enhancer = load_enhancer(
                     model_url,
                     model_version=model_version,
                     download_kwargs=self.download_kwargs,
                     telegram_kwargs=self.telegram_kwargs
                 )
-                for _ in range(num_gpus)
-            ]
-            if GPU_COUNT > 0:
-                for i, p in enumerate(self.pipelines):
-                    p.to(f"cuda:{i}")
+                if GPU_COUNT > 0:
+                    enhancer.to(f"cuda:{i}")
+                self.pipelines.append(enhancer)
             self.model_version = model_version
             self.current_model = model_url
             print("Pipelines successfully initialized.")
@@ -88,24 +91,27 @@ class PipelineManager:
 
     async def load_model(self, model: str, model_version: str) -> Dict[str, Any]:
         async with self.lock:
-            num_gpus = max(GPU_COUNT, 1)
-            for p in self.pipelines:
-                p.clear()
+            loop = asyncio.get_running_loop()
 
-            self.pipelines = [
-                load_enhancer(
-                    model,
-                    model_version=model_version,
-                    download_kwargs=self.download_kwargs,
-                    telegram_kwargs=self.telegram_kwargs
-                )
-                for _ in range(num_gpus)
-            ]
+            def _sync_load():
+                num_gpus = max(GPU_COUNT, 1)
+                for p in self.pipelines:
+                    p.clear()
 
-            if GPU_COUNT > 0:
-                for i, p in enumerate(self.pipelines):
-                    p.to(f"cuda:{i}")
+                new_pipelines = []
+                for i in range(num_gpus):
+                    enhancer = load_enhancer(
+                        model,
+                        model_version=model_version,
+                        download_kwargs=self.download_kwargs,
+                        telegram_kwargs=self.telegram_kwargs
+                    )
+                    if GPU_COUNT > 0:
+                        enhancer.to(f"cuda:{i}")
+                    new_pipelines.append(enhancer)
+                return new_pipelines
 
+            self.pipelines = await loop.run_in_executor(None, _sync_load)
             self.current_model = model
             self.model_version = model_version
             self.ip_adapter = None
@@ -118,8 +124,13 @@ class PipelineManager:
         async with self.lock:
             if not self.pipelines:
                 raise RuntimeError("No model is currently loaded.")
-            for p in self.pipelines:
-                p.set_lora(url, lora_name, strength)
+            loop = asyncio.get_running_loop()
+
+            def _sync_set_lora():
+                for p in self.pipelines:
+                    p.set_lora(url, lora_name, strength)
+
+            await loop.run_in_executor(None, _sync_set_lora)
             return {"status": "success", "lora_name": lora_name, "strength": strength}
 
     async def delete_lora(self, lora_name: str) -> Dict[str, Any]:
@@ -161,9 +172,14 @@ class PipelineManager:
             self._require_pipelines()
             if self._is_flux():
                 raise RuntimeError("IP-Adapter is not supported for FLUX.")
-            for pipeline in self.pipelines:
-                pipeline.set_ip_adapter(uri, subfolder, weight_name, image_encoder_folder)
-                pipeline.set_ip_adapter_strength(strength)
+            loop = asyncio.get_running_loop()
+
+            def _sync_set_ip_adapter():
+                for pipeline in self.pipelines:
+                    pipeline.set_ip_adapter(uri, subfolder, weight_name, image_encoder_folder)
+                    pipeline.set_ip_adapter_strength(strength)
+
+            await loop.run_in_executor(None, _sync_set_ip_adapter)
             self.ip_adapter = {
                 "uri": uri,
                 "subfolder": subfolder,
@@ -196,8 +212,13 @@ class PipelineManager:
         async with self.lock:
             self._require_pipelines()
             self.controlnet_model = model or None
-            for pipeline in self.pipelines:
-                pipeline.load_controlnet(self.controlnet_model)
+            loop = asyncio.get_running_loop()
+
+            def _sync_load_controlnet():
+                for pipeline in self.pipelines:
+                    pipeline.load_controlnet(self.controlnet_model)
+
+            await loop.run_in_executor(None, _sync_load_controlnet)
             return {"status": "success", "controlnet_model": self.controlnet_model, "loaded": True}
 
     async def offload_controlnet(self) -> Dict[str, Any]:
