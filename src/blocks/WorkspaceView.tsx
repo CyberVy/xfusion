@@ -179,12 +179,12 @@ export function WorkspaceView() {
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 md:pt-6 pb-32">
-            <div className="grid grid-cols-1 md:grid-cols-[minmax(340px,420px)_1fr] gap-6 md:gap-8 items-start">
-                <div className="md:order-last md:sticky md:top-6">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(340px,420px)_minmax(0,1fr)] gap-6 md:gap-8 items-start">
+                <div className="min-w-0 md:order-last md:sticky md:top-6">
                     <ResultPanel />
                 </div>
 
-                <div className="flex flex-col gap-6">
+                <div className="min-w-0 flex flex-col gap-6">
                     <div className="grid grid-cols-3 p-1 rounded-full bg-black/5 dark:bg-white/8">
                         {MODES.map((item) => (
                             <button
@@ -305,7 +305,7 @@ export function WorkspaceView() {
                                         >
                                             {is_previewing ? "Rendering preview" : "Preview edges"}
                                         </NaiveButton>
-                                        {preview_error && <p className="text-xs break-words">{preview_error}</p>}
+                                        {preview_error && <p className="text-xs wrap-break-word">{preview_error}</p>}
                                         {control_preview && (
                                             <img
                                                 src={control_preview}
@@ -378,7 +378,7 @@ export function WorkspaceView() {
                             <p className="text-xs text-center text-black/45 dark:text-white/45">{generate_hint}</p>
                         )}
                         {state.error && (
-                            <p className="p-3 rounded-xl text-xs leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 break-words">
+                            <p className="p-3 rounded-xl text-xs leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 wrap-break-word">
                                 {state.error}
                             </p>
                         )}
