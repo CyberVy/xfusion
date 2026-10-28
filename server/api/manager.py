@@ -4,9 +4,10 @@ import base64
 import random
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Union, TypedDict, TYPE_CHECKING
 from PIL import Image
 
+from .schemas import Txt2ImgRequest, Img2ImgRequest, InpaintRequest
 from ..infra.config import GPU_COUNT, GPU_NAME, DOWNLOAD_PATH
 from ..infra.memory import free_memory_to_system
 from ..infra.image import (
@@ -20,18 +21,47 @@ try:
 except (ImportError, AttributeError):
     load_engine = None
 
+from ..engine.base import BasePipelineEngine
+from ..engine.types import InferenceKwargs
+from diffusers import DiffusionPipeline
+
+PipelineEngineType = BasePipelineEngine
+
+
+class IpAdapterDict(TypedDict):
+    uri: str
+    subfolder: str
+    weight_name: str
+    image_encoder_folder: str
+    strength: float
+
+
+class ProgressDict(TypedDict):
+    active: bool
+    step: int
+    total_steps: int
+    image_index: int
+    image_count: int
+
+
+class GeneratedImageItem(TypedDict):
+    image_base64: str
+    seed: int
+    width: int
+    height: int
+
 
 class PipelineManager:
     def __init__(self):
-        self.pipelines: list = []
+        self.pipelines: List[PipelineEngineType] = []
         self.current_model: Optional[str] = None
         self.model_version: Optional[str] = None
         self.lock = asyncio.Lock()
-        self.download_kwargs = {"directory": DOWNLOAD_PATH}
-        self.ip_adapter: Optional[Dict[str, Any]] = None
-        self.loras_enabled = True
+        self.download_kwargs: Dict[str, str] = {"directory": DOWNLOAD_PATH}
+        self.ip_adapter: Optional[IpAdapterDict] = None
+        self.loras_enabled: bool = True
         self.controlnet_model: Optional[str] = None
-        self.progress: Dict[str, Any] = {
+        self.progress: ProgressDict = {
             "active": False,
             "step": 0,
             "total_steps": 0,
@@ -39,7 +69,7 @@ class PipelineManager:
             "image_count": 0,
         }
 
-    def initialize_from_env(self):
+    def initialize_from_env(self) -> None:
         """Optionally initialize pipelines from environment variables."""
         if load_engine is None:
             print("Note: PyTorch CUDA pipeline is deferred or running in API mode.")
@@ -72,23 +102,24 @@ class PipelineManager:
         except Exception as e:
             print(f"Deferred pipeline initialization: {e}")
 
-    async def load_model(self, model: str, model_version: str) -> Dict[str, Any]:
+    async def load_model(self, model: str, model_version: str) -> Dict[str, str]:
         async with self.lock:
             loop = asyncio.get_running_loop()
 
-            def _sync_load():
+            def _sync_load() -> List[PipelineEngineType]:
                 num_gpus = max(GPU_COUNT, 1)
                 for p in self.pipelines:
-                    p.clear()
+                    if hasattr(p, "clear"):
+                        p.clear()
 
-                new_pipelines = []
+                new_pipelines: List[PipelineEngineType] = []
                 for i in range(num_gpus):
                     engine = load_engine(
                         model,
                         model_version=model_version,
                         download_kwargs=self.download_kwargs,
                     )
-                    if GPU_COUNT > 0:
+                    if GPU_COUNT > 0 and hasattr(engine, "to"):
                         engine.to(f"cuda:{i}")
                     new_pipelines.append(engine)
                 return new_pipelines
@@ -102,41 +133,44 @@ class PipelineManager:
             free_memory_to_system()
             return {"status": "success", "model": model, "model_version": model_version}
 
-    async def set_lora(self, url: str, lora_name: str, strength: float = 0.4) -> Dict[str, Any]:
+    async def set_lora(self, url: str, lora_name: str, strength: float = 0.4) -> Dict[str, Union[str, float]]:
         async with self.lock:
             if not self.pipelines:
                 raise RuntimeError("No model is currently loaded.")
             loop = asyncio.get_running_loop()
 
-            def _sync_set_lora():
+            def _sync_set_lora() -> None:
                 for p in self.pipelines:
-                    p.set_lora(url, lora_name, strength)
+                    if hasattr(p, "set_lora"):
+                        p.set_lora(url, lora_name, strength)
 
             await loop.run_in_executor(None, _sync_set_lora)
             return {"status": "success", "lora_name": lora_name, "strength": strength}
 
-    async def delete_lora(self, lora_name: str) -> Dict[str, Any]:
+    async def delete_lora(self, lora_name: str) -> Dict[str, str]:
         async with self.lock:
             if not self.pipelines:
                 raise RuntimeError("No model is currently loaded.")
             for p in self.pipelines:
-                p.delete_adapters(lora_name)
+                if hasattr(p, "delete_adapters"):
+                    p.delete_adapters(lora_name)
             free_memory_to_system()
             return {"status": "success", "deleted_lora": lora_name}
 
     def get_loras(self) -> Dict[str, float]:
         if not self.pipelines:
             return {}
-        return getattr(self.pipelines[0], "lora_dict", {})
+        return dict(getattr(self.pipelines[0], "lora_dict", {}))
 
-    async def set_lora_strength(self, lora_name: str, strength: float) -> Dict[str, Any]:
+    async def set_lora_strength(self, lora_name: str, strength: float) -> Dict[str, Union[str, float]]:
         async with self.lock:
             self._require_pipelines()
             for pipeline in self.pipelines:
-                pipeline.set_lora_strength(lora_name, strength)
+                if hasattr(pipeline, "set_lora_strength"):
+                    pipeline.set_lora_strength(lora_name, strength)
             return {"status": "success", "lora_name": lora_name, "strength": strength}
 
-    async def set_loras_enabled(self, enabled: bool) -> Dict[str, Any]:
+    async def set_loras_enabled(self, enabled: bool) -> Dict[str, Union[str, bool]]:
         async with self.lock:
             self._require_pipelines()
             method_name = "enable_lora" if enabled else "disable_lora"
@@ -155,65 +189,72 @@ class PipelineManager:
         weight_name: str,
         image_encoder_folder: str,
         strength: float
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[str, IpAdapterDict]]:
         async with self.lock:
             self._require_pipelines()
             if self._is_flux():
                 raise RuntimeError("IP-Adapter is not supported for FLUX.")
             loop = asyncio.get_running_loop()
 
-            def _sync_set_ip_adapter():
+            def _sync_set_ip_adapter() -> None:
                 for pipeline in self.pipelines:
-                    pipeline.set_ip_adapter(uri, subfolder, weight_name, image_encoder_folder)
-                    pipeline.set_ip_adapter_strength(strength)
+                    if hasattr(pipeline, "set_ip_adapter"):
+                        pipeline.set_ip_adapter(uri, subfolder, weight_name, image_encoder_folder)
+                    if hasattr(pipeline, "set_ip_adapter_strength"):
+                        pipeline.set_ip_adapter_strength(strength)
 
             await loop.run_in_executor(None, _sync_set_ip_adapter)
-            self.ip_adapter = {
+            adapter_info: IpAdapterDict = {
                 "uri": uri,
                 "subfolder": subfolder,
                 "weight_name": weight_name,
                 "image_encoder_folder": image_encoder_folder,
                 "strength": strength,
             }
+            self.ip_adapter = adapter_info
             return {"status": "success", "ip_adapter": self.ip_adapter}
 
-    async def set_ip_adapter_strength(self, strength: float) -> Dict[str, Any]:
+    async def set_ip_adapter_strength(self, strength: float) -> Dict[str, Union[str, float]]:
         async with self.lock:
             self._require_pipelines()
             if not self.ip_adapter:
                 raise RuntimeError("No IP-Adapter is loaded.")
             for pipeline in self.pipelines:
-                pipeline.set_ip_adapter_strength(strength)
+                if hasattr(pipeline, "set_ip_adapter_strength"):
+                    pipeline.set_ip_adapter_strength(strength)
             self.ip_adapter = {**self.ip_adapter, "strength": strength}
             return {"status": "success", "strength": strength}
 
-    async def delete_ip_adapter(self) -> Dict[str, Any]:
+    async def delete_ip_adapter(self) -> Dict[str, str]:
         async with self.lock:
             self._require_pipelines()
             for pipeline in self.pipelines:
-                pipeline.delete_ip_adapter()
+                if hasattr(pipeline, "delete_ip_adapter"):
+                    pipeline.delete_ip_adapter()
             self.ip_adapter = None
             free_memory_to_system()
             return {"status": "success"}
 
-    async def load_controlnet(self, model: Optional[str]) -> Dict[str, Any]:
+    async def load_controlnet(self, model: Optional[str]) -> Dict[str, Union[str, bool, None]]:
         async with self.lock:
             self._require_pipelines()
             self.controlnet_model = model or None
             loop = asyncio.get_running_loop()
 
-            def _sync_load_controlnet():
+            def _sync_load_controlnet() -> None:
                 for pipeline in self.pipelines:
-                    pipeline.load_controlnet(self.controlnet_model)
+                    if hasattr(pipeline, "load_controlnet"):
+                        pipeline.load_controlnet(self.controlnet_model)
 
             await loop.run_in_executor(None, _sync_load_controlnet)
             return {"status": "success", "controlnet_model": self.controlnet_model, "loaded": True}
 
-    async def offload_controlnet(self) -> Dict[str, Any]:
+    async def offload_controlnet(self) -> Dict[str, Union[str, bool]]:
         async with self.lock:
             self._require_pipelines()
             for pipeline in self.pipelines:
-                pipeline.offload_controlnet()
+                if hasattr(pipeline, "offload_controlnet"):
+                    pipeline.offload_controlnet()
             return {"status": "success", "loaded": self.controlnet_is_loaded()}
 
     def controlnet_is_loaded(self) -> bool:
@@ -233,43 +274,51 @@ class PipelineManager:
     def _is_flux(self) -> bool:
         return self.model_version == "flux"
 
-    def _pipeline_has_controlnet(self, pipeline) -> bool:
+    def _pipeline_has_controlnet(self, pipeline: PipelineEngineType) -> bool:
         if getattr(pipeline, "_controlnet", None) is not None:
             return True
         try:
-            adapters = pipeline.get_list_adapters() or {}
+            get_adapters = getattr(pipeline, "get_list_adapters", None)
+            adapters = get_adapters() if callable(get_adapters) else {}
         except Exception:
             return False
-        return "controlnet" in (adapters.get("transformer") or [])
+        if isinstance(adapters, dict):
+            return "controlnet" in (adapters.get("transformer") or [])
+        return False
 
-    async def set_scheduler(self, scheduler: str, pipeline_type: str = "txt2img") -> Dict[str, Any]:
+    async def set_scheduler(self, scheduler: str, pipeline_type: str = "txt2img") -> Dict[str, str]:
         async with self.lock:
             if not self.pipelines:
                 raise RuntimeError("No model is currently loaded.")
             for p in self.pipelines:
+                target_sub = None
                 if pipeline_type == "txt2img":
-                    p.text_to_image_pipeline.set_scheduler(scheduler)
+                    target_sub = getattr(p, "text_to_image_pipeline", None)
                 elif pipeline_type == "img2img":
-                    p.image_to_image_pipeline.set_scheduler(scheduler)
+                    target_sub = getattr(p, "image_to_image_pipeline", None)
                 elif pipeline_type == "inpaint":
-                    p.inpainting_pipeline.set_scheduler(scheduler)
+                    target_sub = getattr(p, "inpainting_pipeline", None)
+
+                if target_sub is not None and hasattr(target_sub, "set_scheduler"):
+                    target_sub.set_scheduler(scheduler)
             return {"status": "success", "scheduler": scheduler, "pipeline_type": pipeline_type}
 
     def get_schedulers(self) -> List[str]:
         if not self.pipelines:
             return []
-        return list(getattr(self.pipelines[0], "scheduler_map", {}))
+        sched_map = getattr(self.pipelines[0], "scheduler_map", {})
+        return list(sched_map.keys()) if isinstance(sched_map, dict) else []
 
     async def _generate(
         self,
         pipeline_attr: str,
-        kwargs: Dict[str, Any],
+        kwargs: InferenceKwargs,
         seed: Optional[int],
         num: Optional[int],
         scheduler: Optional[str],
         use_controlnet: bool = False,
         controlnet_scale: Optional[float] = None
-    ) -> Tuple[List[Dict[str, Any]], float]:
+    ) -> Tuple[List[GeneratedImageItem], float]:
         async with self.lock:
             self._require_pipelines()
             controlnet_attrs = {
@@ -279,12 +328,13 @@ class PipelineManager:
             }
             if use_controlnet:
                 for pipeline in self.pipelines:
-                    if not self._pipeline_has_controlnet(pipeline):
+                    if not self._pipeline_has_controlnet(pipeline) and hasattr(pipeline, "load_controlnet"):
                         pipeline.load_controlnet(self.controlnet_model)
                 pipeline_attr = controlnet_attrs[pipeline_attr]
                 if self._is_flux():
                     for pipeline in self.pipelines:
-                        pipeline.set_lora_strength("controlnet", controlnet_scale if controlnet_scale is not None else 0.5)
+                        if hasattr(pipeline, "set_lora_strength"):
+                            pipeline.set_lora_strength("controlnet", controlnet_scale if controlnet_scale is not None else 0.5)
                 elif controlnet_scale is not None:
                     kwargs["controlnet_conditioning_scale"] = controlnet_scale
 
@@ -296,10 +346,12 @@ class PipelineManager:
             sub_pipeline = getattr(self.pipelines[0], pipeline_attr)
             if scheduler and getattr(sub_pipeline, "scheduler_map", None):
                 for pipeline in self.pipelines:
-                    getattr(pipeline, pipeline_attr).set_scheduler(scheduler)
+                    target = getattr(pipeline, pipeline_attr, None)
+                    if target is not None and hasattr(target, "set_scheduler"):
+                        target.set_scheduler(scheduler)
 
-            num = max(1, min(int(num or 1), 10))
-            seeds = [seed + i for i in range(num)] if seed else [random.randint(1, 2**31 - 1) for _ in range(num)]
+            num_count = max(1, min(int(num or 1), 10))
+            seeds = [seed + i for i in range(num_count)] if seed else [random.randint(1, 2**31 - 1) for _ in range(num_count)]
 
             total_steps = int(kwargs.get("num_inference_steps") or 0)
             self.progress = {
@@ -310,7 +362,12 @@ class PipelineManager:
                 "image_count": len(seeds),
             }
 
-            def callback_on_step_end(_pipe, step, _timestep, callback_kwargs):
+            def callback_on_step_end(
+                _pipe: DiffusionPipeline,
+                step: int,
+                _timestep: Union[int, float],
+                callback_kwargs: Dict[str, Union[float, int, str]]
+            ) -> Dict[str, Union[float, int, str]]:
                 self.progress = {**self.progress, "step": int(step) + 1}
                 return callback_kwargs
 
@@ -318,24 +375,22 @@ class PipelineManager:
             start_time = time.time()
             loop = asyncio.get_running_loop()
 
-            def run_seed(index: int, item_seed: int, pipeline):
+            def run_seed(index: int, item_seed: int, pipeline: PipelineEngineType) -> Tuple[int, int, List[Image.Image]]:
                 self.progress = {**self.progress, "image_index": index, "step": 0}
-                images = getattr(pipeline, pipeline_attr).generate(
-                    seed=item_seed, num=1, **call_kwargs
-                )
+                sub = getattr(pipeline, pipeline_attr)
+                images: List[Image.Image] = sub.generate(seed=item_seed, num=1, **call_kwargs)
                 return index, item_seed, images
 
             try:
                 if len(self.pipelines) == 1:
-                    ordered = []
+                    ordered: List[Tuple[int, int, List[Image.Image]]] = []
                     for index, item_seed in enumerate(seeds):
-                        ordered.append(
-                            await loop.run_in_executor(
-                                None, run_seed, index, item_seed, self.pipelines[0]
-                            )
+                        res = await loop.run_in_executor(
+                            None, run_seed, index, item_seed, self.pipelines[0]
                         )
+                        ordered.append(res)
                 else:
-                    def run_batch():
+                    def run_batch() -> List[Tuple[int, int, List[Image.Image]]]:
                         with ThreadPoolExecutor(max_workers=len(self.pipelines)) as pool:
                             futures = [
                                 pool.submit(run_seed, index, item_seed, self.pipelines[index % len(self.pipelines)])
@@ -348,7 +403,7 @@ class PipelineManager:
             finally:
                 self.progress = {**self.progress, "active": False}
 
-            result = []
+            result: List[GeneratedImageItem] = []
             for _index, item_seed, images in ordered:
                 for img in images:
                     result.append({
@@ -361,7 +416,12 @@ class PipelineManager:
             free_memory_to_system()
             return result, time.time() - start_time
 
-    def _prepare_control_image(self, req, kwargs: Dict[str, Any], control_field: str) -> bool:
+    def _prepare_control_image(
+        self,
+        req: Union[Txt2ImgRequest, Img2ImgRequest, InpaintRequest],
+        kwargs: InferenceKwargs,
+        control_field: str
+    ) -> bool:
         if not req.control_image:
             return False
         canny = convert_image_to_canny(
@@ -372,15 +432,19 @@ class PipelineManager:
         if self._is_flux():
             kwargs["control_image"] = canny
         else:
-            kwargs[control_field] = canny
+            kwargs[control_field] = canny  # type: ignore
         return True
 
-    def _prepare_ip_adapter_image(self, req, kwargs: Dict[str, Any]) -> None:
+    def _prepare_ip_adapter_image(
+        self,
+        req: Union[Txt2ImgRequest, Img2ImgRequest, InpaintRequest],
+        kwargs: InferenceKwargs
+    ) -> None:
         if req.ip_adapter_image and not self._is_flux():
             kwargs["ip_adapter_image"] = decode_image_data(req.ip_adapter_image).convert("RGB")
 
-    async def generate_txt2img(self, req) -> Tuple[List[Dict[str, Any]], float]:
-        kwargs = {
+    async def generate_txt2img(self, req: Txt2ImgRequest) -> Tuple[List[GeneratedImageItem], float]:
+        kwargs: InferenceKwargs = {
             "prompt": req.prompt,
             "negative_prompt": req.negative_prompt,
             "guidance_scale": req.guidance_scale,
@@ -401,8 +465,8 @@ class PipelineManager:
             req.controlnet_conditioning_scale,
         )
 
-    async def generate_img2img(self, req) -> Tuple[List[Dict[str, Any]], float]:
-        kwargs = {
+    async def generate_img2img(self, req: Img2ImgRequest) -> Tuple[List[GeneratedImageItem], float]:
+        kwargs: InferenceKwargs = {
             "image": decode_image_data(req.image).convert("RGB"),
             "prompt": req.prompt,
             "negative_prompt": req.negative_prompt,
@@ -425,14 +489,14 @@ class PipelineManager:
             req.controlnet_conditioning_scale,
         )
 
-    async def generate_inpaint(self, req) -> Tuple[List[Dict[str, Any]], float]:
+    async def generate_inpaint(self, req: InpaintRequest) -> Tuple[List[GeneratedImageItem], float]:
         mask_raw = decode_image_data(req.mask_image)
         if mask_raw.mode == "RGBA":
             mask_image = convert_mask_image_to_rgb(mask_raw)
         else:
             mask_image = mask_raw.convert("RGB")
 
-        kwargs = {
+        kwargs: InferenceKwargs = {
             "image": decode_image_data(req.image).convert("RGB"),
             "mask_image": mask_image,
             "prompt": req.prompt,

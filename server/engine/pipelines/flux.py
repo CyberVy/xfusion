@@ -1,4 +1,5 @@
-from typing import Dict, Any, Optional
+from __future__ import annotations
+from typing import Optional, Union, Callable
 from PIL import Image
 
 from diffusers import (
@@ -9,12 +10,14 @@ from diffusers import (
     FluxControlImg2ImgPipeline,
     FluxControlInpaintPipeline,
 )
+from diffusers.utils import BaseOutput
 
 from ..base import BasePipelineEngine
+from ..types import PipelineMap, InferenceKwargs
 from ...infra.image import normalize_image
 from ...models.loaders.flux import load_flux_pipeline
 
-FLUX_PIPELINE_MAP = {
+FLUX_PIPELINE_MAP: PipelineMap = {
     "flux": (
         FluxPipeline,
         FluxImg2ImgPipeline,
@@ -29,7 +32,7 @@ FLUX_PIPELINE_MAP = {
 class FluxPipelineEngine(BasePipelineEngine):
     pipeline_map = FLUX_PIPELINE_MAP
 
-    def check_inference_kwargs(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def check_inference_kwargs(self, kwargs: InferenceKwargs) -> InferenceKwargs:
         width = kwargs.get("width")
         height = kwargs.get("height")
         image = kwargs.get("image")
@@ -53,27 +56,40 @@ class FluxPipelineEngine(BasePipelineEngine):
 
         mask_image = kwargs.get("mask_image")
         if mask_image and isinstance(mask_image, Image.Image):
-            if mask_image.size != (kwargs["width"], kwargs["height"]):
-                mask_image = mask_image.resize((kwargs["width"], kwargs["height"]), Image.Resampling.LANCZOS)
+            cur_w = kwargs.get("width", 1024)
+            cur_h = kwargs.get("height", 1024)
+            if mask_image.size != (cur_w, cur_h):
+                mask_image = mask_image.resize((cur_w, cur_h), Image.Resampling.LANCZOS)
             kwargs["mask_image"] = mask_image
 
         adapters = getattr(self.pipeline, "get_list_adapters", lambda: {})() or {}
         if "controlnet" in (adapters.get("transformer") or []):
             control_image = kwargs.get("control_image")
             if control_image and isinstance(control_image, Image.Image):
-                w = kwargs["width"]
-                h = kwargs["height"]
+                w = kwargs.get("width", 1024)
+                h = kwargs.get("height", 1024)
                 if control_image.size != (w, h):
                     control_image = control_image.resize((w, h), Image.Resampling.LANCZOS)
                 kwargs["control_image"] = control_image
 
         return kwargs
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        kwargs = self.check_inference_kwargs(kwargs)
-        return self.pipeline(*args, **kwargs)
+    def __call__(
+        self,
+        *args: Union[str, int, float, bool],
+        **kwargs: Union[str, int, float, bool, Image.Image, None, Callable]
+    ) -> BaseOutput:
+        call_kwargs: InferenceKwargs = self.check_inference_kwargs(dict(kwargs))  # type: ignore
+        pipe = self.pipeline
+        if callable(pipe):
+            return pipe(*args, **call_kwargs)
+        raise TypeError("Flux pipeline is not callable.")
 
-    def load_controlnet(self, controlnet_model: Optional[str] = None, **kwargs: Any) -> None:
+    def load_controlnet(
+        self,
+        controlnet_model: Optional[str] = None,
+        **kwargs: Union[str, float, int, bool]
+    ) -> None:
         adapters = getattr(self.pipeline, "get_list_adapters", lambda: {})() or {}
         if "controlnet" not in (adapters.get("transformer") or []):
             model_url = (
@@ -105,7 +121,12 @@ class FluxPipelineEngine(BasePipelineEngine):
         print("Offload controlnet for FLUX is a no-op.")
 
     @classmethod
-    def from_url(cls, url: Optional[str] = None, init_sub_pipelines: bool = True, **kwargs: Any):
+    def from_url(
+        cls,
+        url: Optional[str] = None,
+        init_sub_pipelines: bool = True,
+        **kwargs: Union[str, float, int, bool]
+    ) -> "FluxPipelineEngine":
         raw_pipe = load_flux_pipeline(url, **kwargs)
         engine = cls(raw_pipe, init_sub_pipelines=init_sub_pipelines)
         if url:

@@ -14,7 +14,7 @@ def free_memory_to_system() -> None:
         torch.cuda.empty_cache()
 
 
-def delete(obj) -> Tuple[int, List[str], int, List[int]]:
+def delete(obj: object) -> Tuple[int, List[str], int, List[int]]:
     """Clear external references to an object across referrers for memory recovery."""
     if obj is None:
         return 0, [], 0, []

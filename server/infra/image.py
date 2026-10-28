@@ -1,8 +1,9 @@
+from __future__ import annotations
 import io
 import os
 import base64
 import requests
-from typing import Tuple, Optional, Callable, Dict, Any
+from typing import Tuple, Optional, Callable, Dict, Union
 from PIL import Image, ImageOps
 import cv2
 import numpy as np
@@ -102,6 +103,6 @@ def convert_image_to_canny(
     return Image.fromarray(edges_3ch)
 
 
-def dict_to_str(d: Dict[str, Any]) -> str:
+def dict_to_str(d: Dict[str, Union[str, int, float, bool, None]]) -> str:
     """Format dictionary entries into readable string representation."""
     return "".join(f"{k}: {v}\n\n" for k, v in d.items())

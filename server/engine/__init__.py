@@ -1,4 +1,5 @@
-from typing import Any
+from typing import Optional, Union
+from diffusers import DiffusionPipeline
 
 try:
     from .base import BasePipelineEngine
@@ -6,13 +7,16 @@ try:
     from .pipelines.flux import FluxPipelineEngine
     from .schedulers import DIFFUSION_SCHEDULER_MAP
 except (ImportError, AttributeError):
-    BasePipelineEngine = None
-    SDPipelineEngine = None
-    FluxPipelineEngine = None
-    DIFFUSION_SCHEDULER_MAP = {}
+    BasePipelineEngine = None  # type: ignore
+    SDPipelineEngine = None  # type: ignore
+    FluxPipelineEngine = None  # type: ignore
+    DIFFUSION_SCHEDULER_MAP = {}  # type: ignore
 
 
-def load_engine(pipeline_or_model: Any = None, **kwargs: Any) -> Any:
+def load_engine(
+    pipeline_or_model: Optional[Union[str, DiffusionPipeline]] = None,
+    **kwargs: Union[str, float, int, bool, dict]
+) -> BasePipelineEngine:
     """Factory function to load and wrap Diffusers pipelines into a standard Inference Engine."""
     if BasePipelineEngine is None:
         raise RuntimeError("Inference engine requires PyTorch and Diffusers dependencies to be installed.")
@@ -28,8 +32,10 @@ def load_engine(pipeline_or_model: Any = None, **kwargs: Any) -> Any:
                 model_version = "3"
             engine = SDPipelineEngine.from_url(pipeline_or_model, model_version=model_version, **kwargs)
             engine.model_name = pipeline_or_model
-        else:
+        elif isinstance(pipeline_or_model, DiffusionPipeline):
             engine = SDPipelineEngine(pipeline_or_model)
+        else:
+            engine = SDPipelineEngine(None)
 
         if isinstance(download_kwargs, dict):
             engine.set_download_kwargs(**download_kwargs)
@@ -39,8 +45,10 @@ def load_engine(pipeline_or_model: Any = None, **kwargs: Any) -> Any:
         if isinstance(pipeline_or_model, str):
             engine = FluxPipelineEngine.from_url(pipeline_or_model, **kwargs)
             engine.model_name = pipeline_or_model
-        else:
+        elif isinstance(pipeline_or_model, DiffusionPipeline):
             engine = FluxPipelineEngine(pipeline_or_model)
+        else:
+            engine = FluxPipelineEngine(None)
 
         if isinstance(download_kwargs, dict):
             engine.set_download_kwargs(**download_kwargs)

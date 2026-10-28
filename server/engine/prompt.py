@@ -1,14 +1,22 @@
-from typing import Dict, Any, List, Optional
+from __future__ import annotations
+from typing import Dict, List, Optional, Union, TYPE_CHECKING
+from diffusers import DiffusionPipeline
+
 try:
     from compel import Compel, ReturnedEmbeddingsType
 except ImportError:
     Compel = None
     ReturnedEmbeddingsType = None
 
+if TYPE_CHECKING:
+    import torch
+    import torch.nn as nn
+    from .base import BasePipelineEngine
+
 from ..models.inspect import get_tokenizers_and_text_encoders_from_pipeline
 
 
-def skip_clip_layer(text_encoders: List[Any], n: Optional[int]) -> None:
+def skip_clip_layer(text_encoders: List[nn.Module], n: Optional[int]) -> None:
     """Dynamically truncate CLIP encoder layers for clip_skip >= 1."""
     if n is not None and not (isinstance(n, int) and n >= 0):
         raise ValueError("clip_skip must be an integer >= 0.")
@@ -31,9 +39,13 @@ def skip_clip_layer(text_encoders: List[Any], n: Optional[int]) -> None:
                 encoder.layers = encoder.backup_layers
 
 
-def get_embeds_from_pipeline(pipeline: Any, prompt: Any, negative_prompt: Any) -> Dict[str, Any]:
+def get_embeds_from_pipeline(
+    pipeline: Union[DiffusionPipeline, BasePipelineEngine],
+    prompt: Union[str, List[str], None],
+    negative_prompt: Union[str, List[str], None]
+) -> Dict[str, torch.Tensor]:
     """Overcome 77-token CLIP limit and support weighted prompt syntax using Compel."""
-    if Compel is None:
+    if Compel is None or prompt is None:
         return {}
 
     target = getattr(pipeline, "pipeline", pipeline)
@@ -47,11 +59,12 @@ def get_embeds_from_pipeline(pipeline: Any, prompt: Any, negative_prompt: Any) -
     try:
         model_ver = getattr(pipeline, "model_version", None) or getattr(target, "model_version", None)
         class_name = target.__class__.__name__.lower()
+        neg_p = negative_prompt or ""
 
         if model_ver in ["1", "1.5"] or "stablediffusion" in class_name and "xl" not in class_name:
             compel = Compel(tokenizers, text_encoders, truncate_long_prompts=False)
             conditioning = compel(prompt)
-            neg_conditioning = compel(negative_prompt)
+            neg_conditioning = compel(neg_p)
             [conditioning, neg_conditioning] = compel.pad_conditioning_tensors_to_same_length(
                 [conditioning, neg_conditioning]
             )
@@ -66,7 +79,7 @@ def get_embeds_from_pipeline(pipeline: Any, prompt: Any, negative_prompt: Any) -
                 truncate_long_prompts=False,
             )
             conditioning, pooled = compel(prompt)
-            neg_conditioning, neg_pooled = compel(negative_prompt)
+            neg_conditioning, neg_pooled = compel(neg_p)
             [conditioning, neg_conditioning] = compel.pad_conditioning_tensors_to_same_length(
                 [conditioning, neg_conditioning]
             )

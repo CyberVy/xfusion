@@ -1,7 +1,14 @@
+from __future__ import annotations
 import os
 import requests
-import torch
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Union
+
+try:
+    import torch
+except (ImportError, AttributeError):
+    torch = None  # type: ignore
+
+LoaderKwargValue = Union[str, float, int, bool, None]
 
 from diffusers import (
     DiffusionPipeline,
@@ -30,14 +37,14 @@ def load_stable_diffusion_controlnet(
     controlnet_model: str,
     model_version: Optional[str] = None,
     file_format: str = "safetensors",
-    download_kwargs: Optional[Dict[str, Any]] = None,
-    **kwargs: Any
-):
+    download_kwargs: Optional[Dict[str, str]] = None,
+    **kwargs: LoaderKwargValue
+) -> Union[ControlNetModel, SD3ControlNetModel]:
     use_internet = True
     model_version = str(model_version or "").lower()
     if kwargs.get("token") is None:
         kwargs.update(token=config.HF_HUB_TOKEN)
-    if kwargs.get("torch_dtype") is None:
+    if kwargs.get("torch_dtype") is None and torch is not None:
         kwargs.update({"torch_dtype": torch.float16})
     if download_kwargs is None:
         download_kwargs = {}
@@ -137,9 +144,9 @@ def load_stable_diffusion_pipeline(
     model: Optional[str] = None,
     model_version: Optional[str] = None,
     file_format: str = "safetensors",
-    download_kwargs: Optional[Dict[str, Any]] = None,
-    **kwargs: Any
-):
+    download_kwargs: Optional[Dict[str, str]] = None,
+    **kwargs: LoaderKwargValue
+) -> DiffusionPipeline:
     """Load DiffusionPipeline for SD 1.5, SD 2.x, SDXL, Pony or SD3."""
     use_internet = True
     model = model or default_stable_diffusion_model_url
@@ -148,7 +155,7 @@ def load_stable_diffusion_pipeline(
         download_kwargs = {}
     if kwargs.get("token") is None:
         kwargs.update(token=config.HF_HUB_TOKEN)
-    if kwargs.get("torch_dtype") is None:
+    if kwargs.get("torch_dtype") is None and torch is not None:
         kwargs.update({"torch_dtype": torch.float16})
     if model.startswith(".") or model.startswith("/") or model.startswith("~"):
         use_internet = False

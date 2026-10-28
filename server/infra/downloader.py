@@ -1,7 +1,7 @@
 import os
 import re
 from urllib.parse import urlparse, unquote
-from typing import Optional, Dict, Any, List, Union
+from typing import Optional, Dict, List, Union
 import requests
 from tqdm import tqdm
 
@@ -52,14 +52,15 @@ def download_file(
     filename: Optional[str] = None,
     directory: Optional[str] = None,
     mute: bool = False,
-    **kwargs: Any
+    **kwargs: Union[str, int, float, bool, None, Dict[str, str]]
 ) -> str:
     if not (url.startswith("http://") or url.startswith("https://")):
         raise ValueError("A valid URL is required.")
 
     target_dir = directory or "./"
     parsed_url = urlparse(url)
-    headers = kwargs.pop("headers", {})
+    headers_arg = kwargs.pop("headers", {})
+    headers: Dict[str, str] = dict(headers_arg) if isinstance(headers_arg, dict) else {}
 
     if "cookie" not in headers and config.XFUSION_COOKIE:
         headers["cookie"] = config.XFUSION_COOKIE
@@ -126,7 +127,7 @@ class DownloadArgumentsMixin:
     """Mixin for managing model download arguments and caching directories."""
 
     def __init__(self):
-        self.download_kwargs: Dict[str, Any] = {"directory": config.DOWNLOAD_PATH}
+        self.download_kwargs: Dict[str, str] = {"directory": config.DOWNLOAD_PATH}
 
-    def set_download_kwargs(self, **kwargs: Any) -> None:
+    def set_download_kwargs(self, **kwargs: str) -> None:
         self.download_kwargs.update(kwargs)

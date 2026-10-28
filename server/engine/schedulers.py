@@ -1,5 +1,6 @@
-from typing import Dict, Any, Tuple
+from typing import Dict, Tuple, Type, Union
 from diffusers.schedulers import (
+    SchedulerMixin,
     DPMSolverMultistepScheduler,
     DPMSolverSinglestepScheduler,
     KDPM2DiscreteScheduler,
@@ -11,8 +12,9 @@ from diffusers.schedulers import (
     DEISMultistepScheduler,
     UniPCMultistepScheduler,
 )
+from .types import SchedulerConfigMap, SchedulerConfigValue
 
-DIFFUSION_SCHEDULER_MAP: Dict[str, Tuple[Any, Dict[str, Any]]] = {
+DIFFUSION_SCHEDULER_MAP: SchedulerConfigMap = {
     "DPM++ 2M": (DPMSolverMultistepScheduler, {}),
     "DPM++ 2M KARRAS": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True}),
     "DPM++ 2M SDE": (DPMSolverMultistepScheduler, {"algorithm_type": "sde-dpmsolver++"}),

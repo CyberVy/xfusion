@@ -1,12 +1,22 @@
 import os
-from typing import Dict, Any, Union, List
+from typing import Dict, Union, List
+from diffusers import DiffusionPipeline
 
 from ...infra.downloader import download_file, DownloadArgumentsMixin
 from ...infra.memory import free_memory_to_system
 
 
-def load_lora_weights(pipeline: Any, lora_uri: str, lora_name: str, download_kwargs: Dict[str, Any], **kwargs: Any) -> None:
+def load_lora_weights(
+    pipeline: DiffusionPipeline,
+    lora_uri: str,
+    lora_name: str,
+    download_kwargs: Dict[str, str],
+    **kwargs: Union[str, float, int, bool]
+) -> None:
     use_internet = not (lora_uri.startswith(".") or lora_uri.startswith("/") or lora_uri.startswith("~"))
+    if not hasattr(pipeline, "load_lora_weights"):
+        raise AttributeError(f"Pipeline {pipeline} does not support load_lora_weights")
+
     if use_internet:
         lora_path = download_file(lora_uri, **download_kwargs)
         pipeline.load_lora_weights(lora_path, adapter_name=lora_name, **kwargs)
@@ -20,7 +30,7 @@ class LoraAdapterMixin(DownloadArgumentsMixin):
         self.lora_dict: Dict[str, float] = {}
 
     def set_lora(self, lora_uri: str, lora_name: str, weight: float = 0.4) -> None:
-        target_pipe = getattr(self, "pipeline", self)
+        target_pipe: DiffusionPipeline = getattr(self, "pipeline", self)
         if lora_name not in self.lora_dict:
             download_kwargs = self.download_kwargs.copy()
             directory = download_kwargs.get("directory", "./")
