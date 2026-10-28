@@ -1,4 +1,3 @@
-import os
 import io
 import time
 import base64
@@ -8,33 +7,18 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Optional, Tuple, Any
 from PIL import Image
 
-from ..const import GPU_COUNT, GPU_NAME
+from ..infra.config import GPU_COUNT, GPU_NAME, DOWNLOAD_PATH
+from ..infra.memory import free_memory_to_system
+from ..infra.image import (
+    pil_to_base64_data_uri,
+    decode_image_data,
+    convert_image_to_canny,
+    convert_mask_image_to_rgb,
+)
 try:
-    from ..enhancement import load_enhancer
+    from ..engine import load_engine
 except (ImportError, AttributeError):
-    load_enhancer = None
-from ..utils import free_memory_to_system, convert_mask_image_to_rgb, convert_image_to_canny
-
-
-def pil_to_base64_data_uri(image: Image.Image, format: str = "PNG") -> str:
-    buffer = io.BytesIO()
-    image.save(buffer, format=format)
-    encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
-    return f"data:image/{format.lower()};base64,{encoded}"
-
-
-def decode_image_data(image_str: str) -> Image.Image:
-    """Decode base64 data URI, raw base64 string, or download from URL."""
-    if image_str.startswith("http://") or image_str.startswith("https://"):
-        import requests
-        response = requests.get(image_str, timeout=30)
-        return Image.open(io.BytesIO(response.content)).convert("RGB")
-    
-    if "base64," in image_str:
-        image_str = image_str.split("base64,")[1]
-    
-    image_bytes = base64.b64decode(image_str)
-    return Image.open(io.BytesIO(image_bytes))
+    load_engine = None
 
 
 class PipelineManager:
@@ -43,8 +27,7 @@ class PipelineManager:
         self.current_model: Optional[str] = None
         self.model_version: Optional[str] = None
         self.lock = asyncio.Lock()
-        self.download_kwargs = {"directory": os.environ.get("DOWNLOAD_PATH", "/xfusion_models")}
-        self.telegram_kwargs = {"token": os.environ.get("TG_TOKEN", ""), "chat_id": os.environ.get("TG_ID", "")}
+        self.download_kwargs = {"directory": DOWNLOAD_PATH}
         self.ip_adapter: Optional[Dict[str, Any]] = None
         self.loras_enabled = True
         self.controlnet_model: Optional[str] = None
@@ -58,10 +41,11 @@ class PipelineManager:
 
     def initialize_from_env(self):
         """Optionally initialize pipelines from environment variables."""
-        if load_enhancer is None:
+        if load_engine is None:
             print("Note: PyTorch CUDA pipeline is deferred or running in API mode.")
             return
 
+        import os
         model_version = os.environ.get("MODEL_VERSION", "")
         model_url = os.environ.get("MODEL_URL", None)
         if not model_url:
@@ -74,15 +58,14 @@ class PipelineManager:
         try:
             self.pipelines = []
             for i in range(num_gpus):
-                enhancer = load_enhancer(
+                engine = load_engine(
                     model_url,
                     model_version=model_version,
                     download_kwargs=self.download_kwargs,
-                    telegram_kwargs=self.telegram_kwargs
                 )
                 if GPU_COUNT > 0:
-                    enhancer.to(f"cuda:{i}")
-                self.pipelines.append(enhancer)
+                    engine.to(f"cuda:{i}")
+                self.pipelines.append(engine)
             self.model_version = model_version
             self.current_model = model_url
             print("Pipelines successfully initialized.")
@@ -100,15 +83,14 @@ class PipelineManager:
 
                 new_pipelines = []
                 for i in range(num_gpus):
-                    enhancer = load_enhancer(
+                    engine = load_engine(
                         model,
                         model_version=model_version,
                         download_kwargs=self.download_kwargs,
-                        telegram_kwargs=self.telegram_kwargs
                     )
                     if GPU_COUNT > 0:
-                        enhancer.to(f"cuda:{i}")
-                    new_pipelines.append(enhancer)
+                        engine.to(f"cuda:{i}")
+                    new_pipelines.append(engine)
                 return new_pipelines
 
             self.pipelines = await loop.run_in_executor(None, _sync_load)
@@ -166,8 +148,14 @@ class PipelineManager:
             self.loras_enabled = enabled
             return {"status": "success", "enabled": enabled}
 
-    async def set_ip_adapter(self, uri: str, subfolder: str, weight_name: str, image_encoder_folder: str,
-                             strength: float) -> Dict[str, Any]:
+    async def set_ip_adapter(
+        self,
+        uri: str,
+        subfolder: str,
+        weight_name: str,
+        image_encoder_folder: str,
+        strength: float
+    ) -> Dict[str, Any]:
         async with self.lock:
             self._require_pipelines()
             if self._is_flux():
@@ -272,9 +260,16 @@ class PipelineManager:
             return []
         return list(getattr(self.pipelines[0], "scheduler_map", {}))
 
-    async def _generate(self, pipeline_attr: str, kwargs: Dict[str, Any], seed: Optional[int], num: Optional[int],
-                        scheduler: Optional[str], use_controlnet: bool = False,
-                        controlnet_scale: Optional[float] = None) -> Tuple[List[Dict[str, Any]], float]:
+    async def _generate(
+        self,
+        pipeline_attr: str,
+        kwargs: Dict[str, Any],
+        seed: Optional[int],
+        num: Optional[int],
+        scheduler: Optional[str],
+        use_controlnet: bool = False,
+        controlnet_scale: Optional[float] = None
+    ) -> Tuple[List[Dict[str, Any]], float]:
         async with self.lock:
             self._require_pipelines()
             controlnet_attrs = {
@@ -303,9 +298,8 @@ class PipelineManager:
                 for pipeline in self.pipelines:
                     getattr(pipeline, pipeline_attr).set_scheduler(scheduler)
 
-            # Seeds stay within 31 bits so JavaScript clients can round-trip them exactly.
             num = max(1, min(int(num or 1), 10))
-            seeds = [seed + i for i in range(num)] if seed else [random.randint(1, 2 ** 31 - 1) for _ in range(num)]
+            seeds = [seed + i for i in range(num)] if seed else [random.randint(1, 2**31 - 1) for _ in range(num)]
 
             total_steps = int(kwargs.get("num_inference_steps") or 0)
             self.progress = {
@@ -326,7 +320,7 @@ class PipelineManager:
 
             def run_seed(index: int, item_seed: int, pipeline):
                 self.progress = {**self.progress, "image_index": index, "step": 0}
-                images = getattr(pipeline, pipeline_attr).generate_image_and_send_to_telegram(
+                images = getattr(pipeline, pipeline_attr).generate(
                     seed=item_seed, num=1, **call_kwargs
                 )
                 return index, item_seed, images
@@ -335,9 +329,11 @@ class PipelineManager:
                 if len(self.pipelines) == 1:
                     ordered = []
                     for index, item_seed in enumerate(seeds):
-                        ordered.append(await loop.run_in_executor(
-                            None, run_seed, index, item_seed, self.pipelines[0]
-                        ))
+                        ordered.append(
+                            await loop.run_in_executor(
+                                None, run_seed, index, item_seed, self.pipelines[0]
+                            )
+                        )
                 else:
                     def run_batch():
                         with ThreadPoolExecutor(max_workers=len(self.pipelines)) as pool:
@@ -396,8 +392,13 @@ class PipelineManager:
         use_controlnet = self._prepare_control_image(req, kwargs, "image")
         self._prepare_ip_adapter_image(req, kwargs)
         return await self._generate(
-            "text_to_image_pipeline", kwargs, req.seed, req.num, req.scheduler,
-            use_controlnet, req.controlnet_conditioning_scale,
+            "text_to_image_pipeline",
+            kwargs,
+            req.seed,
+            req.num,
+            req.scheduler,
+            use_controlnet,
+            req.controlnet_conditioning_scale,
         )
 
     async def generate_img2img(self, req) -> Tuple[List[Dict[str, Any]], float]:
@@ -415,8 +416,13 @@ class PipelineManager:
         use_controlnet = self._prepare_control_image(req, kwargs, "control_image")
         self._prepare_ip_adapter_image(req, kwargs)
         return await self._generate(
-            "image_to_image_pipeline", kwargs, req.seed, req.num, req.scheduler,
-            use_controlnet, req.controlnet_conditioning_scale,
+            "image_to_image_pipeline",
+            kwargs,
+            req.seed,
+            req.num,
+            req.scheduler,
+            use_controlnet,
+            req.controlnet_conditioning_scale,
         )
 
     async def generate_inpaint(self, req) -> Tuple[List[Dict[str, Any]], float]:
@@ -441,8 +447,13 @@ class PipelineManager:
         use_controlnet = self._prepare_control_image(req, kwargs, "control_image")
         self._prepare_ip_adapter_image(req, kwargs)
         return await self._generate(
-            "inpainting_pipeline", kwargs, req.seed, req.num, req.scheduler,
-            use_controlnet, req.controlnet_conditioning_scale,
+            "inpainting_pipeline",
+            kwargs,
+            req.seed,
+            req.num,
+            req.scheduler,
+            use_controlnet,
+            req.controlnet_conditioning_scale,
         )
 
 
