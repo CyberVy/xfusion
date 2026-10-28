@@ -4,7 +4,7 @@ import sys
 from fastapi import APIRouter
 from ..schemas import SystemInfoResponse
 from ..manager import manager
-from ...const import GPU_COUNT, GPU_NAME
+from ...infra.config import GPU_COUNT, GPU_NAME
 
 router = APIRouter(prefix="/api/v1/system", tags=["System"])
 
