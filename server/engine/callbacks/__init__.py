@@ -1,5 +1,3 @@
-from typing import Dict, Any
-
 try:
     from diffusers.callbacks import (
         SDCFGCutoffCallback,

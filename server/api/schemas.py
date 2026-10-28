@@ -1,5 +1,15 @@
+from typing import Optional, List, Dict, Union
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+
+MetadataScalar = Union[str, int, float, bool, None]
+
+
+class IpAdapterInfo(BaseModel):
+    uri: str
+    subfolder: str
+    weight_name: str
+    image_encoder_folder: str
+    strength: float
 
 
 class GenerationExtras(BaseModel):
@@ -116,7 +126,7 @@ class GenerationResponse(BaseModel):
     status: str = "success"
     images: List[GeneratedImage]
     elapsed_seconds: float
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, MetadataScalar] = Field(default_factory=dict)
 
 
 class GenerationProgress(BaseModel):
@@ -137,6 +147,6 @@ class SystemInfoResponse(BaseModel):
     loras_enabled: bool = True
     schedulers: List[str] = []
     controlnet_loaded: bool = False
-    ip_adapter: Optional[Dict[str, Any]] = None
+    ip_adapter: Optional[IpAdapterInfo] = None
     python_version: str = ""
     os_platform: str = ""
