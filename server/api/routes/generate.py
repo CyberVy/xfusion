@@ -18,6 +18,13 @@ async def generation_progress():
     return GenerationProgress(**manager.progress)
 
 
+@router.post("/cancel")
+async def cancel_generation():
+    """Interrupt currently running generation task and release GPU resources immediately."""
+    cancelled = manager.cancel()
+    return {"status": "success", "cancelled": cancelled}
+
+
 @router.post("/txt2img", response_model=GenerationResponse)
 async def generate_text_to_image(req: Txt2ImgRequest):
     """Generate image from text prompt."""
