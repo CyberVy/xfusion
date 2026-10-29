@@ -72,6 +72,26 @@ export interface GenerationResponse {
     elapsed_seconds: number
 }
 
+export interface StreamImageEvent {
+    image_base64: string
+    seed: number
+    width: number
+    height: number
+    index: number
+    elapsed_seconds: number
+}
+
+export interface StreamDoneEvent {
+    status: string
+    total_images: number
+    elapsed_seconds: number
+}
+
+export type StreamGenerationEvent =
+    | { type: "image"; data: StreamImageEvent }
+    | { type: "done"; data: StreamDoneEvent }
+    | { type: "progress"; data: GenerationProgress }
+
 export interface GeneratedImageItem {
     id: string
     image_base64: string

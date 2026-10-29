@@ -4,7 +4,7 @@ import { create_logger } from "@/infra/logger"
 import { ApiClient } from "../api/client"
 import { settings_controller } from "./settings_controller"
 import { model_controller } from "./model_controller"
-import type { GeneratedImageItem, GenerationProgress, GenerationResponse } from "../api/types"
+import type { GeneratedImageItem, GenerationProgress, GenerationResponse, StreamGenerationEvent } from "../api/types"
 
 const logger = create_logger("GenerationController")
 
@@ -155,14 +155,14 @@ export class GenerationController extends BaseController<GenerationState> {
             return Promise.resolve()
         }
         return this.run_generation("txt2img", (api_url, common, signal) =>
-            ApiClient.generate_txt2img(api_url, { ...common, ...this.extra_params(extras) }, signal)
+            ApiClient.generate_txt2img_stream(api_url, { ...common, ...this.extra_params(extras) }, signal)
         )
     }
 
     public generate_img2img(image_base64: string, extras?: GenerationExtrasInput): Promise<void> {
         const strength = this.state.img2img_strength
         return this.run_generation("img2img", (api_url, common, signal) =>
-            ApiClient.generate_img2img(
+            ApiClient.generate_img2img_stream(
                 api_url,
                 {
                     ...common,
@@ -178,7 +178,7 @@ export class GenerationController extends BaseController<GenerationState> {
     public generate_inpaint(image_base64: string, mask_base64: string, extras?: GenerationExtrasInput): Promise<void> {
         const strength = this.state.inpaint_strength
         return this.run_generation("inpaint", (api_url, common, signal) =>
-            ApiClient.generate_inpaint(
+            ApiClient.generate_inpaint_stream(
                 api_url,
                 {
                     ...common,
@@ -226,11 +226,11 @@ export class GenerationController extends BaseController<GenerationState> {
 
     private async run_generation(
         type: GeneratedImageItem["type"],
-        request: (
+        request_stream: (
             api_url: string,
             common: ReturnType<GenerationController["common_request_params"]>,
             signal: AbortSignal
-        ) => Promise<GenerationResponse>
+        ) => AsyncGenerator<StreamGenerationEvent, void, unknown>
     ): Promise<void> {
         if (this.state.is_generating) return
         const api_url = settings_controller.get_value("api_url", "http://localhost:8000")
@@ -280,33 +280,43 @@ export class GenerationController extends BaseController<GenerationState> {
         poll_timer = window.setTimeout(poll_loop, 600)
 
         try {
-            const res = await request(api_url, this.common_request_params(), abort_controller.signal)
-            const new_items: GeneratedImageItem[] = []
+            const stream = request_stream(api_url, this.common_request_params(), abort_controller.signal)
+            for await (const event of stream) {
+                if (abort_controller.signal.aborted) break
 
-            for (const img of res.images) {
-                const item: GeneratedImageItem = {
-                    id: `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-                    image_base64: img.image_base64,
-                    seed: img.seed,
-                    prompt,
-                    negative_prompt,
-                    width: img.width,
-                    height: img.height,
-                    created_at: Date.now(),
-                    type,
-                    elapsed_seconds: res.elapsed_seconds
+                if (event.type === "image") {
+                    const img = event.data
+                    const item: GeneratedImageItem = {
+                        id: `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                        image_base64: img.image_base64,
+                        seed: img.seed,
+                        prompt,
+                        negative_prompt,
+                        width: img.width,
+                        height: img.height,
+                        created_at: Date.now(),
+                        type,
+                        elapsed_seconds: img.elapsed_seconds
+                    }
+                    await this.history_store.set(item.id, item)
+
+                    this.update_state({
+                        history: [item, ...this.state.history],
+                        selected_image: item
+                    })
+                    this.dispatchEvent(new CustomEvent("history_change"))
+                    this.dispatchEvent(new CustomEvent("change"))
+                } else if (event.type === "progress") {
+                    this.update_state({ progress: event.data })
+                    this.dispatchEvent(new CustomEvent("status_change"))
+                    this.dispatchEvent(new CustomEvent("change"))
                 }
-                await this.history_store.set(item.id, item)
-                new_items.push(item)
             }
 
             this.update_state({
                 is_generating: false,
-                progress: null,
-                history: [...new_items, ...this.state.history],
-                selected_image: new_items[0] || this.state.selected_image
+                progress: null
             })
-            this.dispatchEvent(new CustomEvent("history_change"))
         } catch (err: any) {
             if (abort_controller.signal.aborted) {
                 this.update_state({ is_generating: false, progress: null })

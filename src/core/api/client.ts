@@ -4,7 +4,8 @@ import type {
     InpaintParams,
     SystemInfo,
     GenerationResponse,
-    GenerationProgress
+    GenerationProgress,
+    StreamGenerationEvent
 } from "./types"
 
 export class ApiClient {
@@ -136,6 +137,42 @@ export class ApiClient {
         return res.json()
     }
 
+    public static async *generate_txt2img_stream(
+        base_url: string,
+        params: Txt2ImgParams,
+        signal?: AbortSignal
+    ): AsyncGenerator<StreamGenerationEvent, void, unknown> {
+        yield* this.consume_sse_stream(
+            `${this.clean_base_url(base_url)}/api/v1/generate/txt2img/stream`,
+            params,
+            signal
+        )
+    }
+
+    public static async *generate_img2img_stream(
+        base_url: string,
+        params: Img2ImgParams,
+        signal?: AbortSignal
+    ): AsyncGenerator<StreamGenerationEvent, void, unknown> {
+        yield* this.consume_sse_stream(
+            `${this.clean_base_url(base_url)}/api/v1/generate/img2img/stream`,
+            params,
+            signal
+        )
+    }
+
+    public static async *generate_inpaint_stream(
+        base_url: string,
+        params: InpaintParams,
+        signal?: AbortSignal
+    ): AsyncGenerator<StreamGenerationEvent, void, unknown> {
+        yield* this.consume_sse_stream(
+            `${this.clean_base_url(base_url)}/api/v1/generate/inpaint/stream`,
+            params,
+            signal
+        )
+    }
+
     public static async get_progress(base_url: string, signal?: AbortSignal): Promise<GenerationProgress> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/progress`
         const res = await fetch(url, { signal: signal ?? AbortSignal.timeout(5_000) })
@@ -215,5 +252,138 @@ export class ApiClient {
             throw new Error(typeof detail === "string" ? detail : "Request failed")
         }
         return res.json()
+    }
+
+    private static async *consume_sse_stream(
+        url: string,
+        body: unknown,
+        signal?: AbortSignal
+    ): AsyncGenerator<StreamGenerationEvent, void, unknown> {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "text/event-stream"
+            },
+            body: JSON.stringify(body),
+            signal: signal ?? AbortSignal.timeout(600_000)
+        })
+
+        if (res.status === 404 && url.endsWith("/stream")) {
+            const fallback_url = url.slice(0, -7)
+            const fallback_res = await fetch(fallback_url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+                signal: signal ?? AbortSignal.timeout(600_000)
+            })
+            if (!fallback_res.ok) {
+                const err = await fallback_res.json().catch(() => ({ detail: fallback_res.statusText }))
+                throw new Error(err.detail || "Generation request failed")
+            }
+            const data: GenerationResponse = await fallback_res.json()
+            for (let i = 0; i < data.images.length; i++) {
+                const img = data.images[i]
+                yield {
+                    type: "image",
+                    data: {
+                        image_base64: img.image_base64,
+                        seed: img.seed,
+                        width: img.width,
+                        height: img.height,
+                        index: i,
+                        elapsed_seconds: data.elapsed_seconds
+                    }
+                }
+            }
+            yield {
+                type: "done",
+                data: {
+                    status: data.status,
+                    total_images: data.images.length,
+                    elapsed_seconds: data.elapsed_seconds
+                }
+            }
+            return
+        }
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            throw new Error(err.detail || "Generation request failed")
+        }
+
+        if (!res.body) {
+            throw new Error("Response body is not readable")
+        }
+
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder("utf-8")
+        let buffer = ""
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
+                buffer += decoder.decode(value, { stream: true })
+
+                let boundary_index = buffer.indexOf("\n\n")
+                while (boundary_index !== -1) {
+                    const block = buffer.slice(0, boundary_index)
+                    buffer = buffer.slice(boundary_index + 2)
+
+                    const event = this.parse_sse_block(block)
+                    if (event) {
+                        yield event
+                    }
+                    boundary_index = buffer.indexOf("\n\n")
+                }
+            }
+
+            if (buffer.trim()) {
+                const event = this.parse_sse_block(buffer)
+                if (event) {
+                    yield event
+                }
+            }
+        } finally {
+            reader.releaseLock()
+        }
+    }
+
+    private static parse_sse_block(block: string): StreamGenerationEvent | null {
+        let event_type = "message"
+        const data_lines: string[] = []
+
+        const lines = block.split(/\r?\n/)
+        for (const line of lines) {
+            if (line.startsWith("event:")) {
+                event_type = line.slice(6).trim()
+            } else if (line.startsWith("data:")) {
+                data_lines.push(line.slice(5).trim())
+            }
+        }
+
+        if (data_lines.length === 0) return null
+        const raw_json = data_lines.join("\n")
+
+        try {
+            const parsed = JSON.parse(raw_json)
+            if (event_type === "image") {
+                return { type: "image", data: parsed }
+            }
+            if (event_type === "done") {
+                return { type: "done", data: parsed }
+            }
+            if (event_type === "progress") {
+                return { type: "progress", data: parsed }
+            }
+            if (event_type === "error") {
+                throw new Error(parsed.detail || "Stream error during generation")
+            }
+        } catch (err: any) {
+            if (event_type === "error") throw err
+            return null
+        }
+        return null
     }
 }

@@ -3,8 +3,9 @@ import time
 import base64
 import random
 import asyncio
+import json
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Dict, Optional, Tuple, Union, TypedDict, TYPE_CHECKING
+from typing import List, Dict, Optional, Tuple, Union, TypedDict, TYPE_CHECKING, AsyncGenerator, Any
 from PIL import Image
 
 from .schemas import Txt2ImgRequest, Img2ImgRequest, InpaintRequest
@@ -461,6 +462,142 @@ class PipelineManager:
             free_memory_to_system()
             return result, time.time() - start_time
 
+    async def _generate_stream(
+        self,
+        pipeline_attr: str,
+        kwargs: InferenceKwargs,
+        seed: Optional[int],
+        num: Optional[int],
+        scheduler: Optional[str],
+        use_controlnet: bool = False,
+        controlnet_scale: Optional[float] = None
+    ) -> AsyncGenerator[str, None]:
+        async with self.lock:
+            self._require_pipelines()
+            controlnet_attrs = {
+                "text_to_image_pipeline": "text_to_image_controlnet_pipeline",
+                "image_to_image_pipeline": "image_to_image_controlnet_pipeline",
+                "inpainting_pipeline": "inpainting_controlnet_pipeline",
+            }
+            if use_controlnet:
+                for pipeline in self.pipelines:
+                    if not self._pipeline_has_controlnet(pipeline) and hasattr(pipeline, "load_controlnet"):
+                        pipeline.load_controlnet(self.controlnet_model)
+                pipeline_attr = controlnet_attrs[pipeline_attr]
+                if self._is_flux():
+                    for pipeline in self.pipelines:
+                        if hasattr(pipeline, "set_lora_strength"):
+                            pipeline.set_lora_strength("controlnet", controlnet_scale if controlnet_scale is not None else 0.5)
+                elif controlnet_scale is not None:
+                    kwargs["controlnet_conditioning_scale"] = controlnet_scale
+
+            if self._is_flux():
+                kwargs.pop("negative_prompt", None)
+                kwargs.pop("clip_skip", None)
+                kwargs.pop("ip_adapter_image", None)
+
+            sub_pipeline = getattr(self.pipelines[0], pipeline_attr)
+            if scheduler and getattr(sub_pipeline, "scheduler_map", None):
+                for pipeline in self.pipelines:
+                    target = getattr(pipeline, pipeline_attr, None)
+                    if target is not None and hasattr(target, "set_scheduler"):
+                        target.set_scheduler(scheduler)
+
+            num_count = max(1, min(int(num or 1), 10))
+            seeds = [seed + i for i in range(num_count)] if seed else [random.randint(1, 2**31 - 1) for _ in range(num_count)]
+
+            self.cancel_requested = False
+            total_steps = int(kwargs.get("num_inference_steps") or 0)
+            self.progress = {
+                "active": True,
+                "step": 0,
+                "total_steps": total_steps,
+                "image_index": 0,
+                "image_count": len(seeds),
+            }
+
+            def callback_on_step_end(
+                _pipe: DiffusionPipeline,
+                step: int,
+                _timestep: Union[int, float],
+                callback_kwargs: Dict[str, Union[float, int, str]]
+            ) -> Dict[str, Union[float, int, str]]:
+                if self.cancel_requested:
+                    if hasattr(_pipe, "_interrupt"):
+                        _pipe._interrupt = True
+                    raise GenerationInterrupted("Generation cancelled by user")
+                self.progress = {**self.progress, "step": int(step) + 1}
+                return callback_kwargs
+
+            call_kwargs = {**kwargs, "callback_on_step_end": callback_on_step_end}
+            start_time = time.time()
+            loop = asyncio.get_running_loop()
+            queue: asyncio.Queue[Tuple[str, Any]] = asyncio.Queue()
+
+            num_pipelines = max(1, len(self.pipelines))
+            assignments: List[List[Tuple[int, int]]] = [[] for _ in range(num_pipelines)]
+            for index, item_seed in enumerate(seeds):
+                assignments[index % num_pipelines].append((index, item_seed))
+
+            def run_pipeline_worker(p_idx: int, task_list: List[Tuple[int, int]]):
+                pipeline = self.pipelines[p_idx]
+                for index, item_seed in task_list:
+                    if self.cancel_requested:
+                        break
+                    try:
+                        t0 = time.time()
+                        self.progress = {**self.progress, "image_index": index, "step": 0}
+                        sub = getattr(pipeline, pipeline_attr)
+                        images: List[Image.Image] = sub.generate(seed=item_seed, num=1, **call_kwargs)
+                        dt = time.time() - t0
+                        for img in images:
+                            item = {
+                                "image_base64": pil_to_base64_data_uri(img),
+                                "seed": item_seed,
+                                "width": img.width,
+                                "height": img.height,
+                                "index": index,
+                                "elapsed_seconds": round(dt, 3),
+                            }
+                            loop.call_soon_threadsafe(queue.put_nowait, ("image", item))
+                    except GenerationInterrupted:
+                        break
+                    except Exception as exc:
+                        loop.call_soon_threadsafe(queue.put_nowait, ("error", str(exc)))
+                        break
+
+            active_workers = [p_idx for p_idx in range(num_pipelines) if assignments[p_idx]]
+            pool = ThreadPoolExecutor(max_workers=max(1, len(active_workers)))
+            for p_idx in active_workers:
+                pool.submit(run_pipeline_worker, p_idx, assignments[p_idx])
+
+            completed_count = 0
+            total_items = len(seeds)
+
+            try:
+                while completed_count < total_items and not self.cancel_requested:
+                    msg_type, payload = await queue.get()
+                    if msg_type == "image":
+                        completed_count += 1
+                        yield f"event: image\ndata: {json.dumps(payload)}\n\n"
+                    elif msg_type == "error":
+                        yield f"event: error\ndata: {json.dumps({'detail': payload})}\n\n"
+                        break
+
+                if not self.cancel_requested and completed_count == total_items:
+                    total_elapsed = round(time.time() - start_time, 3)
+                    done_payload = {
+                        "status": "success",
+                        "total_images": completed_count,
+                        "elapsed_seconds": total_elapsed
+                    }
+                    yield f"event: done\ndata: {json.dumps(done_payload)}\n\n"
+            finally:
+                self.cancel_requested = True
+                pool.shutdown(wait=False, cancel_futures=True)
+                self.progress = {**self.progress, "active": False}
+                free_memory_to_system()
+
     def _prepare_control_image(
         self,
         req: Union[Txt2ImgRequest, Img2ImgRequest, InpaintRequest],
@@ -564,6 +701,86 @@ class PipelineManager:
             use_controlnet,
             req.controlnet_conditioning_scale,
         )
+
+    async def generate_txt2img_stream(self, req: Txt2ImgRequest) -> AsyncGenerator[str, None]:
+        kwargs: InferenceKwargs = {
+            "prompt": req.prompt,
+            "negative_prompt": req.negative_prompt,
+            "guidance_scale": req.guidance_scale,
+            "num_inference_steps": req.num_inference_steps,
+            "clip_skip": req.clip_skip,
+            "width": req.width,
+            "height": req.height,
+        }
+        use_controlnet = self._prepare_control_image(req, kwargs, "image")
+        self._prepare_ip_adapter_image(req, kwargs)
+        async for chunk in self._generate_stream(
+            "text_to_image_pipeline",
+            kwargs,
+            req.seed,
+            req.num,
+            req.scheduler,
+            use_controlnet,
+            req.controlnet_conditioning_scale,
+        ):
+            yield chunk
+
+    async def generate_img2img_stream(self, req: Img2ImgRequest) -> AsyncGenerator[str, None]:
+        kwargs: InferenceKwargs = {
+            "image": decode_image_data(req.image).convert("RGB"),
+            "prompt": req.prompt,
+            "negative_prompt": req.negative_prompt,
+            "strength": req.strength,
+            "guidance_scale": req.guidance_scale,
+            "num_inference_steps": req.num_inference_steps,
+            "clip_skip": req.clip_skip,
+            "width": req.width,
+            "height": req.height,
+        }
+        use_controlnet = self._prepare_control_image(req, kwargs, "control_image")
+        self._prepare_ip_adapter_image(req, kwargs)
+        async for chunk in self._generate_stream(
+            "image_to_image_pipeline",
+            kwargs,
+            req.seed,
+            req.num,
+            req.scheduler,
+            use_controlnet,
+            req.controlnet_conditioning_scale,
+        ):
+            yield chunk
+
+    async def generate_inpaint_stream(self, req: InpaintRequest) -> AsyncGenerator[str, None]:
+        mask_raw = decode_image_data(req.mask_image)
+        if mask_raw.mode == "RGBA":
+            mask_image = convert_mask_image_to_rgb(mask_raw)
+        else:
+            mask_image = mask_raw.convert("RGB")
+
+        kwargs: InferenceKwargs = {
+            "image": decode_image_data(req.image).convert("RGB"),
+            "mask_image": mask_image,
+            "prompt": req.prompt,
+            "negative_prompt": req.negative_prompt,
+            "strength": req.strength,
+            "guidance_scale": req.guidance_scale,
+            "num_inference_steps": req.num_inference_steps,
+            "clip_skip": req.clip_skip,
+            "width": req.width,
+            "height": req.height,
+        }
+        use_controlnet = self._prepare_control_image(req, kwargs, "control_image")
+        self._prepare_ip_adapter_image(req, kwargs)
+        async for chunk in self._generate_stream(
+            "inpainting_pipeline",
+            kwargs,
+            req.seed,
+            req.num,
+            req.scheduler,
+            use_controlnet,
+            req.controlnet_conditioning_scale,
+        ):
+            yield chunk
 
 
 manager = PipelineManager()
