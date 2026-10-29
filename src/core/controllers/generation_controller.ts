@@ -65,6 +65,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
 
 export class GenerationController extends BaseController<GenerationState> {
     private history_store = new LocalForageMap<GeneratedImageItem>("history", "xfusion")
+    private current_abort_controller: AbortController | null = null
 
     constructor() {
         super()
@@ -100,6 +101,19 @@ export class GenerationController extends BaseController<GenerationState> {
     public clear_error(): void {
         if (this.state.error === null) return
         this.update_state({ error: null })
+        this.dispatchEvent(new CustomEvent("change"))
+    }
+
+    public cancel_generation(): void {
+        if (!this.state.is_generating) return
+        if (this.current_abort_controller) {
+            this.current_abort_controller.abort()
+            this.current_abort_controller = null
+        }
+        const api_url = settings_controller.get_value("api_url", "http://localhost:8000")
+        ApiClient.cancel_generation(api_url).catch(() => undefined)
+        this.update_state({ is_generating: false, progress: null, error: null })
+        this.dispatchEvent(new CustomEvent("status_change"))
         this.dispatchEvent(new CustomEvent("change"))
     }
 
@@ -140,33 +154,41 @@ export class GenerationController extends BaseController<GenerationState> {
             this.dispatchEvent(new CustomEvent("change"))
             return Promise.resolve()
         }
-        return this.run_generation("txt2img", (api_url, common) =>
-            ApiClient.generate_txt2img(api_url, { ...common, ...this.extra_params(extras) })
+        return this.run_generation("txt2img", (api_url, common, signal) =>
+            ApiClient.generate_txt2img(api_url, { ...common, ...this.extra_params(extras) }, signal)
         )
     }
 
     public generate_img2img(image_base64: string, extras?: GenerationExtrasInput): Promise<void> {
         const strength = this.state.img2img_strength
-        return this.run_generation("img2img", (api_url, common) =>
-            ApiClient.generate_img2img(api_url, {
-                ...common,
-                ...this.extra_params(extras),
-                image: image_base64,
-                strength
-            })
+        return this.run_generation("img2img", (api_url, common, signal) =>
+            ApiClient.generate_img2img(
+                api_url,
+                {
+                    ...common,
+                    ...this.extra_params(extras),
+                    image: image_base64,
+                    strength
+                },
+                signal
+            )
         )
     }
 
     public generate_inpaint(image_base64: string, mask_base64: string, extras?: GenerationExtrasInput): Promise<void> {
         const strength = this.state.inpaint_strength
-        return this.run_generation("inpaint", (api_url, common) =>
-            ApiClient.generate_inpaint(api_url, {
-                ...common,
-                ...this.extra_params(extras),
-                image: image_base64,
-                mask_image: mask_base64,
-                strength
-            })
+        return this.run_generation("inpaint", (api_url, common, signal) =>
+            ApiClient.generate_inpaint(
+                api_url,
+                {
+                    ...common,
+                    ...this.extra_params(extras),
+                    image: image_base64,
+                    mask_image: mask_base64,
+                    strength
+                },
+                signal
+            )
         )
     }
 
@@ -206,12 +228,16 @@ export class GenerationController extends BaseController<GenerationState> {
         type: GeneratedImageItem["type"],
         request: (
             api_url: string,
-            common: ReturnType<GenerationController["common_request_params"]>
+            common: ReturnType<GenerationController["common_request_params"]>,
+            signal: AbortSignal
         ) => Promise<GenerationResponse>
     ): Promise<void> {
         if (this.state.is_generating) return
         const api_url = settings_controller.get_value("api_url", "http://localhost:8000")
         const { prompt, negative_prompt, num_inference_steps, num } = this.state
+
+        const abort_controller = new AbortController()
+        this.current_abort_controller = abort_controller
 
         this.update_state({
             is_generating: true,
@@ -221,19 +247,40 @@ export class GenerationController extends BaseController<GenerationState> {
         this.dispatchEvent(new CustomEvent("status_change"))
         this.dispatchEvent(new CustomEvent("change"))
 
-        const poll = window.setInterval(() => {
-            ApiClient.get_progress(api_url)
-                .then((progress) => {
-                    if (!this.state.is_generating) return
-                    this.update_state({ progress })
-                    this.dispatchEvent(new CustomEvent("status_change"))
-                    this.dispatchEvent(new CustomEvent("change"))
-                })
-                .catch(() => undefined)
-        }, 500)
+        let is_polling = false
+        let poll_timer: number | null = null
+
+        const poll_loop = async () => {
+            if (!this.state.is_generating || abort_controller.signal.aborted) return
+            if (!is_polling) {
+                is_polling = true
+                try {
+                    const timeout_signal = AbortSignal.timeout(5_000)
+                    const progress_signal =
+                        typeof (AbortSignal as any).any === "function"
+                            ? (AbortSignal as any).any([abort_controller.signal, timeout_signal])
+                            : abort_controller.signal
+                    const progress = await ApiClient.get_progress(api_url, progress_signal)
+                    if (this.state.is_generating && !abort_controller.signal.aborted) {
+                        this.update_state({ progress })
+                        this.dispatchEvent(new CustomEvent("status_change"))
+                        this.dispatchEvent(new CustomEvent("change"))
+                    }
+                } catch {
+                    // Ignore non-fatal progress poll failures
+                } finally {
+                    is_polling = false
+                }
+            }
+            if (this.state.is_generating && !abort_controller.signal.aborted) {
+                poll_timer = window.setTimeout(poll_loop, 600)
+            }
+        }
+
+        poll_timer = window.setTimeout(poll_loop, 600)
 
         try {
-            const res = await request(api_url, this.common_request_params())
+            const res = await request(api_url, this.common_request_params(), abort_controller.signal)
             const new_items: GeneratedImageItem[] = []
 
             for (const img of res.images) {
@@ -261,9 +308,18 @@ export class GenerationController extends BaseController<GenerationState> {
             })
             this.dispatchEvent(new CustomEvent("history_change"))
         } catch (err: any) {
-            this.update_state({ is_generating: false, progress: null, error: err.message || "Generation failed" })
+            if (abort_controller.signal.aborted) {
+                this.update_state({ is_generating: false, progress: null })
+            } else {
+                this.update_state({ is_generating: false, progress: null, error: err.message || "Generation failed" })
+            }
         } finally {
-            window.clearInterval(poll)
+            if (poll_timer !== null) {
+                window.clearTimeout(poll_timer)
+            }
+            if (this.current_abort_controller === abort_controller) {
+                this.current_abort_controller = null
+            }
         }
         this.dispatchEvent(new CustomEvent("status_change"))
         this.dispatchEvent(new CustomEvent("change"))

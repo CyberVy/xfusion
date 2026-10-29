@@ -51,6 +51,11 @@ class GeneratedImageItem(TypedDict):
     height: int
 
 
+class GenerationInterrupted(Exception):
+    """Raised when in-flight generation is cancelled by user."""
+    pass
+
+
 class PipelineManager:
     def __init__(self):
         self.pipelines: List[PipelineEngineType] = []
@@ -61,6 +66,7 @@ class PipelineManager:
         self.ip_adapter: Optional[IpAdapterDict] = None
         self.loras_enabled: bool = True
         self.controlnet_model: Optional[str] = None
+        self.cancel_requested: bool = False
         self.progress: ProgressDict = {
             "active": False,
             "step": 0,
@@ -68,6 +74,27 @@ class PipelineManager:
             "image_index": 0,
             "image_count": 0,
         }
+
+    def cancel(self) -> bool:
+        """Cancel any active generation and interrupt diffusion pipelines immediately."""
+        if not self.progress.get("active"):
+            return False
+        self.cancel_requested = True
+        for pipeline in self.pipelines:
+            for sub in getattr(pipeline, "sub_pipelines", {}).values():
+                pipe = getattr(sub, "pipeline", None)
+                if pipe is not None:
+                    try:
+                        pipe._interrupt = True
+                    except Exception:
+                        pass
+            pipe = getattr(pipeline, "pipeline", None)
+            if pipe is not None:
+                try:
+                    pipe._interrupt = True
+                except Exception:
+                    pass
+        return True
 
     def initialize_from_env(self) -> None:
         """Optionally initialize pipelines from environment variables."""
@@ -353,6 +380,7 @@ class PipelineManager:
             num_count = max(1, min(int(num or 1), 10))
             seeds = [seed + i for i in range(num_count)] if seed else [random.randint(1, 2**31 - 1) for _ in range(num_count)]
 
+            self.cancel_requested = False
             total_steps = int(kwargs.get("num_inference_steps") or 0)
             self.progress = {
                 "active": True,
@@ -368,6 +396,10 @@ class PipelineManager:
                 _timestep: Union[int, float],
                 callback_kwargs: Dict[str, Union[float, int, str]]
             ) -> Dict[str, Union[float, int, str]]:
+                if self.cancel_requested:
+                    if hasattr(_pipe, "_interrupt"):
+                        _pipe._interrupt = True
+                    raise GenerationInterrupted("Generation cancelled by user")
                 self.progress = {**self.progress, "step": int(step) + 1}
                 return callback_kwargs
 
@@ -376,15 +408,19 @@ class PipelineManager:
             loop = asyncio.get_running_loop()
 
             def run_seed(index: int, item_seed: int, pipeline: PipelineEngineType) -> Tuple[int, int, List[Image.Image]]:
+                if self.cancel_requested:
+                    raise GenerationInterrupted("Generation cancelled by user")
                 self.progress = {**self.progress, "image_index": index, "step": 0}
                 sub = getattr(pipeline, pipeline_attr)
                 images: List[Image.Image] = sub.generate(seed=item_seed, num=1, **call_kwargs)
                 return index, item_seed, images
 
+            ordered: List[Tuple[int, int, List[Image.Image]]] = []
             try:
                 if len(self.pipelines) == 1:
-                    ordered: List[Tuple[int, int, List[Image.Image]]] = []
                     for index, item_seed in enumerate(seeds):
+                        if self.cancel_requested:
+                            break
                         res = await loop.run_in_executor(
                             None, run_seed, index, item_seed, self.pipelines[0]
                         )
@@ -396,11 +432,20 @@ class PipelineManager:
                                 pool.submit(run_seed, index, item_seed, self.pipelines[index % len(self.pipelines)])
                                 for index, item_seed in enumerate(seeds)
                             ]
-                            return [future.result() for future in futures]
+                            batch_results = []
+                            for future in futures:
+                                try:
+                                    batch_results.append(future.result())
+                                except GenerationInterrupted:
+                                    break
+                            return batch_results
 
                     ordered = await loop.run_in_executor(None, run_batch)
                     ordered.sort(key=lambda item: item[0])
+            except GenerationInterrupted:
+                pass
             finally:
+                self.cancel_requested = False
                 self.progress = {**self.progress, "active": False}
 
             result: List[GeneratedImageItem] = []

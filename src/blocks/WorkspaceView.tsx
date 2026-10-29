@@ -357,23 +357,36 @@ export function WorkspaceView() {
                     </Section>
 
                     <div className="flex flex-col gap-2">
-                        <NaiveButton
-                            className="w-full h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                            on_click={handle_generate}
-                            disabled={!can_generate}
-                        >
-                            {state.is_generating ? (
-                                <span className="flex items-center gap-2">
+                        {state.is_generating ? (
+                            <div className="flex gap-2 w-full">
+                                <div className="flex-1 h-12 rounded-2xl bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 text-sm font-medium flex items-center justify-center gap-2 select-none">
                                     <RefreshIcon width={16} height={16} className="animate-spin" />
-                                    Generating
-                                </span>
-                            ) : (
+                                    <span>
+                                        {state.progress?.active
+                                            ? `Step ${state.progress.step}/${state.progress.total_steps}`
+                                            : "Generating..."}
+                                    </span>
+                                </div>
+                                <NaiveButton
+                                    className="h-12 px-5 rounded-2xl bg-black/5 dark:bg-white/10 text-black dark:text-white text-sm font-medium hover:bg-black/10 dark:hover:bg-white/15 shrink-0"
+                                    on_click={() => generation_controller.cancel_generation()}
+                                    title="Cancel current generation"
+                                >
+                                    Cancel
+                                </NaiveButton>
+                            </div>
+                        ) : (
+                            <NaiveButton
+                                className="w-full h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                                on_click={handle_generate}
+                                disabled={!can_generate}
+                            >
                                 <span className="flex items-center gap-2">
                                     <WandIcon width={18} height={18} />
                                     Generate
                                 </span>
-                            )}
-                        </NaiveButton>
+                            </NaiveButton>
+                        )}
                         {generate_hint && !state.is_generating && (
                             <p className="text-xs text-center text-black/45 dark:text-white/45">{generate_hint}</p>
                         )}

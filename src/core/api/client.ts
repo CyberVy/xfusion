@@ -79,12 +79,17 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async generate_txt2img(base_url: string, params: Txt2ImgParams): Promise<GenerationResponse> {
+    public static async generate_txt2img(
+        base_url: string,
+        params: Txt2ImgParams,
+        signal?: AbortSignal
+    ): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/txt2img`
         const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(params)
+            body: JSON.stringify(params),
+            signal: signal ?? AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({ detail: res.statusText }))
@@ -93,12 +98,17 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async generate_img2img(base_url: string, params: Img2ImgParams): Promise<GenerationResponse> {
+    public static async generate_img2img(
+        base_url: string,
+        params: Img2ImgParams,
+        signal?: AbortSignal
+    ): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/img2img`
         const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(params)
+            body: JSON.stringify(params),
+            signal: signal ?? AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({ detail: res.statusText }))
@@ -107,12 +117,17 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async generate_inpaint(base_url: string, params: InpaintParams): Promise<GenerationResponse> {
+    public static async generate_inpaint(
+        base_url: string,
+        params: InpaintParams,
+        signal?: AbortSignal
+    ): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/inpaint`
         const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(params)
+            body: JSON.stringify(params),
+            signal: signal ?? AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({ detail: res.statusText }))
@@ -121,11 +136,21 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async get_progress(base_url: string): Promise<GenerationProgress> {
+    public static async get_progress(base_url: string, signal?: AbortSignal): Promise<GenerationProgress> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/progress`
-        const res = await fetch(url)
+        const res = await fetch(url, { signal: signal ?? AbortSignal.timeout(5_000) })
         if (!res.ok) throw new Error("Failed to read generation progress")
         return res.json()
+    }
+
+    public static async cancel_generation(base_url: string): Promise<boolean> {
+        try {
+            const url = `${this.clean_base_url(base_url)}/api/v1/generate/cancel`
+            const res = await fetch(url, { method: "POST", signal: AbortSignal.timeout(3_000) })
+            return res.ok
+        } catch {
+            return false
+        }
     }
 
     public static set_lora_strength(base_url: string, lora_name: string, strength: number): Promise<any> {

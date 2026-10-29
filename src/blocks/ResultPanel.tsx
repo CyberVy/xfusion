@@ -33,13 +33,20 @@ export function ResultPanel() {
                 )}
 
                 {state.is_generating && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-black/60 dark:text-white/60">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-black/60 dark:text-white/60 bg-white/30 dark:bg-black/30 backdrop-blur-xs">
                         <RefreshIcon width={28} height={28} className="animate-spin" />
                         <span className="text-sm text-center px-6">
                             {state.progress?.active
                                 ? `Step ${state.progress.step} / ${state.progress.total_steps} · image ${state.progress.image_index + 1} / ${state.progress.image_count}`
                                 : "Generating..."}
                         </span>
+                        <button
+                            type="button"
+                            onClick={() => generation_controller.cancel_generation()}
+                            className="text-xs text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white underline cursor-pointer transition mt-0.5"
+                        >
+                            Cancel
+                        </button>
                     </div>
                 )}
             </div>
