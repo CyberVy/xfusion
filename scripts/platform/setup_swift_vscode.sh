@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 apple_dir="$repo_root/src-tauri/gen/apple"
 build_server_path="$repo_root/buildServer.json"
 xcode_build_server="$(command -v xcode-build-server || true)"

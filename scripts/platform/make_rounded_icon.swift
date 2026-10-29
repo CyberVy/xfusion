@@ -3,13 +3,13 @@ import AppKit
 /*
 Usage:
   1) Generate rounded source icon:
-     swift scripts/make_rounded_icon.swift public/icons/1024x1024.png src-tauri/icons/app-icon-rounded-1024.png
+     swift scripts/platform/make_rounded_icon.swift public/icons/1024x1024.png src-tauri/icons/app-icon-rounded-1024.png
 
   2) Regenerate Tauri icons (icns/ico/png):
      npm run tauri -- icon src-tauri/icons/app-icon-rounded-1024.png -o src-tauri/icons
 
 Optional args:
-  swift scripts/make_rounded_icon.swift <input.png> <output.png> [canvas] [inset] [radius] [zoom] [strength]
+  swift scripts/platform/make_rounded_icon.swift <input.png> <output.png> [canvas] [inset] [radius] [zoom] [strength]
 
 Arg details (all are in px):
   canvas: output canvas size, default 1024. Usually keep 1024 for app icons.
@@ -42,7 +42,7 @@ if args.count < 3 {
   fputs(
     """
     Usage:
-      swift scripts/make_rounded_icon.swift <input.png> <output.png> [canvas] [inset] [radius] [zoom] [strength]
+      swift scripts/platform/make_rounded_icon.swift <input.png> <output.png> [canvas] [inset] [radius] [zoom] [strength]
 
     Defaults:
       canvas = 1024
@@ -65,16 +65,16 @@ if args.count < 3 {
       strength: 0.30 ~ 0.90
 
     Example:
-      swift scripts/make_rounded_icon.swift public/icons/1024x1024.png src-tauri/icons/app-icon-rounded-1024.png
+      swift scripts/platform/make_rounded_icon.swift public/icons/1024x1024.png src-tauri/icons/app-icon-rounded-1024.png
       npm run tauri -- icon src-tauri/icons/app-icon-rounded-1024.png -o src-tauri/icons
 
     More examples:
       # Keep icon slightly larger
-      swift scripts/make_rounded_icon.swift in.png out.png 1024 64 180 1.0 0.60
+      swift scripts/platform/make_rounded_icon.swift in.png out.png 1024 64 180 1.0 0.60
       # Keep icon smaller with stronger rounding
-      swift scripts/make_rounded_icon.swift in.png out.png 1024 110 230 1.0 0.60
+      swift scripts/platform/make_rounded_icon.swift in.png out.png 1024 110 230 1.0 0.60
       # Stronger center-content compensation
-      swift scripts/make_rounded_icon.swift in.png out.png 1024 80 200 1.08 0.75
+      swift scripts/platform/make_rounded_icon.swift in.png out.png 1024 80 200 1.08 0.75
     """,
     stderr
   )

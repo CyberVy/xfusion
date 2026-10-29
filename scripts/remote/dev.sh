@@ -36,10 +36,10 @@ fi
 # Step 2: Ensure backend is running
 if [ "$DO_RESTART" = true ]; then
     log_info "[2/4] Restarting remote backend..."
-    rexec "cd $REMOTE_DIR && uv run python scripts/remote/server_daemon.py restart --port $BACKEND_PORT"
+    bash "$SCRIPT_DIR/backend.sh" restart
 else
     log_info "[2/4] Ensuring remote backend is running..."
-    rexec "cd $REMOTE_DIR && uv run python scripts/remote/server_daemon.py start --port $BACKEND_PORT"
+    bash "$SCRIPT_DIR/backend.sh" start
 fi
 
 # Step 3: Establish local port forwarding

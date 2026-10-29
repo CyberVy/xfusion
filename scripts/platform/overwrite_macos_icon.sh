@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 INPUT_PNG="${1:-${ROOT_DIR}/public/icons/1024x1024.png}"
 CANVAS="${2:-1024}"
@@ -16,7 +16,7 @@ OUTPUT_ICNS="${7:-${ROOT_DIR}/src-tauri/icons/icon.icns}"
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   cat <<'EOF'
 Usage:
-  bash scripts/overwrite_macos_icon.sh [input_png] [canvas] [inset] [radius] [zoom] [strength] [output_icns]
+  bash scripts/platform/overwrite_macos_icon.sh [input_png] [canvas] [inset] [radius] [zoom] [strength] [output_icns]
 
 Defaults:
   input_png   = public/icons/1024x1024.png
@@ -28,8 +28,8 @@ Defaults:
   output_icns = src-tauri/icons/icon.icns
 
 Examples:
-  bash scripts/overwrite_macos_icon.sh
-  bash scripts/overwrite_macos_icon.sh public/icons/1024x1024.png 1024 80 200 1.05 0.70
+  bash scripts/platform/overwrite_macos_icon.sh
+  bash scripts/platform/overwrite_macos_icon.sh public/icons/1024x1024.png 1024 80 200 1.05 0.70
 
 Notes:
   - This script only updates macOS icns.

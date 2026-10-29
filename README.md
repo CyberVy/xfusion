@@ -25,15 +25,15 @@ xfusion/
 │   ├── engine/           # Unified pipeline engines (SD, FLUX), adapters, schedulers, prompt utils
 │   ├── models/           # Model architecture detection, loaders (SD, FLUX) & pipeline configs
 │   └── infra/            # Hardware/CUDA config, GPU memory management, image utils, model downloader
-├── scripts/              # Helper scripts & remote GPU development toolchain
-│   └── remote/           # Remote synchronization, daemon manager, and port forwarding via rexec
+├── scripts/              # Helper scripts & development toolchain
+│   ├── dev.sh            # Unified fullstack developer launcher (local / remote)
+│   ├── remote/           # Remote GPU synchronization, daemon manager & port forwarding
+│   └── platform/         # Native platform build, icon generation & app signing
 ├── src-tauri/            # Tauri 2.0 cross-platform desktop/mobile integration
 ├── public/               # Static assets & PWA manifest
 ├── cli/                  # Frontend debug bridge & testing utilities
-├── package.json          # Frontend scripts, dependencies & remote commands
-├── pyproject.toml        # Backend Python dependencies (managed via uv)
-├── start.py              # Backend API startup script (Default Port: 8000)
-├── install.sh            # One-click backend dependency installation script
+├── package.json          # Frontend scripts, dependencies & build tasks
+├── pyproject.toml        # Backend Python dependencies & entrypoints (managed via uv)
 └── vite.config.ts        # Vite configuration & development server (Port: 8888)
 ```
 
@@ -77,16 +77,14 @@ xfusion/
 #### Installation & Launch
 
 ```bash
-# 1. Install backend dependencies
-./install.sh
-# Or manually with uv:
-# uv sync
+# 1. Install backend dependencies (via uv)
+uv sync
 
 # 2. Start the FastAPI server (Default: http://0.0.0.0:8000)
-python start.py
+uv run xfusion-server
 
 # Optional environment variables:
-# HOST=0.0.0.0 PORT=8000 DEBUG=true DOWNLOAD_PATH=/xfusion_models python start.py
+# HOST=0.0.0.0 PORT=8000 DEBUG=true DOWNLOAD_PATH=/xfusion_models uv run xfusion-server
 ```
 
 Once running:
@@ -139,19 +137,22 @@ If you develop on macOS or a laptop without a dedicated CUDA GPU, you can connec
     ```bash
     cp .env.example .env
     ```
-2. Start remote dev session:
+2. Start dev session:
     ```bash
-    npm run dev:remote
-    ```
-    This automatically syncs your local code to the remote GPU instance, starts the background backend daemon, creates a secure port forwarding tunnel (localhost:8000 -> remote:8000), and launches your local frontend dev server.
+    # Remote GPU workflow (sync + daemon + forward + frontend)
+    ./scripts/dev.sh
 
-Additional remote helper commands:
+    # Local fullstack workflow (local backend + frontend)
+    ./scripts/dev.sh --local
+    ```
+    The remote workflow automatically syncs your local code to the remote GPU instance, starts the background backend daemon, creates a secure port forwarding tunnel (localhost:8000 -> remote:8000), and launches your local frontend dev server.
+
+Additional remote helper scripts:
 
 ```bash
-npm run remote:sync      # Sync local files to the remote server
-npm run remote:backend   # Manage remote backend daemon (start/stop/restart/status)
-npm run remote:logs      # Tail remote backend logs in real-time
-npm run remote:forward   # Open SSH/rexec port forwarding tunnel
+./scripts/remote/sync.sh      # Sync local files to the remote server
+./scripts/remote/backend.sh   # Manage remote backend daemon (start/stop/restart/status/logs)
+./scripts/remote/forward.sh   # Open SSH/rexec port forwarding tunnel
 ```
 
 #### Production Build & CDN Deployment

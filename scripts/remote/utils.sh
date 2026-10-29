@@ -56,7 +56,7 @@ check_rexec() {
 
 # Dynamically resolve remote project directory if not explicitly specified
 resolve_remote_dir() {
-    if [ -n "$REMOTE_DIR" ]; then
+    if [ -n "${REMOTE_DIR:-}" ]; then
         REMOTE_LOG_FILE="${REMOTE_LOG_FILE:-$REMOTE_DIR/.server.log}"
         REMOTE_PID_FILE="${REMOTE_PID_FILE:-$REMOTE_DIR/.server.pid}"
         REMOTE_MODELS_DIR="${REMOTE_MODELS_DIR:-$REMOTE_DIR/models}"

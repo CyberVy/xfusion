@@ -27,6 +27,6 @@ rexec "cd $REMOTE_DIR && uv sync"
 
 # 5. Verify environment
 log_info "Verifying remote Python environment..."
-rexec "cd $REMOTE_DIR && uv run python scripts/remote/server_daemon.py check-env"
+bash "$SCRIPT_DIR/backend.sh" check-env
 
 log_success "Remote setup finished successfully! Ready for development."
