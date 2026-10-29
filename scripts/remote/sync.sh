@@ -50,9 +50,8 @@ rexec "rm -rf $REMOTE_DIR/server/components $REMOTE_DIR/server/enhancement $REMO
 log_info "Pushing scripts/remote/ ..."
 rexec push -r "$PROJECT_ROOT/scripts/remote" "$REMOTE_DIR/scripts/remote" || true
 
-# 4. Push root configurations and entrypoints (README.md is required by pyproject.toml hatchling build)
+# 4. Push root configurations (README.md is required by pyproject.toml hatchling build)
 log_info "Pushing entry files and configurations..."
-rexec push "$PROJECT_ROOT/start.py" "$REMOTE_DIR/start.py"
 rexec push "$PROJECT_ROOT/pyproject.toml" "$REMOTE_DIR/pyproject.toml"
 rexec push "$PROJECT_ROOT/README.md" "$REMOTE_DIR/README.md"
 

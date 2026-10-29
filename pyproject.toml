@@ -28,6 +28,9 @@ dependencies = [
     "compel; sys_platform == 'linux'",
 ]
 
+[project.scripts]
+xfusion-server = "server.__main__:main"
+
 [project.urls]
 Homepage = "https://xsolutiontech.com"
 Repository = "https://github.com/CyberVy/xfusion"
