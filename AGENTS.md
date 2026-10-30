@@ -1,6 +1,6 @@
 ## Project Structure
 
-- `src/app/`: Application UI entry points and shells.
+- `frontend/app/`: Application UI entry points and shells.
   - `index.html`: SPA HTML shell entry.
   - `main.tsx`: SPA entry mount point.
   - `App.tsx`: main application root component.
@@ -9,19 +9,19 @@
     - `main.tsx`: native/Tauri entry mount point.
     - `App.tsx`: native/Tauri entry route component.
   - `globals.css`: global styles, font imports, and Tailwind setup.
-- `src/blocks/`: business-facing React UI blocks composed from base components.
+- `frontend/blocks/`: business-facing React UI blocks composed from base components.
   - Put app-specific composite UI here and bind it directly to domain controllers.
-- `src/components/`: base reusable UI components and UI infrastructure.
+- `frontend/components/`: base reusable UI components and UI infrastructure.
   - Put framework-level or reusable domain-agnostic primitives here.
   - Commonly categorized into `base/` (atomic UI), `composite/` (generic composite components), and `animation/` (transitions/animations).
-- `src/core/`: domain logic, algorithms, data generators, and application state coordination.
+- `frontend/core/`: domain logic, algorithms, data generators, and application state coordination.
   - `controllers/`: centralized reactive state and data controllers.
-- `src/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
+- `frontend/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
   - `*.client.ts`: browser/webview-only client integrations.
   - `web_ipc.client.ts`: frontend-side Tauri IPC adapter.
-- `src/inject/`: client-side scripts injected directly into external WebViews.
+- `frontend/inject/`: client-side scripts injected directly into external WebViews.
   - Organized into `infra/` (environment/IPC polyfills) and `core/` (business/product logic injections), each using `index.ts` as the entry point.
-- `src/sw/`: service worker source (packaged to `dist/sw.js` in build, served in-memory by Vite in dev).
+- `frontend/sw/`: service worker source (packaged to `dist/sw.js` in build, served in-memory by Vite in dev).
   - `core/`: core service worker logic (e.g., image/video cache, playlist handlers).
   - `infra/`: service worker infrastructure/adapters (e.g., static resource cache).
   - `main.worker.ts`: entry worker script.
@@ -73,13 +73,13 @@ The application adheres to a strict **Event-Driven Producer-Consumer Architectur
 ```
 
 ### 1. Data Generator (No Events)
-- **Definition**: Stateless data-producing modules responsible for fetching raw inputs, parsing, algorithmic transformation, and low-level data extraction. Data Generator is an architectural role rather than a directory boundary; generator modules may live under `src/core/` or `src/infra/`.
+- **Definition**: Stateless data-producing modules responsible for fetching raw inputs, parsing, algorithmic transformation, and low-level data extraction. Data Generator is an architectural role rather than a directory boundary; generator modules may live under `frontend/core/` or `frontend/infra/`.
 - **Constraints**:
   - **No Application Events**: Must NOT publish application or domain state-change events, maintain external subscription registries, or couple with reactive view lifecycles. Low-level event-based APIs may be used internally.
   - **No Owned Application State**: Must return results through values or Promises and must not own long-lived application state, domain caches, or persistence lifecycles. External I/O may be nondeterministic.
 
 ### 2. Data Controller (With Events)
-- **Definition**: Centralized domain state coordinators and reactive event dispatchers (located under `src/core/controllers/`).
+- **Definition**: Centralized domain state coordinators and reactive event dispatchers (located under `frontend/core/controllers/`).
 - **Responsibilities**:
   - Serves as the **Single Source of Truth (SSOT)** for domain state.
   - Coordinates Data Generators, performs caching, indexing, deduplication, and persistence.
@@ -98,7 +98,7 @@ The application adheres to a strict **Event-Driven Producer-Consumer Architectur
   - **Unidirectional Flow & Anti-Bypass**: Consumers must NEVER bypass a Data Controller to interact directly with a Data Generator when a Controller exists for that domain.
   - **No Manual Domain-State Sync**: UI consumers must not mirror controller-owned domain state into component state through effects. Ephemeral UI state that is not owned by a Controller remains local to the component.
   - **Zero Cross-Block Callback Drilling**: Do NOT forward domain action callbacks through intermediate UI blocks. An immediate parent-child callback is permitted when the parent handles it directly rather than forwarding it further.
-  - **Minimal Block Props**: Props for domain blocks (`src/blocks/`) must NEVER duplicate, proxy, or shadow state and action logic that can be directly managed or derived by a domain Controller. Reserve props only for instance-specific context (e.g., item records in list renderers, slot composition) or local configuration that the Controller does not own.
+  - **Minimal Block Props**: Props for domain blocks (`frontend/blocks/`) must NEVER duplicate, proxy, or shadow state and action logic that can be directly managed or derived by a domain Controller. Reserve props only for instance-specific context (e.g., item records in list renderers, slot composition) or local configuration that the Controller does not own.
 
 ## Storage Architecture (Normalized Index-Data Separation)
 
@@ -147,14 +147,14 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 - Types, interfaces, classes, enums, and type aliases: `PascalCase` (e.g. `PlayerState`).
 - React components: `PascalCase` filenames and exports (e.g. `GlobalSettingButton`).
 - React component props types: component name plus `Props` in `PascalCase` (e.g. `PlayerProps`).
-- Blocks: `PascalCase` filenames and exports under `src/blocks/`.
+- Blocks: `PascalCase` filenames and exports under `frontend/blocks/`.
 - React hooks: `camelCase` names starting with `use` (e.g. `useWindowSize`).
 - Functions and methods: `snake_case` (e.g. `get_playlist_id_from_url`).
 - Variables, parameters, refs, and state values: `snake_case` (e.g. `current_video_id`).
 - Constants: `SCREAMING_SNAKE_CASE` for module-level semantic constants (e.g. `DESKTOP_USER_AGENT`); use `snake_case` for local values and function bindings.
 - Type imports: use `import type` when importing only types.
-- Path aliases: prefer `@/` for imports under `src/`.
-- WebView injection scripts: entry point is `src-tauri/src/inject.ts` (source) and `src-tauri/src/inject.js` (compiled output). Sub-modules under `src/inject/` may use `*.inject.ts` naming.
+- Path aliases: prefer `@/` for imports under `frontend/`.
+- WebView injection scripts: entry point is `src-tauri/src/inject.ts` (source) and `src-tauri/src/inject.js` (compiled output). Sub-modules under `frontend/inject/` may use `*.inject.ts` naming.
 - Type Definitions: Follow the proximity principle (define types close to where they are used). Avoid creating separate type files (like `types.ts` or `*.types.ts`) unless the type declarations are highly complex or repeatedly reused across multiple files.
 - Descriptive Naming: All variable, function, component, and file names must clearly reflect their purpose and responsibility. Use readable, self-explanatory names and strictly avoid generic, vague, or obscure names (e.g. prefer `is_sidebar_open` over `temp` or `flag`).
 - External Naming: Preserve names required by external APIs, framework contracts, serialized payloads, and implemented or overridden interfaces.
@@ -167,21 +167,21 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
   - **High-Frequency & Looping Animations**: Continuous, high-frequency, or infinite animations (e.g., playback indicators, spectrum bounces, pulsing effects, spinners) MUST strictly use composited, hardware-accelerated properties (`transform`, `opacity`) to prevent CPU layout reflow and repaint thrashing.
   - **Low-Frequency & Discrete Transitions**: Infrequent, one-off state transitions triggered by user interaction (e.g., play/pause toggles, accordion expansion) may animate layout properties (e.g., `height`, `width`) when geometric fidelity (such as preserving true circular/capsule `border-radius` without affine scale distortion) is required, provided the transition is brief and layout impact is localized.
 - **Filter & Effect Restraint (GPU)**: Do not abuse CSS filters (e.g., `blur`, `backdrop-filter`) and animations that cause excessive GPU overhead and rendering bottlenecks.
-- **Icons & SVGs**: Write SVG components in the corresponding `icons.tsx` based on the UI ownership layer (e.g., `src/components/icons.tsx` for generic component-level icons and `src/blocks/icons.tsx` for block-level business icons). Inline SVGs outside these files are prohibited by Oxlint. Do not import external icon libraries.
+- **Icons & SVGs**: Write SVG components in the corresponding `icons.tsx` based on the UI ownership layer (e.g., `frontend/components/icons.tsx` for generic component-level icons and `frontend/blocks/icons.tsx` for block-level business icons). Inline SVGs outside these files are prohibited by Oxlint. Do not import external icon libraries.
 - **Modals & Dialogs**:
   - Do not use native window dialogs (`window.alert`, `window.confirm`, `window.prompt`). This is enforced by Oxlint.
-  - Use [ModalContainer.tsx](src/components/composite/ModalContainer.tsx) to build modals and dialog components.
-  - If a modal requires animations, compose it with [AnimationContainer.tsx](src/components/animation/AnimationContainer.tsx).
+  - Use [ModalContainer.tsx](frontend/components/composite/ModalContainer.tsx) to build modals and dialog components.
+  - If a modal requires animations, compose it with [AnimationContainer.tsx](frontend/components/animation/AnimationContainer.tsx).
 
 ## Layering Rules
 
-- **UI vs Non-UI Directories**: React UI components, UI-specific React hooks, and JSX rendered by the main application may exist only in `src/app/`, `src/blocks/`, and `src/components/`. All other directories under `src/` (such as `src/core/`, `src/infra/`, `src/inject/`, and `src/sw/`) are Non-UI environments.
-- **Non-UI Isolation**: Non-UI environments must NEVER import modules from `src/app/`, `src/blocks/`, or `src/components/`.
-- **Component Isolation**: `src/components/` must NEVER import from `src/app/`, `src/blocks/`, or `src/core/`. Keep business UI and domain dependencies out of reusable components.
-- **Infrastructure Isolation**: `src/infra/` must NEVER import from `src/core/`.
+- **UI vs Non-UI Directories**: React UI components, UI-specific React hooks, and JSX rendered by the main application may exist only in `frontend/app/`, `frontend/blocks/`, and `frontend/components/`. All other directories under `frontend/` (such as `frontend/core/`, `frontend/infra/`, `frontend/inject/`, and `frontend/sw/`) are Non-UI environments.
+- **Non-UI Isolation**: Non-UI environments must NEVER import modules from `frontend/app/`, `frontend/blocks/`, or `frontend/components/`.
+- **Component Isolation**: `frontend/components/` must NEVER import from `frontend/app/`, `frontend/blocks/`, or `frontend/core/`. Keep business UI and domain dependencies out of reusable components.
+- **Infrastructure Isolation**: `frontend/infra/` must NEVER import from `frontend/core/`.
 - The import restrictions above apply to runtime imports, type-only imports, dynamic imports, and re-exports, and are enforced by Oxlint.
 - **Web IPC Communications**:
-  - All communication between frontend web app and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](src/infra/web_ipc.client.ts)).
+  - All communication between frontend web app and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](frontend/infra/web_ipc.client.ts)).
   - Shared data types used across the IPC boundary should follow the general type rules and be defined close to their usage/IPC client implementation.
 
 ## Base Rules

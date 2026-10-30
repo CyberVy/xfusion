@@ -6,7 +6,7 @@ To facilitate bidirectional communication between the **Frontend Browser Context
 
 ## 1. How the Mechanism Works
 
-The communication runs purely on standard web protocols (Server-Sent Events & HTTP POST) and is integrated directly into the Vite development server via Connect middleware. During development, Vite serves `/debug_bridge.js` directly and exposes the `/__debug/*` endpoints on the **same origin** as Vite itself. It keeps the core React frontend codebase (`src/core`, `src/infra`, `src/app/App.tsx`, etc.) 100% clean and untouched.
+The communication runs purely on standard web protocols (Server-Sent Events & HTTP POST) and is integrated directly into the Vite development server via Connect middleware. During development, Vite serves `/debug_bridge.js` directly and exposes the `/__debug/*` endpoints on the **same origin** as Vite itself. It keeps the core React frontend codebase (`frontend/core`, `frontend/infra`, `frontend/app/App.tsx`, etc.) 100% clean and untouched.
 
 ```
                   ┌─────────────────────────────────────┐
@@ -33,7 +33,7 @@ The communication runs purely on standard web protocols (Server-Sent Events & HT
 - **`cli/debug/debug_bridge.js`** (Browser Script): The client script that runs inside the browser, intercepting logs and evaluating incoming commands via same-origin `/__debug/*` calls.
 - **`debug_bridge_plugin` in `vite.config.ts`** (Injector): Injects `<script src="/debug_bridge.js">` non-intrusively via `transformIndexHtml` (head-prepend) during development (`apply: "serve"`), leaving production HTML completely untouched.
 - **`cli/debug/eval.js`** (CLI Helper): A lightweight evaluation utility that allows developers or agents to synchronously execute code in the browser by reading `.debug/config.json`.
-- **`src/app/index.html`** (Production HTML Entry): 100% clean of debug tooling. Zero intrusion into source code or production artifacts.
+- **`frontend/app/index.html`** (Production HTML Entry): 100% clean of debug tooling. Zero intrusion into source code or production artifacts.
 - **`.debug/`** (Ignored Data Directory): Contains the runtime configuration and persistent session log files:
     - `config.json`: The port configuration parameter for the debug bridge.
     - `logs.jsonl`: The browser console outputs and uncaught exceptions.

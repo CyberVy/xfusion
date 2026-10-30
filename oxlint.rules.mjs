@@ -166,21 +166,21 @@ const layeringRestrictionsRule = {
             description: "Enforce module dependency layering rules"
         },
         messages: {
-            noComponentsToBlocks: "Layering violation: 'src/components/' must not depend on 'src/blocks/' or 'src/app/'.",
+            noComponentsToBlocks: "Layering violation: 'frontend/components/' must not depend on 'frontend/blocks/' or 'frontend/app/'.",
             noUiInNonUi: "Layering violation: Non-UI file '{{file}}' must not import UI-related directory '{{imported}}'.",
-            noCoreInInfra: "Layering violation: 'src/infra/' must not depend on 'src/core/'."
+            noCoreInInfra: "Layering violation: 'frontend/infra/' must not depend on 'frontend/core/'."
         }
     },
     create(context) {
         const filename = context.filename || (context.getFilename && context.getFilename()) || "";
         const relativeFile = path.relative(process.cwd(), filename).replace(/\\/g, "/");
 
-        const UI_DIRS = ["src/app/", "src/blocks/", "src/components/"];
+        const UI_DIRS = ["frontend/app/", "frontend/blocks/", "frontend/components/"];
         const isUiFile = UI_DIRS.some(dir => relativeFile.startsWith(dir));
 
         function get_resolved_import(importPath) {
             if (importPath.startsWith("@/")) {
-                return importPath.replace("@/", "src/");
+                return importPath.replace("@/", "frontend/");
             }
             if (importPath.startsWith(".") || importPath.startsWith("/")) {
                 const dirname = path.dirname(filename);
@@ -214,9 +214,9 @@ const layeringRestrictionsRule = {
                 }
             }
 
-            // 2. src/components/ must not depend on src/blocks/ or src/app/
-            if (relativeFile.startsWith("src/components/")) {
-                if (resolved.startsWith("src/blocks/") || resolved.startsWith("src/app/")) {
+            // 2. frontend/components/ must not depend on frontend/blocks/ or frontend/app/
+            if (relativeFile.startsWith("frontend/components/")) {
+                if (resolved.startsWith("frontend/blocks/") || resolved.startsWith("frontend/app/")) {
                     context.report({
                         node,
                         messageId: "noComponentsToBlocks"
@@ -224,9 +224,9 @@ const layeringRestrictionsRule = {
                 }
             }
 
-            // 3. src/infra/ must not depend on src/core/
-            if (relativeFile.startsWith("src/infra/")) {
-                if (resolved.startsWith("src/core/")) {
+            // 3. frontend/infra/ must not depend on frontend/core/
+            if (relativeFile.startsWith("frontend/infra/")) {
+                if (resolved.startsWith("frontend/core/")) {
                     context.report({
                         node,
                         messageId: "noCoreInInfra"

@@ -13,7 +13,7 @@ Designed with a modern **Client-Server Decoupled Architecture**:
 
 ```text
 xfusion/
-├── src/                  # Frontend Client (React 19 + Nextkit blocks & components)
+├── frontend/             # Frontend Client (React 19 + Nextkit blocks & components)
 │   ├── app/              # Entry points (SPA & native Tauri shell), global styles
 │   ├── blocks/           # Domain UI blocks (Workspace, Model Manager, Gallery, Result Panel)
 │   ├── components/       # Atomic primitives, animation containers & composite modals
