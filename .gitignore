@@ -5,11 +5,13 @@ __pycache__/
 .venv/
 dist/
 build/
+target/
 *.egg-info/
 node_modules/
 draft/
 .debug/
 tsconfig.tsbuildinfo
+/buildServer.json
 
 # Local environment files
 .env

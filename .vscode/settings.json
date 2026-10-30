@@ -10,5 +10,11 @@
     "[typescriptreact]": {
         "editor.defaultFormatter": "oxc.oxc-vscode"
     },
-    "python.terminal.useEnvFile": true
+    "python.terminal.useEnvFile": true,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "Cargo.toml": "Cargo.lock",
+        "package.json": "package-lock.json, tsconfig.json, tsconfig.*.json, vite.config.ts, postcss.config.*, .oxlintrc.json, .oxfmtrc.json, oxlint.rules.*",
+        "pyproject.toml": "uv.lock"
+    }
 }
