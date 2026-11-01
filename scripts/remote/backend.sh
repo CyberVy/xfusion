@@ -42,7 +42,7 @@ do_start() {
     do_stop >/dev/null 2>&1 || true
 
     log_info "Starting remote backend on port $BACKEND_PORT..."
-    rexec "cd $REMOTE_DIR && mkdir -p \$(dirname '$REMOTE_LOG_FILE') && PORT=$BACKEND_PORT HOST=0.0.0.0 PYTHONUNBUFFERED=1 nohup uv run python -m server > '$REMOTE_LOG_FILE' 2>&1 & echo \$! > '$REMOTE_PID_FILE'"
+    rexec "cd $REMOTE_DIR && mkdir -p \$(dirname '$REMOTE_LOG_FILE') && MALLOC_ARENA_MAX=2 PORT=$BACKEND_PORT HOST=0.0.0.0 PYTHONUNBUFFERED=1 nohup uv run python -m server > '$REMOTE_LOG_FILE' 2>&1 & echo \$! > '$REMOTE_PID_FILE'"
 
     log_info "Waiting for backend readiness (timeout: 60s)..."
     local ready=false

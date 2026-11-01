@@ -105,12 +105,22 @@ export interface GeneratedImageItem {
     elapsed_seconds?: number
 }
 
+export interface ModelLoadOptions {
+    quantization?: string
+    text_encoder_mode?: string
+    offload_mode?: string
+    delete_after_load?: boolean
+}
+
 export interface SystemInfo {
     status: string
     gpu_count: number
     gpu_names: string[]
     current_model: string | null
     model_version: string | null
+    quantization?: string
+    text_encoder_mode?: string
+    offload_mode?: string
     loras: Record<string, number>
     loras_enabled?: boolean
     schedulers: string[]

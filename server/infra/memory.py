@@ -1,17 +1,26 @@
+import ctypes
 import gc
-from typing import Tuple, List, Optional
+from typing import Tuple, List
+import torch
 
 try:
-    import torch
-except ImportError:
-    torch = None
+    _libc = ctypes.CDLL("libc.so.6")
+except Exception:
+    _libc = None
 
 
 def free_memory_to_system() -> None:
-    """Trigger Python garbage collection and release cached PyTorch CUDA allocations."""
+    """Trigger Python garbage collection, release CUDA cache, and trim glibc heap arenas back to the OS."""
     gc.collect()
-    if torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available():
+    if torch.cuda.is_available():
         torch.cuda.empty_cache()
+        if hasattr(torch.cuda, "ipc_collect"):
+            torch.cuda.ipc_collect()
+    if _libc is not None and hasattr(_libc, "malloc_trim"):
+        try:
+            _libc.malloc_trim(0)
+        except Exception:
+            pass
 
 
 def delete(obj: object) -> Tuple[int, List[str], int, List[int]]:

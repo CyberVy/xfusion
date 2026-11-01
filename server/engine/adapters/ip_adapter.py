@@ -31,15 +31,30 @@ class IPAdapterMixin:
             token=config.HF_HUB_TOKEN,
             **kwargs
         )
+        image_encoder = getattr(target_pipe, "image_encoder", None)
+        offload_mode = getattr(self, "offload_mode", "none")
+        exec_device = getattr(self, "execution_device", None)
+        if image_encoder is not None and exec_device is not None:
+            if offload_mode == "model_cpu_offload":
+                try:
+                    from accelerate import cpu_offload_with_hook
+                    _, hook = cpu_offload_with_hook(image_encoder, execution_device=exec_device)
+                    if hasattr(target_pipe, "_all_hooks"):
+                        target_pipe._all_hooks.append(hook)
+                except Exception:
+                    image_encoder.to(exec_device)
+            elif offload_mode == "sequential_cpu_offload":
+                try:
+                    from accelerate import cpu_offload
+                    cpu_offload(image_encoder, execution_device=exec_device)
+                except Exception:
+                    image_encoder.to(exec_device)
+            elif offload_mode == "none":
+                image_encoder.to(exec_device)
 
-        sub_pipelines: Dict[str, EngineType] = getattr(self, "sub_pipelines", {})
-        for sub_p in sub_pipelines.values():
-            underlying = getattr(sub_p, "pipeline", sub_p)
-            if hasattr(underlying, "register_modules"):
-                if hasattr(target_pipe, "image_encoder"):
-                    underlying.register_modules(image_encoder=target_pipe.image_encoder)
-                if hasattr(target_pipe, "feature_extractor"):
-                    underlying.register_modules(feature_extractor=target_pipe.feature_extractor)
+        task_pipes = getattr(self, "_task_pipes", None)
+        if isinstance(task_pipes, dict):
+            task_pipes.clear()
 
     def set_ip_adapter_strength(self, weight: float) -> None:
         target_pipe = getattr(self, "pipeline", self)
@@ -50,11 +65,7 @@ class IPAdapterMixin:
         target_pipe = getattr(self, "pipeline", self)
         if hasattr(target_pipe, "unload_ip_adapter"):
             target_pipe.unload_ip_adapter()
-
-        sub_pipelines: Dict[str, EngineType] = getattr(self, "sub_pipelines", {})
-        for sub_p in sub_pipelines.values():
-            underlying = getattr(sub_p, "pipeline", sub_p)
-            if hasattr(underlying, "unload_ip_adapter"):
-                underlying.unload_ip_adapter()
-
+        task_pipes = getattr(self, "_task_pipes", None)
+        if isinstance(task_pipes, dict):
+            task_pipes.clear()
         free_memory_to_system()

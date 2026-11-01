@@ -20,10 +20,18 @@ router = APIRouter(prefix="/api/v1", tags=["Models & Adapters"])
 async def load_model(req: ModelLoadRequest):
     """Load or switch the base diffusion model."""
     try:
-        res = await manager.load_model(req.model, req.model_version)
+        res = await manager.load_model(
+            req.model,
+            req.model_version or "",
+            quantization=req.quantization or "none",
+            text_encoder_mode=req.text_encoder_mode or "default",
+            offload_mode=req.offload_mode or "none",
+            delete_after_load=bool(req.delete_after_load),
+        )
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get("/models/current")
@@ -139,7 +147,6 @@ async def preview_controlnet(req: ControlnetPreviewRequest):
 async def set_scheduler(req: SchedulerSetRequest):
     """Change the sampler/scheduler on the active pipeline."""
     try:
-        res = await manager.set_scheduler(req.scheduler, req.pipeline_type)
-        return res
+        return await manager.set_scheduler(req.scheduler)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,10 +1,9 @@
 from __future__ import annotations
 import io
-import os
 import base64
 import requests
-from typing import Tuple, Optional, Callable, Dict, Union
-from PIL import Image, ImageOps
+from typing import Tuple, Optional
+from PIL import Image
 import cv2
 import numpy as np
 
@@ -28,31 +27,6 @@ def decode_image_data(image_str: str) -> Image.Image:
 
     image_bytes = base64.b64decode(image_str)
     return Image.open(io.BytesIO(image_bytes))
-
-
-def load_image(
-    image: Image.Image | str,
-    convert_method: Optional[Callable[[Image.Image], Image.Image]] = None
-) -> Image.Image:
-    """Load image from path, URL or existing instance and apply orientation normalization."""
-    if isinstance(image, str):
-        if image.startswith("http://") or image.startswith("https://"):
-            loaded = Image.open(requests.get(image, stream=True).raw)
-        elif os.path.isfile(image):
-            loaded = Image.open(image)
-        else:
-            raise ValueError(
-                f"Invalid image path or URL: {image}"
-            )
-    elif isinstance(image, Image.Image):
-        loaded = image
-    else:
-        raise ValueError("Image must be a URL, local file path, or PIL Image instance.")
-
-    loaded = ImageOps.exif_transpose(loaded)
-    if convert_method is not None:
-        return convert_method(loaded)
-    return loaded.convert("RGB")
 
 
 def normalize_image_size(
@@ -101,8 +75,3 @@ def convert_image_to_canny(
     edges = cv2.Canny(img_np, low, high)
     edges_3ch = np.stack([edges, edges, edges], axis=2)
     return Image.fromarray(edges_3ch)
-
-
-def dict_to_str(d: Dict[str, Union[str, int, float, bool, None]]) -> str:
-    """Format dictionary entries into readable string representation."""
-    return "".join(f"{k}: {v}\n\n" for k, v in d.items())

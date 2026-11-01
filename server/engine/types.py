@@ -1,28 +1,15 @@
 from __future__ import annotations
-from typing import Dict, Tuple, Type, Union, Optional, List, Callable, TypedDict, TYPE_CHECKING
+from typing import Dict, Tuple, Type, Union, Optional, List, Callable, TypedDict
 from PIL import Image
+import torch
 
 from diffusers import DiffusionPipeline, ControlNetModel, SD3ControlNetModel
 from diffusers.schedulers import SchedulerMixin
 
-if TYPE_CHECKING:
-    import torch
-    TorchTensor = torch.Tensor
-    TorchGenerator = torch.Generator
-    TorchDevice = torch.device
-    TorchModule = torch.nn.Module
-else:
-    try:
-        import torch
-        TorchTensor = torch.Tensor
-        TorchGenerator = torch.Generator
-        TorchDevice = torch.device
-        TorchModule = torch.nn.Module
-    except (ImportError, AttributeError):
-        TorchTensor = Union[str, None]
-        TorchGenerator = Union[int, None]
-        TorchDevice = Union[str, int, None]
-        TorchModule = Union[str, None]
+TorchTensor = torch.Tensor
+TorchGenerator = torch.Generator
+TorchDevice = torch.device
+TorchModule = torch.nn.Module
 
 StepCallback = Callable[[DiffusionPipeline, int, Union[int, float], Dict[str, Union[float, int, str]]], Dict[str, Union[float, int, str]]]
 SchedulerConfigValue = Union[str, bool, int, float]

@@ -96,19 +96,24 @@ Once running:
 
 #### Environment Variables
 
-| Variable           | Default                         | Description                                                                           |
-| :----------------- | :------------------------------ | :------------------------------------------------------------------------------------ |
-| `HOST`             | `0.0.0.0`                       | Host IP to bind the API server                                                        |
-| `PORT`             | `8000`                          | Port to bind the API server                                                           |
-| `DEBUG`            | `false`                         | Enable automatic server reload on code change                                         |
-| `MODEL_URL`        | `None`                          | Optional model URL or path to auto-load on startup                                    |
-| `MODEL_VERSION`    | `""`                            | Version hint for `MODEL_URL` (`1.5`, `2`, `xl`, `pony`, `3`, `3.5`, `flux`, or empty) |
-| `DOWNLOAD_PATH`    | `/xfusion_models`               | Local directory for caching downloaded models and adapters                            |
-| `HF_HUB_TOKEN`     | `None`                          | Hugging Face token for downloading gated models                                       |
-| `CIVITAI_TOKEN`    | `None`                          | Civitai API key for downloading models and LoRAs                                      |
-| `NEED_PROXY`       | Auto                            | Force enable (`true`) or disable (`false`) proxy routing                              |
-| `PROXY_URL_PREFIX` | `https://us2.xsolutiontech.com` | Proxy prefix for downloads                                                            |
-| `CORS_ORIGINS`     | `*`                             | Comma-separated list of allowed CORS origins                                          |
+| Variable            | Default                         | Description                                                                           |
+| :------------------ | :------------------------------ | :------------------------------------------------------------------------------------ |
+| `HOST`              | `0.0.0.0`                       | Host IP to bind the API server                                                        |
+| `PORT`              | `8000`                          | Port to bind the API server                                                           |
+| `DEBUG`             | `false`                         | Enable automatic server reload on code change                                         |
+| `MODEL_URL`         | `None`                          | Optional model URL or path to auto-load on startup                                    |
+| `MODEL_VERSION`     | `""`                            | Version hint for `MODEL_URL` (`1.5`, `2`, `xl`, `pony`, `3`, `3.5`, `flux`, or empty) |
+| `QUANTIZATION`      | `"none"`                        | Startup backbone quantization (`none`, `bnb_4bit`, `bnb_8bit`, `fp8_cast`, `gguf`)    |
+| `TEXT_ENCODER_MODE` | `"default"`                     | Startup text encoder mode (`default`, `bnb_4bit`, `bnb_8bit`, `fp8_cast`, `none`)     |
+| `OFFLOAD_MODE`      | `"none"`                        | Startup VRAM offload mode (`none`, `model_cpu_offload`, `sequential_cpu_offload`)     |
+| `DELETE_AFTER_LOAD` | `false`                         | Delete downloaded single-file weights from disk after loading into memory             |
+| `DOWNLOAD_PATH`     | `/xfusion_models`               | Local directory for caching downloaded models and adapters                            |
+| `HF_HUB_TOKEN`      | `None`                          | Hugging Face token for downloading gated models                                       |
+| `CIVITAI_TOKEN`     | `None`                          | Civitai API key for downloading models and LoRAs                                      |
+| `NEED_PROXY`        | Auto                            | Force enable (`true`) or disable (`false`) proxy routing                              |
+| `PROXY_URL_PREFIX`  | `https://us2.xsolutiontech.com` | Proxy prefix for downloads                                                            |
+| `CORS_ORIGINS`      | `*`                             | Comma-separated list of allowed CORS origins                                          |
+
 
 ---
 
@@ -197,7 +202,8 @@ The frontend client communicates with the inference backend over HTTP with full 
 | :----- | :---------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET`  | `/api/v1/system/health`       | Service health status and whether a model is loaded                                                                                             |
 | `GET`  | `/api/v1/system/info`         | GPU status, loaded model & version, active LoRAs & toggle, available schedulers, ControlNet & IP-Adapter state, Python & OS info                |
-| `POST` | `/api/v1/models/load`         | Load or switch base model (`model`, `model_version`: `1.5`, `2`, `xl`, `pony`, `3`, `3.5`, `flux`, or empty for auto-detect)                    |
+| `POST` | `/api/v1/models/load`         | Load or switch base model (`model`, `model_version`, `quantization`, `text_encoder_mode`, `offload_mode`, `delete_after_load`)                  |
+
 | `GET`  | `/api/v1/models/current`      | Retrieve currently active base model name and architecture version                                                                              |
 | `POST` | `/api/v1/lora/load`           | Load or update a LoRA adapter (`url`, `lora_name`, `strength`)                                                                                  |
 | `POST` | `/api/v1/lora/strength`       | Adjust the strength of an active LoRA without redownloading (`lora_name`, `strength`)                                                           |

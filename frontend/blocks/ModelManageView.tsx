@@ -18,6 +18,28 @@ const MODEL_VERSIONS = [
     { label: "FLUX", value: "flux" }
 ]
 
+const QUANTIZATION_MODES = [
+    { label: "Backbone: FP16", value: "none" },
+    { label: "Backbone: 4-Bit (NF4)", value: "bnb_4bit" },
+    { label: "Backbone: 8-Bit (INT8)", value: "bnb_8bit" },
+    { label: "Backbone: FP8 Cast", value: "fp8_cast" },
+    { label: "Backbone: GGUF", value: "gguf" }
+]
+
+const TEXT_ENCODER_MODES = [
+    { label: "Text Encoder: Default", value: "default" },
+    { label: "Text Encoder: 4-Bit T5", value: "bnb_4bit" },
+    { label: "Text Encoder: 8-Bit T5", value: "bnb_8bit" },
+    { label: "Text Encoder: FP8 Cast", value: "fp8_cast" },
+    { label: "Text Encoder: Skip T5", value: "none" }
+]
+
+const OFFLOAD_MODES = [
+    { label: "Offload: GPU Resident", value: "none" },
+    { label: "Offload: Model CPU", value: "model_cpu_offload" },
+    { label: "Offload: Sequential CPU", value: "sequential_cpu_offload" }
+]
+
 const FIELD_CLASS =
     "rounded-xl bg-black/4 dark:bg-white/6 border border-black/8 dark:border-white/10 focus-within:border-black/30 dark:focus-within:border-white/30 transition"
 
@@ -82,7 +104,12 @@ export function ModelManageView() {
 
     const [model_url, set_model_url] = useState("eramth/realism-sdxl")
     const [model_version, set_model_version] = useState("xl")
+    const [quantization, set_quantization] = useState("none")
+    const [text_encoder_mode, set_text_encoder_mode] = useState("default")
+    const [offload_mode, set_offload_mode] = useState("none")
+    const [delete_after_load, set_delete_after_load] = useState(false)
     const [lora_url, set_lora_url] = useState("")
+
     const [lora_name, set_lora_name] = useState("")
     const [lora_strength, set_lora_strength] = useState(0.4)
     const [ip_uri, set_ip_uri] = useState("h94/IP-Adapter")
@@ -113,9 +140,21 @@ export function ModelManageView() {
                         <p className="text-xs text-black/50 dark:text-white/50">Currently loaded</p>
                         <p className="text-sm font-mono truncate">{state.system_info?.current_model || "None"}</p>
                     </div>
-                    <span className="shrink-0 text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                        {state.system_info?.model_version || "N/A"}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        {state.system_info?.quantization && state.system_info.quantization !== "none" && (
+                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                {state.system_info.quantization}
+                            </span>
+                        )}
+                        {state.system_info?.offload_mode && state.system_info.offload_mode !== "none" && (
+                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                {state.system_info.offload_mode.replace("_cpu_offload", " offload")}
+                            </span>
+                        )}
+                        <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                            {state.system_info?.model_version || "N/A"}
+                        </span>
+                    </div>
                 </div>
 
                 <StringInput
@@ -124,6 +163,59 @@ export function ModelManageView() {
                     placeholder="e.g. eramth/realism-sdxl"
                     className={`h-11 ${FIELD_CLASS}`}
                 />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <select
+                        value={quantization}
+                        onChange={(e) => set_quantization(e.target.value)}
+                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
+                        aria-label="Backbone quantization mode"
+                    >
+                        {QUANTIZATION_MODES.map((m) => (
+                            <option key={m.value} value={m.value}>
+                                {m.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={text_encoder_mode}
+                        onChange={(e) => set_text_encoder_mode(e.target.value)}
+                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
+                        aria-label="Text encoder loading mode"
+                    >
+                        {TEXT_ENCODER_MODES.map((m) => (
+                            <option key={m.value} value={m.value}>
+                                {m.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={offload_mode}
+                        onChange={(e) => set_offload_mode(e.target.value)}
+                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
+                        aria-label="VRAM offload mode"
+                    >
+                        {OFFLOAD_MODES.map((m) => (
+                            <option key={m.value} value={m.value}>
+                                {m.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                    <label className="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={delete_after_load}
+                            onChange={(e) => set_delete_after_load(e.target.checked)}
+                            className="accent-black dark:accent-white cursor-pointer"
+                        />
+                        Purge downloaded archive after loading into memory
+                    </label>
+                </div>
 
                 <div className="flex gap-2">
                     <select
@@ -140,7 +232,15 @@ export function ModelManageView() {
 
                     <NaiveButton
                         className="h-11 px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                        on_click={() => model_url.trim() && model_controller.load_model(model_url, model_version)}
+                        on_click={() =>
+                            model_url.trim() &&
+                            model_controller.load_model(model_url, model_version, {
+                                quantization,
+                                text_encoder_mode,
+                                offload_mode,
+                                delete_after_load
+                            })
+                        }
                         disabled={state.is_loading_model}
                     >
                         {state.is_loading_model ? (

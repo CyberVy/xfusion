@@ -13,7 +13,7 @@ def load_lora_weights(
     download_kwargs: Dict[str, str],
     **kwargs: Union[str, float, int, bool]
 ) -> None:
-    use_internet = not (lora_uri.startswith(".") or lora_uri.startswith("/") or lora_uri.startswith("~"))
+    use_internet = lora_uri.startswith(("http://", "https://"))
     if not hasattr(pipeline, "load_lora_weights"):
         raise AttributeError(f"Pipeline {pipeline} does not support load_lora_weights")
 
@@ -21,22 +21,21 @@ def load_lora_weights(
         lora_path = download_file(lora_uri, **download_kwargs)
         pipeline.load_lora_weights(lora_path, adapter_name=lora_name, **kwargs)
     else:
-        pipeline.load_lora_weights(lora_uri, adapter_name=lora_name, **kwargs)
+        pipeline.load_lora_weights(os.path.expanduser(lora_uri), adapter_name=lora_name, **kwargs)
 
 
 class LoraAdapterMixin(DownloadArgumentsMixin):
     def __init__(self):
         super().__init__()
         self.lora_dict: Dict[str, float] = {}
+        self.loras_enabled: bool = True
 
     def set_lora(self, lora_uri: str, lora_name: str, weight: float = 0.4) -> None:
         target_pipe: DiffusionPipeline = getattr(self, "pipeline", self)
         if lora_name not in self.lora_dict:
             download_kwargs = self.download_kwargs.copy()
             directory = download_kwargs.get("directory", "./")
-            directory = os.path.join(directory, "lora")
-            download_kwargs["directory"] = directory
-
+            download_kwargs["directory"] = os.path.join(directory, "lora")
             load_lora_weights(target_pipe, lora_uri, lora_name, download_kwargs)
 
         self.set_lora_strength(lora_name, weight)
@@ -44,7 +43,7 @@ class LoraAdapterMixin(DownloadArgumentsMixin):
     def set_lora_strength(self, lora_name: str, weight: float) -> None:
         self.lora_dict[lora_name] = weight
         target_pipe = getattr(self, "pipeline", self)
-        if hasattr(target_pipe, "set_adapters"):
+        if hasattr(target_pipe, "set_adapters") and self.lora_dict:
             target_pipe.set_adapters(list(self.lora_dict.keys()), list(self.lora_dict.values()))
 
     def delete_adapters(self, adapter_names: Union[str, List[str]]) -> None:
@@ -58,11 +57,13 @@ class LoraAdapterMixin(DownloadArgumentsMixin):
         free_memory_to_system()
 
     def enable_lora(self) -> None:
+        self.loras_enabled = True
         target_pipe = getattr(self, "pipeline", self)
         if hasattr(target_pipe, "enable_lora"):
             target_pipe.enable_lora()
 
     def disable_lora(self) -> None:
+        self.loras_enabled = False
         target_pipe = getattr(self, "pipeline", self)
         if hasattr(target_pipe, "disable_lora"):
             target_pipe.disable_lora()

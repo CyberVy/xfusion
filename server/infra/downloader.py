@@ -1,50 +1,11 @@
 import os
 import re
 from urllib.parse import urlparse, unquote
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, Union
 import requests
 from tqdm import tqdm
 
 from . import config
-
-
-def get_hf_repo_filename_url_dict(
-    repo_id: str,
-    subfolders: Optional[Union[str, List[str]]] = None,
-    token: Optional[str] = None
-) -> Dict[str, str]:
-    headers = {}
-    auth_token = token if token is not None else config.HF_HUB_TOKEN
-    if auth_token:
-        headers["authorization"] = f"Bearer {auth_token}"
-
-    hf_url = "https://huggingface.co"
-    if config.is_proxy_needed() and config.PROXY_URL_PREFIX:
-        hf_url = f"{config.PROXY_URL_PREFIX}/{hf_url}"
-
-    resp = requests.get(f"{hf_url}/api/models/{repo_id}", headers=headers)
-    json_info = resp.json()
-    file_name_list = json_info.get("siblings")
-    if file_name_list is None:
-        print(f"The repo {repo_id} does not exist or is private.")
-        return {}
-
-    complete_dict: Dict[str, str] = {}
-    for item in file_name_list:
-        file_name = item["rfilename"]
-        complete_dict[file_name] = f"{hf_url}/{repo_id}/resolve/main/{file_name}?download=true"
-
-    if subfolders is None:
-        return complete_dict
-
-    subfolder_list = [subfolders] if isinstance(subfolders, str) else subfolders
-    filtered_dict: Dict[str, str] = {}
-    for file_name, file_url in complete_dict.items():
-        for sub in subfolder_list:
-            prefix = f"{sub}/" if not sub.endswith("/") else sub
-            if file_name.startswith(prefix):
-                filtered_dict[file_name] = file_url
-    return filtered_dict
 
 
 def download_file(

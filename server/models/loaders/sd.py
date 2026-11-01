@@ -1,20 +1,14 @@
 from __future__ import annotations
 import os
-import requests
-from typing import Optional, Dict, Union
-
-try:
-    import torch
-except (ImportError, AttributeError):
-    torch = None  # type: ignore
-
-LoaderKwargValue = Union[str, float, int, bool, None]
-
+from typing import Optional, Dict, Union, Tuple, Type
+import torch
 from diffusers import (
     DiffusionPipeline,
     StableDiffusionPipeline,
     StableDiffusionXLPipeline,
     StableDiffusion3Pipeline,
+    UNet2DConditionModel,
+    SD3Transformer2DModel,
     ControlNetModel,
     SD3ControlNetModel,
 )
@@ -28,9 +22,37 @@ from ..constants import (
     SD_V1_V2_CONTROLNET_CONFIG_PATH,
     SD_XL_CONTROLNET_CONFIG_PATH,
 )
-from ..inspect import infer_model_version
-from ...infra.downloader import download_file
+from ..inspect import (
+    infer_model_version,
+    resolve_model_source,
+    build_bnb_config,
+    build_gguf_config,
+    build_pipeline_quant_config,
+    apply_post_load_optimizations,
+)
 from ...infra import config
+
+LoaderKwargValue = Union[str, float, int, bool, None, object]
+
+
+def _normalize_controlnet_version(inferred: str) -> str:
+    if inferred == "controlnet_xl_large":
+        return "xl"
+    if inferred == "controlnet":
+        return "1.5"
+    raise ValueError(f"Unsupported ControlNet architecture: {inferred}")
+
+
+def _normalize_sd_version(inferred: str) -> str:
+    if "sd3" in inferred:
+        return "3"
+    if "xl" in inferred:
+        return "xl"
+    if inferred == "v2":
+        return "2"
+    if inferred == "v1":
+        return "1.5"
+    raise ValueError(f"Unsupported Stable Diffusion architecture: {inferred}")
 
 
 def load_stable_diffusion_controlnet(
@@ -38,106 +60,65 @@ def load_stable_diffusion_controlnet(
     model_version: Optional[str] = None,
     file_format: str = "safetensors",
     download_kwargs: Optional[Dict[str, str]] = None,
-    **kwargs: LoaderKwargValue
+    delete_after_load: bool = False,
+    **kwargs: LoaderKwargValue,
 ) -> Union[ControlNetModel, SD3ControlNetModel]:
-    use_internet = True
-    model_version = str(model_version or "").lower()
-    if kwargs.get("token") is None:
-        kwargs.update(token=config.HF_HUB_TOKEN)
-    if kwargs.get("torch_dtype") is None and torch is not None:
-        kwargs.update({"torch_dtype": torch.float16})
-    if download_kwargs is None:
-        download_kwargs = {}
+    version = str(model_version or "").lower()
+    dl_kwargs = dict(download_kwargs or {})
+    call_kwargs: Dict[str, LoaderKwargValue] = dict(kwargs)
+    if call_kwargs.get("token") is None:
+        call_kwargs["token"] = config.HF_HUB_TOKEN
+    if call_kwargs.get("torch_dtype") is None:
+        call_kwargs["torch_dtype"] = torch.float16
+    call_kwargs["cache_dir"] = dl_kwargs.get("directory") or config.DOWNLOAD_PATH
 
-    if (
-        controlnet_model.startswith(".")
-        or controlnet_model.startswith("/")
-        or controlnet_model.startswith("~")
-    ):
-        use_internet = False
+    resolved, is_single_file, was_downloaded = resolve_model_source(
+        controlnet_model, dl_kwargs, default_ext=file_format
+    )
 
-    kwargs.update(cache_dir=download_kwargs.get("directory"))
-
-    if use_internet:
-        # from Hugging face repo
-        if not (controlnet_model.startswith("http://") or controlnet_model.startswith("https://")):
-            if model_version in ["1", "1.5", "2", "xl", "pony"]:
-                return ControlNetModel.from_pretrained(controlnet_model, variant="fp16", **kwargs)
-            elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_pretrained(controlnet_model, **kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-        # from single file URL
-        else:
-            file_path = download_file(controlnet_model, **download_kwargs)
-            if not (
-                file_path.endswith(".safetensors")
-                or file_path.endswith(".bin")
-                or file_path.endswith(".ckpt")
-            ):
-                print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
-                renamed = f"{file_path}.{file_format}"
-                os.rename(file_path, renamed)
-                file_path = renamed
-
-            if not model_version:
-                inferred = infer_model_version(file_path)
-                if "controlnet_xl_large" == inferred:
-                    model_version = "xl"
-                elif "controlnet" == inferred:
-                    model_version = "1.5"
-                else:
-                    raise ValueError(f"{model_version} is not supported yet.")
-                print(f"Auto detect result: {model_version}.")
-
-            if model_version in ["1", "1.5", "2"]:
+    if is_single_file:
+        if not version:
+            version = _normalize_controlnet_version(infer_model_version(resolved))
+        try:
+            if version in ("1", "1.5", "2"):
                 return ControlNetModel.from_single_file(
-                    file_path, config=SD_V1_V2_CONTROLNET_CONFIG_PATH, **kwargs
+                    resolved, config=SD_V1_V2_CONTROLNET_CONFIG_PATH, **call_kwargs
                 )
-            elif model_version in ["xl", "pony"]:
+            if version in ("xl", "sdxl", "pony"):
                 return ControlNetModel.from_single_file(
-                    file_path, config=SD_XL_CONTROLNET_CONFIG_PATH, **kwargs
+                    resolved, config=SD_XL_CONTROLNET_CONFIG_PATH, **call_kwargs
                 )
-            elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_single_file(file_path, config=None, **kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-    else:
-        # from local single file
-        if (
-            controlnet_model.endswith(".safetensors")
-            or controlnet_model.endswith(".bin")
-            or controlnet_model.endswith(".ckpt")
-        ):
-            if not model_version:
-                inferred = infer_model_version(controlnet_model)
-                if "controlnet_xl_large" == inferred:
-                    model_version = "xl"
-                elif "controlnet" == inferred:
-                    model_version = "1.5"
-                else:
-                    raise ValueError(f"{model_version} is not supported yet.")
+            if version in ("3", "3.5"):
+                return SD3ControlNetModel.from_single_file(resolved, config=None, **call_kwargs)
+            raise ValueError(f"ControlNet version '{version}' is not supported.")
+        finally:
+            if (delete_after_load or config.DELETE_AFTER_LOAD) and was_downloaded and os.path.exists(resolved):
+                os.remove(resolved)
 
-            if model_version in ["1", "1.5", "2"]:
-                return ControlNetModel.from_single_file(
-                    controlnet_model, config=SD_V1_V2_CONTROLNET_CONFIG_PATH, **kwargs
-                )
-            elif model_version in ["xl", "pony"]:
-                return ControlNetModel.from_single_file(
-                    controlnet_model, config=SD_XL_CONTROLNET_CONFIG_PATH, **kwargs
-                )
-            elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_single_file(controlnet_model, config=None, **kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-        # from local directory
-        else:
-            if model_version in ["1", "1.5", "2", "xl", "pony"]:
-                return ControlNetModel.from_pretrained(controlnet_model, **kwargs)
-            elif model_version in ["3", "3.5"]:
-                return SD3ControlNetModel.from_pretrained(controlnet_model, **kwargs)
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
+    if version in ("3", "3.5"):
+        return SD3ControlNetModel.from_pretrained(resolved, **call_kwargs)
+
+    if version in ("1", "1.5", "2", "xl", "sdxl", "pony", ""):
+        if not os.path.isdir(resolved) and "variant" not in call_kwargs:
+            try:
+                return ControlNetModel.from_pretrained(resolved, variant="fp16", **call_kwargs)
+            except (ValueError, OSError):
+                pass
+        return ControlNetModel.from_pretrained(resolved, **call_kwargs)
+
+    raise ValueError(f"ControlNet version '{version}' is not supported.")
+
+
+_SINGLE_FILE_SPECS: Dict[str, Tuple[Type[DiffusionPipeline], str, Type[object], str]] = {
+    "1": (StableDiffusionPipeline, SD_V1_CONFIG_PATH, UNet2DConditionModel, "unet"),
+    "1.5": (StableDiffusionPipeline, SD_V1_CONFIG_PATH, UNet2DConditionModel, "unet"),
+    "2": (StableDiffusionPipeline, SD_V2_CONFIG_PATH, UNet2DConditionModel, "unet"),
+    "xl": (StableDiffusionXLPipeline, SD_XL_CONFIG_PATH, UNet2DConditionModel, "unet"),
+    "sdxl": (StableDiffusionXLPipeline, SD_XL_CONFIG_PATH, UNet2DConditionModel, "unet"),
+    "pony": (StableDiffusionXLPipeline, SD_XL_CONFIG_PATH, UNet2DConditionModel, "unet"),
+    "3": (StableDiffusion3Pipeline, SD_3_CONFIG_PATH, SD3Transformer2DModel, "transformer"),
+    "3.5": (StableDiffusion3Pipeline, SD_3_CONFIG_PATH, SD3Transformer2DModel, "transformer"),
+}
 
 
 def load_stable_diffusion_pipeline(
@@ -145,121 +126,86 @@ def load_stable_diffusion_pipeline(
     model_version: Optional[str] = None,
     file_format: str = "safetensors",
     download_kwargs: Optional[Dict[str, str]] = None,
-    **kwargs: LoaderKwargValue
+    quantization: str = "none",
+    text_encoder_mode: str = "default",
+    delete_after_load: bool = False,
+    **kwargs: LoaderKwargValue,
 ) -> DiffusionPipeline:
-    """Load DiffusionPipeline for SD 1.5, SD 2.x, SDXL, Pony or SD3."""
-    use_internet = True
-    model = model or default_stable_diffusion_model_url
-    model_version = str(model_version or "").lower()
-    if download_kwargs is None:
-        download_kwargs = {}
-    if kwargs.get("token") is None:
-        kwargs.update(token=config.HF_HUB_TOKEN)
-    if kwargs.get("torch_dtype") is None and torch is not None:
-        kwargs.update({"torch_dtype": torch.float16})
-    if model.startswith(".") or model.startswith("/") or model.startswith("~"):
-        use_internet = False
+    """Load DiffusionPipeline for SD 1.5, SD 2.x, SDXL, Pony or SD3 with optional quantization."""
+    target_model = model or default_stable_diffusion_model_url
+    version = str(model_version or "").lower()
+    quant_mode = (quantization or "none").lower()
+    te_mode = (text_encoder_mode or "default").lower()
+    dl_kwargs = dict(download_kwargs or {})
 
-    kwargs.update(cache_dir=download_kwargs.get("directory"))
+    call_kwargs: Dict[str, LoaderKwargValue] = dict(kwargs)
+    if call_kwargs.get("token") is None:
+        call_kwargs["token"] = config.HF_HUB_TOKEN
+    if call_kwargs.get("torch_dtype") is None:
+        call_kwargs["torch_dtype"] = torch.float16
+    call_kwargs["cache_dir"] = dl_kwargs.get("directory") or config.DOWNLOAD_PATH
 
-    if use_internet:
-        # from Hugging Face repo
-        if not (model.startswith("http://") or model.startswith("https://")):
-            text = requests.get(
-                f"https://huggingface.co/{model}/tree/main/vae?not-for-all-audiences=true"
-            ).text
-            is_fp32 = "diffusion_pytorch_model.safetensors" in text
-            is_fp16 = "diffusion_pytorch_model.fp16.safetensors" in text
-            if is_fp16:
-                kwargs.update({"variant": "fp16"})
-            elif is_fp32:
-                pass
-            else:
-                raise Exception(f"Model {model} is not supported.")
-            return DiffusionPipeline.from_pretrained(model, **kwargs)
-        # from single file URL
-        else:
-            file_path = download_file(model, **download_kwargs)
-            if not (
-                file_path.endswith(".safetensors")
-                or file_path.endswith(".bin")
-                or file_path.endswith(".ckpt")
-            ):
-                print(f"Warning: Can't get the format of the downloaded file, guess it is .{file_format}")
-                renamed = f"{file_path}.{file_format}"
-                os.rename(file_path, renamed)
-                file_path = renamed
+    resolved, is_single_file, was_downloaded = resolve_model_source(
+        target_model, dl_kwargs, default_ext=file_format
+    )
 
-            if not model_version:
-                inferred = infer_model_version(file_path)
-                if "sd3" in inferred:
-                    model_version = "3"
-                elif "xl_base" == inferred:
-                    model_version = "xl"
-                elif "v1" == inferred:
-                    model_version = "1"
-                elif "v2" == inferred:
-                    model_version = "2"
-                else:
-                    raise ValueError(f"{model_version} is not supported yet.")
-                print(f"Auto detect result: {model_version}.")
+    if te_mode == "none" and version in ("3", "3.5"):
+        call_kwargs["text_encoder_3"] = None
+        call_kwargs["tokenizer_3"] = None
 
-            if model_version in ["xl", "pony"]:
-                return StableDiffusionXLPipeline.from_single_file(
-                    file_path, config=SD_XL_CONFIG_PATH, **kwargs
+    if is_single_file:
+        if not version:
+            version = _normalize_sd_version(infer_model_version(resolved))
+        if te_mode == "none" and version in ("3", "3.5"):
+            call_kwargs["text_encoder_3"] = None
+            call_kwargs["tokenizer_3"] = None
+
+        spec = _SINGLE_FILE_SPECS.get(version)
+        if spec is None:
+            raise ValueError(f"Model version '{version}' is not supported.")
+        pipe_cls, cfg_path, backbone_cls, backbone_key = spec
+
+        try:
+            if resolved.endswith(".gguf") or quant_mode == "gguf":
+                call_kwargs[backbone_key] = backbone_cls.from_single_file(  # type: ignore[attr-defined]
+                    resolved,
+                    config=cfg_path,
+                    subfolder=backbone_key,
+                    quantization_config=build_gguf_config(),
+                    torch_dtype=call_kwargs["torch_dtype"],
                 )
-            elif model_version == "3":
-                return StableDiffusion3Pipeline.from_single_file(
-                    file_path, config=SD_3_CONFIG_PATH, **kwargs
+            elif quant_mode in ("bnb_4bit", "bnb_8bit"):
+                call_kwargs[backbone_key] = backbone_cls.from_single_file(  # type: ignore[attr-defined]
+                    resolved,
+                    config=cfg_path,
+                    subfolder=backbone_key,
+                    quantization_config=build_bnb_config(quant_mode, target="diffusers"),
+                    torch_dtype=call_kwargs["torch_dtype"],
                 )
-            elif model_version == "2":
-                return StableDiffusionPipeline.from_single_file(
-                    file_path, config=SD_V2_CONFIG_PATH, **kwargs
-                )
-            elif model_version in ["1", "1.5"]:
-                return StableDiffusionPipeline.from_single_file(
-                    file_path, config=SD_V1_CONFIG_PATH, **kwargs
-                )
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
+
+            pipe = pipe_cls.from_single_file(resolved, config=cfg_path, **call_kwargs)
+        finally:
+            if (delete_after_load or config.DELETE_AFTER_LOAD) and was_downloaded and os.path.exists(resolved):
+                os.remove(resolved)
     else:
-        # from local single file
-        if (
-            model.endswith(".safetensors")
-            or model.endswith(".bin")
-            or model.endswith(".ckpt")
-        ):
-            if not model_version:
-                inferred = infer_model_version(model)
-                if "sd3" in inferred:
-                    model_version = "3"
-                elif "xl_base" == inferred:
-                    model_version = "xl"
-                elif "v1" == inferred:
-                    model_version = "1"
-                elif "v2" == inferred:
-                    model_version = "2"
-                else:
-                    raise ValueError(f"{model_version} is not supported yet.")
+        backbone_key = "transformer" if version in ("3", "3.5") else "unet"
+        te_keys = ("text_encoder_3",) if version in ("3", "3.5") else ("text_encoder_2",)
+        if "quantization_config" not in call_kwargs:
+            quant_cfg = build_pipeline_quant_config(
+                quantization=quant_mode,
+                text_encoder_mode=te_mode,
+                backbone_key=backbone_key,
+                text_encoder_keys=te_keys,
+            )
+            if quant_cfg is not None:
+                call_kwargs["quantization_config"] = quant_cfg
 
-            if model_version in ["xl", "pony"]:
-                return StableDiffusionXLPipeline.from_single_file(
-                    model, config=SD_XL_CONFIG_PATH, **kwargs
-                )
-            elif model_version == "3":
-                return StableDiffusion3Pipeline.from_single_file(
-                    model, config=SD_3_CONFIG_PATH, **kwargs
-                )
-            elif model_version == "2":
-                return StableDiffusionPipeline.from_single_file(
-                    model, config=SD_V2_CONFIG_PATH, **kwargs
-                )
-            elif model_version in ["1", "1.5"]:
-                return StableDiffusionPipeline.from_single_file(
-                    model, config=SD_V1_CONFIG_PATH, **kwargs
-                )
-            else:
-                raise ValueError(f"{model_version} is not supported yet.")
-        # from local directory
+        if not os.path.isdir(resolved) and "variant" not in call_kwargs:
+            try:
+                pipe = DiffusionPipeline.from_pretrained(resolved, variant="fp16", **call_kwargs)
+            except (ValueError, OSError):
+                pipe = DiffusionPipeline.from_pretrained(resolved, **call_kwargs)
         else:
-            return DiffusionPipeline.from_pretrained(model, **kwargs)
+            pipe = DiffusionPipeline.from_pretrained(resolved, **call_kwargs)
+
+    return apply_post_load_optimizations(pipe, quantization=quant_mode, text_encoder_mode=te_mode)

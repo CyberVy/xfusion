@@ -1,4 +1,10 @@
 import os
+
+_ALLOC_CONF = "expandable_segments:True,garbage_collection_threshold:0.8"
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", _ALLOC_CONF)
+os.environ.setdefault("PYTORCH_ALLOC_CONF", _ALLOC_CONF)
+os.environ.setdefault("MALLOC_ARENA_MAX", "2")
+
 import uvicorn
 
 
@@ -13,3 +19,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

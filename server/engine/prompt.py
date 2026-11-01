@@ -39,6 +39,17 @@ def skip_clip_layer(text_encoders: List[nn.Module], n: Optional[int]) -> None:
                 encoder.layers = encoder.backup_layers
 
 
+def _sync_compel_device(compel: object, device_str: Optional[str]) -> None:
+    if not device_str:
+        return
+    cond_provider = getattr(compel, "conditioning_provider", None)
+    if cond_provider is None:
+        return
+    providers = getattr(cond_provider, "embedding_providers", None) or [cond_provider]
+    for provider in providers:
+        provider.device = device_str
+
+
 def get_embeds_from_pipeline(
     pipeline: Union[DiffusionPipeline, BasePipelineEngine],
     prompt: Union[str, List[str], None],
@@ -60,9 +71,21 @@ def get_embeds_from_pipeline(
         model_ver = getattr(pipeline, "model_version", None) or getattr(target, "model_version", None)
         class_name = target.__class__.__name__.lower()
         neg_p = negative_prompt or ""
+        exec_device = (
+            getattr(pipeline, "execution_device", None)
+            or getattr(target, "_execution_device", None)
+            or getattr(target, "device", None)
+        )
+        device_str = str(exec_device) if exec_device is not None else None
 
         if model_ver in ["1", "1.5"] or "stablediffusion" in class_name and "xl" not in class_name:
-            compel = Compel(tokenizers, text_encoders, truncate_long_prompts=False)
+            compel = Compel(
+                tokenizers,
+                text_encoders,
+                truncate_long_prompts=False,
+                device=device_str,
+            )
+            _sync_compel_device(compel, device_str)
             conditioning = compel(prompt)
             neg_conditioning = compel(neg_p)
             [conditioning, neg_conditioning] = compel.pad_conditioning_tensors_to_same_length(
@@ -77,7 +100,9 @@ def get_embeds_from_pipeline(
                 returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,
                 requires_pooled=[False, True],
                 truncate_long_prompts=False,
+                device=device_str,
             )
+            _sync_compel_device(compel, device_str)
             conditioning, pooled = compel(prompt)
             neg_conditioning, neg_pooled = compel(neg_p)
             [conditioning, neg_conditioning] = compel.pad_conditioning_tensors_to_same_length(
@@ -91,5 +116,11 @@ def get_embeds_from_pipeline(
             }
     except Exception:
         pass
+    finally:
+        if hasattr(target, "maybe_free_model_hooks"):
+            try:
+                target.maybe_free_model_hooks()
+            except Exception:
+                pass
 
     return {}

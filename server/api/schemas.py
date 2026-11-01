@@ -67,6 +67,11 @@ class InpaintRequest(GenerationExtras):
 class ModelLoadRequest(BaseModel):
     model: str = Field(..., description="Hugging Face repo ID, local path, or Civitai download URL")
     model_version: Optional[str] = Field(default="xl", description="Model architecture version (e.g., 1.5, xl, pony, 3, 3.5, flux, or empty to auto-detect)")
+    quantization: Optional[str] = Field(default="none", description="Backbone quantization mode: none, bnb_4bit, bnb_8bit, fp8_cast, gguf")
+    text_encoder_mode: Optional[str] = Field(default="default", description="Text encoder loading mode: default, bnb_4bit, bnb_8bit, fp8_cast, none")
+    offload_mode: Optional[str] = Field(default="none", description="VRAM offload mode: none, model_cpu_offload, sequential_cpu_offload")
+    delete_after_load: Optional[bool] = Field(default=False, description="Delete downloaded single-file weights from disk after loading")
+
 
 
 class LoraLoadRequest(BaseModel):
@@ -112,7 +117,6 @@ class ControlnetPreviewRequest(BaseModel):
 
 class SchedulerSetRequest(BaseModel):
     scheduler: str = Field(..., description="Scheduler name (e.g. DPM++ 2M KARRAS, EULER A)")
-    pipeline_type: Optional[str] = Field(default="txt2img", description="Pipeline type: txt2img, img2img, inpaint")
 
 
 class GeneratedImage(BaseModel):
@@ -143,6 +147,9 @@ class SystemInfoResponse(BaseModel):
     gpu_names: List[str]
     current_model: Optional[str] = None
     model_version: Optional[str] = None
+    quantization: str = "none"
+    text_encoder_mode: str = "default"
+    offload_mode: str = "none"
     loras: Dict[str, float] = {}
     loras_enabled: bool = True
     schedulers: List[str] = []
@@ -150,3 +157,4 @@ class SystemInfoResponse(BaseModel):
     ip_adapter: Optional[IpAdapterInfo] = None
     python_version: str = ""
     os_platform: str = ""
+

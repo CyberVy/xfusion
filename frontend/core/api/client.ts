@@ -5,7 +5,8 @@ import type {
     SystemInfo,
     GenerationResponse,
     GenerationProgress,
-    StreamGenerationEvent
+    StreamGenerationEvent,
+    ModelLoadOptions
 } from "./types"
 
 export class ApiClient {
@@ -32,12 +33,17 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async load_model(base_url: string, model: string, model_version: string = "xl"): Promise<any> {
+    public static async load_model(
+        base_url: string,
+        model: string,
+        model_version: string = "xl",
+        options?: ModelLoadOptions
+    ): Promise<any> {
         const url = `${this.clean_base_url(base_url)}/api/v1/models/load`
         const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ model, model_version }),
+            body: JSON.stringify({ model, model_version, ...options }),
             signal: AbortSignal.timeout(600_000)
         })
         if (!res.ok) {

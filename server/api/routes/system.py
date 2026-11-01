@@ -28,6 +28,9 @@ async def get_system_info():
         gpu_names=GPU_NAME,
         current_model=manager.current_model,
         model_version=manager.model_version,
+        quantization=manager.quantization,
+        text_encoder_mode=manager.text_encoder_mode,
+        offload_mode=manager.offload_mode,
         loras=manager.get_loras(),
         loras_enabled=manager.loras_enabled,
         schedulers=manager.get_schedulers(),
@@ -36,3 +39,4 @@ async def get_system_info():
         python_version=sys.version.split()[0],
         os_platform=platform.platform(),
     )
+

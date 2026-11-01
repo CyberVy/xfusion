@@ -2,7 +2,7 @@ import { BaseController } from "@/infra/base_controller"
 import { create_logger } from "@/infra/logger"
 import { ApiClient } from "../api/client"
 import { settings_controller } from "./settings_controller"
-import type { SystemInfo } from "../api/types"
+import type { SystemInfo, ModelLoadOptions } from "../api/types"
 
 const logger = create_logger("ModelController")
 
@@ -59,10 +59,10 @@ export class ModelController extends BaseController<ModelState> {
         }
     }
 
-    public async load_model(model: string, model_version: string): Promise<void> {
+    public async load_model(model: string, model_version: string, options?: ModelLoadOptions): Promise<void> {
         this.commit({ is_loading_model: true, model_error: null })
         try {
-            await ApiClient.load_model(this.api_url, model, model_version)
+            await ApiClient.load_model(this.api_url, model, model_version, options)
             await this.refresh_system_info()
             this.commit({ is_loading_model: false })
         } catch (err: any) {
