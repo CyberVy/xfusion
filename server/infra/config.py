@@ -21,7 +21,7 @@ CIVITAI_TOKEN: Optional[str] = os.environ.get("CIVITAI_TOKEN")
 
 PROXY_URL_PREFIX: str = os.environ.get("PROXY_URL_PREFIX") or "https://us2.xsolutiontech.com"
 DOWNLOAD_PATH: str = os.environ.get("DOWNLOAD_PATH", "/xfusion_models")
-DELETE_AFTER_LOAD: bool = os.environ.get("DELETE_AFTER_LOAD", "false").lower() in ("true", "1", "yes")
+DELETE_FILE_AFTER_LOAD: bool = os.environ.get("DELETE_FILE_AFTER_LOAD", "false").lower() in ("true", "1", "yes")
 
 
 

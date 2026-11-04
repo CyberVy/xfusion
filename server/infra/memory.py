@@ -34,20 +34,24 @@ def delete(obj: object) -> Tuple[int, List[str], int, List[int]]:
     other_referrers: List[int] = []
 
     for item in gc.get_referrers(obj):
-        if hasattr(item, "__dict__"):
-            target_dict = object.__getattribute__(item, "__dict__")
-        elif isinstance(item, dict):
+        target_dict = None
+        if isinstance(item, dict):
             target_dict = item
-        elif isinstance(item, list):
-            for index, element in enumerate(item):
-                if element is obj:
-                    item[index] = None
-                    referrers.append(f"list.{index}")
-                    count += 1
-            continue
         else:
-            other_referrers.append(id(item))
-            other_count += 1
+            try:
+                target_dict = object.__getattribute__(item, "__dict__")
+            except AttributeError:
+                target_dict = None
+        if not isinstance(target_dict, dict):
+            if isinstance(item, list):
+                for index, element in enumerate(item):
+                    if element is obj:
+                        item[index] = None
+                        referrers.append(f"list.{index}")
+                        count += 1
+            else:
+                other_referrers.append(id(item))
+                other_count += 1
             continue
 
         target_keys = [k for k, v in target_dict.items() if v is obj]

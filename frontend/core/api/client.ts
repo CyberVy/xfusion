@@ -1,7 +1,5 @@
 import type {
-    Txt2ImgParams,
-    Img2ImgParams,
-    InpaintParams,
+    GenerationBody,
     SystemInfo,
     GenerationResponse,
     GenerationProgress,
@@ -33,17 +31,12 @@ export class ApiClient {
         return res.json()
     }
 
-    public static async load_model(
-        base_url: string,
-        model: string,
-        model_version: string = "xl",
-        options?: ModelLoadOptions
-    ): Promise<any> {
+    public static async load_model(base_url: string, source: string, options?: ModelLoadOptions): Promise<any> {
         const url = `${this.clean_base_url(base_url)}/api/v1/models/load`
         const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ model, model_version, ...options }),
+            body: JSON.stringify({ source, ...options }),
             signal: AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
@@ -88,7 +81,7 @@ export class ApiClient {
 
     public static async generate_txt2img(
         base_url: string,
-        params: Txt2ImgParams,
+        params: GenerationBody,
         signal?: AbortSignal
     ): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/txt2img`
@@ -107,7 +100,7 @@ export class ApiClient {
 
     public static async generate_img2img(
         base_url: string,
-        params: Img2ImgParams,
+        params: GenerationBody,
         signal?: AbortSignal
     ): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/img2img`
@@ -126,7 +119,7 @@ export class ApiClient {
 
     public static async generate_inpaint(
         base_url: string,
-        params: InpaintParams,
+        params: GenerationBody,
         signal?: AbortSignal
     ): Promise<GenerationResponse> {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/inpaint`
@@ -145,7 +138,7 @@ export class ApiClient {
 
     public static async *generate_txt2img_stream(
         base_url: string,
-        params: Txt2ImgParams,
+        params: GenerationBody,
         signal?: AbortSignal
     ): AsyncGenerator<StreamGenerationEvent, void, unknown> {
         yield* this.consume_sse_stream(
@@ -157,7 +150,7 @@ export class ApiClient {
 
     public static async *generate_img2img_stream(
         base_url: string,
-        params: Img2ImgParams,
+        params: GenerationBody,
         signal?: AbortSignal
     ): AsyncGenerator<StreamGenerationEvent, void, unknown> {
         yield* this.consume_sse_stream(
@@ -169,7 +162,7 @@ export class ApiClient {
 
     public static async *generate_inpaint_stream(
         base_url: string,
-        params: InpaintParams,
+        params: GenerationBody,
         signal?: AbortSignal
     ): AsyncGenerator<StreamGenerationEvent, void, unknown> {
         yield* this.consume_sse_stream(
@@ -206,17 +199,17 @@ export class ApiClient {
 
     public static load_ip_adapter(
         base_url: string,
-        uri: string,
-        subfolder: string,
-        weight_name: string,
-        image_encoder_folder: string,
+        source: string,
+        folder: string,
+        weight: string,
+        encoder_folder: string,
         strength: number
     ): Promise<any> {
         return this.post_json(base_url, "/api/v1/ip-adapter/load", {
-            uri,
-            subfolder,
-            weight_name,
-            image_encoder_folder,
+            source,
+            folder,
+            weight,
+            encoder_folder,
             strength
         })
     }
@@ -229,8 +222,8 @@ export class ApiClient {
         return this.post_json(base_url, "/api/v1/ip-adapter/delete")
     }
 
-    public static load_controlnet(base_url: string, model: string): Promise<any> {
-        return this.post_json(base_url, "/api/v1/controlnet/load", { model: model || null })
+    public static load_controlnet(base_url: string, source: string): Promise<any> {
+        return this.post_json(base_url, "/api/v1/controlnet/load", { source: source || null })
     }
 
     public static offload_controlnet(base_url: string): Promise<any> {
@@ -240,10 +233,10 @@ export class ApiClient {
     public static preview_canny(
         base_url: string,
         image: string,
-        low_threshold: number,
-        high_threshold: number
+        canny_low: number,
+        canny_high: number
     ): Promise<{ image_base64: string }> {
-        return this.post_json(base_url, "/api/v1/controlnet/preview", { image, low_threshold, high_threshold })
+        return this.post_json(base_url, "/api/v1/controlnet/preview", { image, canny_low, canny_high })
     }
 
     private static async post_json(base_url: string, path: string, body?: unknown): Promise<any> {

@@ -60,7 +60,7 @@ def load_stable_diffusion_controlnet(
     model_version: Optional[str] = None,
     file_format: str = "safetensors",
     download_kwargs: Optional[Dict[str, str]] = None,
-    delete_after_load: bool = False,
+    delete_file_after_load: bool = False,
     **kwargs: LoaderKwargValue,
 ) -> Union[ControlNetModel, SD3ControlNetModel]:
     version = str(model_version or "").lower()
@@ -92,7 +92,7 @@ def load_stable_diffusion_controlnet(
                 return SD3ControlNetModel.from_single_file(resolved, config=None, **call_kwargs)
             raise ValueError(f"ControlNet version '{version}' is not supported.")
         finally:
-            if (delete_after_load or config.DELETE_AFTER_LOAD) and was_downloaded and os.path.exists(resolved):
+            if (delete_file_after_load or config.DELETE_FILE_AFTER_LOAD) and was_downloaded and os.path.exists(resolved):
                 os.remove(resolved)
 
     if version in ("3", "3.5"):
@@ -126,16 +126,16 @@ def load_stable_diffusion_pipeline(
     model_version: Optional[str] = None,
     file_format: str = "safetensors",
     download_kwargs: Optional[Dict[str, str]] = None,
-    quantization: str = "none",
-    text_encoder_mode: str = "default",
-    delete_after_load: bool = False,
+    backbone: str = "fp16",
+    text_encoder: str = "default",
+    delete_file_after_load: bool = False,
     **kwargs: LoaderKwargValue,
-) -> DiffusionPipeline:
-    """Load DiffusionPipeline for SD 1.5, SD 2.x, SDXL, Pony or SD3 with optional quantization."""
+) -> Tuple[DiffusionPipeline, str]:
+    """Load a Stable Diffusion pipeline and return the resolved version id."""
     target_model = model or default_stable_diffusion_model_url
     version = str(model_version or "").lower()
-    quant_mode = (quantization or "none").lower()
-    te_mode = (text_encoder_mode or "default").lower()
+    quant_mode = (backbone or "fp16").lower()
+    te_mode = (text_encoder or "default").lower()
     dl_kwargs = dict(download_kwargs or {})
 
     call_kwargs: Dict[str, LoaderKwargValue] = dict(kwargs)
@@ -149,14 +149,14 @@ def load_stable_diffusion_pipeline(
         target_model, dl_kwargs, default_ext=file_format
     )
 
-    if te_mode == "none" and version in ("3", "3.5"):
+    if te_mode == "skip" and version in ("3", "3.5"):
         call_kwargs["text_encoder_3"] = None
         call_kwargs["tokenizer_3"] = None
 
     if is_single_file:
         if not version:
             version = _normalize_sd_version(infer_model_version(resolved))
-        if te_mode == "none" and version in ("3", "3.5"):
+        if te_mode == "skip" and version in ("3", "3.5"):
             call_kwargs["text_encoder_3"] = None
             call_kwargs["tokenizer_3"] = None
 
@@ -174,7 +174,7 @@ def load_stable_diffusion_pipeline(
                     quantization_config=build_gguf_config(),
                     torch_dtype=call_kwargs["torch_dtype"],
                 )
-            elif quant_mode in ("bnb_4bit", "bnb_8bit"):
+            elif quant_mode in ("int4", "int8"):
                 call_kwargs[backbone_key] = backbone_cls.from_single_file(  # type: ignore[attr-defined]
                     resolved,
                     config=cfg_path,
@@ -185,15 +185,15 @@ def load_stable_diffusion_pipeline(
 
             pipe = pipe_cls.from_single_file(resolved, config=cfg_path, **call_kwargs)
         finally:
-            if (delete_after_load or config.DELETE_AFTER_LOAD) and was_downloaded and os.path.exists(resolved):
+            if (delete_file_after_load or config.DELETE_FILE_AFTER_LOAD) and was_downloaded and os.path.exists(resolved):
                 os.remove(resolved)
     else:
         backbone_key = "transformer" if version in ("3", "3.5") else "unet"
         te_keys = ("text_encoder_3",) if version in ("3", "3.5") else ("text_encoder_2",)
         if "quantization_config" not in call_kwargs:
             quant_cfg = build_pipeline_quant_config(
-                quantization=quant_mode,
-                text_encoder_mode=te_mode,
+                backbone=quant_mode,
+                text_encoder=te_mode,
                 backbone_key=backbone_key,
                 text_encoder_keys=te_keys,
             )
@@ -208,4 +208,5 @@ def load_stable_diffusion_pipeline(
         else:
             pipe = DiffusionPipeline.from_pretrained(resolved, **call_kwargs)
 
-    return apply_post_load_optimizations(pipe, quantization=quant_mode, text_encoder_mode=te_mode)
+    pipe = apply_post_load_optimizations(pipe, backbone=quant_mode, text_encoder=te_mode)
+    return pipe, version

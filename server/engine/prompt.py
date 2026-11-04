@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, List, Optional, Union, TYPE_CHECKING
+from typing import Dict, List, Optional, Union
 from diffusers import DiffusionPipeline
 
 try:
@@ -8,16 +8,14 @@ except ImportError:
     Compel = None
     ReturnedEmbeddingsType = None
 
-if TYPE_CHECKING:
-    import torch
-    import torch.nn as nn
-    from .base import BasePipelineEngine
+import torch
+import torch.nn as nn
 
 from ..models.inspect import get_tokenizers_and_text_encoders_from_pipeline
 
 
 def skip_clip_layer(text_encoders: List[nn.Module], n: Optional[int]) -> None:
-    """Dynamically truncate CLIP encoder layers for clip_skip >= 1."""
+    """Truncate CLIP encoder layers when clip_skip is 1 or more."""
     if n is not None and not (isinstance(n, int) and n >= 0):
         raise ValueError("clip_skip must be an integer >= 0.")
 
@@ -50,35 +48,30 @@ def _sync_compel_device(compel: object, device_str: Optional[str]) -> None:
         provider.device = device_str
 
 
-def get_embeds_from_pipeline(
-    pipeline: Union[DiffusionPipeline, BasePipelineEngine],
+def encode_clip_prompt(
+    pipeline: DiffusionPipeline,
+    model_version: str,
     prompt: Union[str, List[str], None],
-    negative_prompt: Union[str, List[str], None]
+    negative_prompt: Union[str, List[str], None],
+    device: Optional[torch.device],
 ) -> Dict[str, torch.Tensor]:
-    """Overcome 77-token CLIP limit and support weighted prompt syntax using Compel."""
+    """Encode weighted prompts past the 77-token CLIP limit."""
     if Compel is None or prompt is None:
         return {}
 
-    target = getattr(pipeline, "pipeline", pipeline)
-    tokenizers, text_encoders = get_tokenizers_and_text_encoders_from_pipeline(target)
+    tokenizers, text_encoders = get_tokenizers_and_text_encoders_from_pipeline(pipeline)
     tokenizers = [tok for tok in tokenizers if tok]
     text_encoders = [enc for enc in text_encoders if enc]
-
     if not tokenizers or not text_encoders:
         return {}
 
     try:
-        model_ver = getattr(pipeline, "model_version", None) or getattr(target, "model_version", None)
-        class_name = target.__class__.__name__.lower()
         neg_p = negative_prompt or ""
-        exec_device = (
-            getattr(pipeline, "execution_device", None)
-            or getattr(target, "_execution_device", None)
-            or getattr(target, "device", None)
-        )
-        device_str = str(exec_device) if exec_device is not None else None
+        device_str = str(device) if device is not None else None
+        class_name = pipeline.__class__.__name__.lower()
+        version = (model_version or "").lower()
 
-        if model_ver in ["1", "1.5"] or "stablediffusion" in class_name and "xl" not in class_name:
+        if version in ("1", "1.5", "2") or ("stablediffusion" in class_name and "xl" not in class_name and "3" not in class_name):
             compel = Compel(
                 tokenizers,
                 text_encoders,
@@ -93,7 +86,7 @@ def get_embeds_from_pipeline(
             )
             return {"prompt_embeds": conditioning, "negative_prompt_embeds": neg_conditioning}
 
-        if model_ver in ["xl", "pony"] or "xl" in class_name:
+        if version in ("xl", "pony") or "xl" in class_name:
             compel = Compel(
                 tokenizers,
                 text_encoders,
@@ -117,9 +110,9 @@ def get_embeds_from_pipeline(
     except Exception:
         pass
     finally:
-        if hasattr(target, "maybe_free_model_hooks"):
+        if hasattr(pipeline, "maybe_free_model_hooks"):
             try:
-                target.maybe_free_model_hooks()
+                pipeline.maybe_free_model_hooks()
             except Exception:
                 pass
 

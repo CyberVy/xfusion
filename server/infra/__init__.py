@@ -7,7 +7,7 @@ from .config import (
     XFUSION_PROXY,
     PROXY_URL_PREFIX,
     DOWNLOAD_PATH,
-    DELETE_AFTER_LOAD,
+    DELETE_FILE_AFTER_LOAD,
     is_proxy_needed,
     get_origin_country,
 )
@@ -31,7 +31,7 @@ __all__ = [
     "XFUSION_PROXY",
     "PROXY_URL_PREFIX",
     "DOWNLOAD_PATH",
-    "DELETE_AFTER_LOAD",
+    "DELETE_FILE_AFTER_LOAD",
     "is_proxy_needed",
     "get_origin_country",
     "free_memory_to_system",

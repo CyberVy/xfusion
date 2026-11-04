@@ -12,9 +12,8 @@ from diffusers.schedulers import (
     DEISMultistepScheduler,
     UniPCMultistepScheduler,
 )
-from .types import SchedulerConfigMap, SchedulerConfigValue
-
-DIFFUSION_SCHEDULER_MAP: SchedulerConfigMap = {
+SchedulerConfigValue = Union[str, bool, int, float]
+DIFFUSION_SCHEDULER_MAP: Dict[str, Tuple[Type[SchedulerMixin], Dict[str, SchedulerConfigValue]]] = {
     "DPM++ 2M": (DPMSolverMultistepScheduler, {}),
     "DPM++ 2M KARRAS": (DPMSolverMultistepScheduler, {"use_karras_sigmas": True}),
     "DPM++ 2M SDE": (DPMSolverMultistepScheduler, {"algorithm_type": "sde-dpmsolver++"}),

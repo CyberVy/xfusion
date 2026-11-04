@@ -8,40 +8,38 @@ import { model_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 
 const MODEL_VERSIONS = [
-    { label: "Auto", value: "" },
-    { label: "SD 1.5", value: "1.5" },
-    { label: "SD 2", value: "2" },
-    { label: "SDXL", value: "xl" },
-    { label: "Pony", value: "pony" },
-    { label: "SD 3", value: "3" },
-    { label: "SD 3.5", value: "3.5" },
-    { label: "FLUX", value: "flux" }
+    { label: "Version: Auto", value: "" },
+    { label: "Version: SD 1.5", value: "1.5" },
+    { label: "Version: SD 2", value: "2" },
+    { label: "Version: SDXL", value: "xl" },
+    { label: "Version: Pony", value: "pony" },
+    { label: "Version: SD 3", value: "3" },
+    { label: "Version: SD 3.5", value: "3.5" },
+    { label: "Version: FLUX", value: "flux" }
 ]
 
-const QUANTIZATION_MODES = [
-    { label: "Backbone: FP16", value: "none" },
-    { label: "Backbone: 4-Bit (NF4)", value: "bnb_4bit" },
-    { label: "Backbone: 8-Bit (INT8)", value: "bnb_8bit" },
-    { label: "Backbone: FP8 Cast", value: "fp8_cast" },
-    { label: "Backbone: GGUF", value: "gguf" }
+const BACKBONE_MODES = [
+    { label: "Precision: As published", value: "fp16" },
+    { label: "Quantize: 4-bit NF4", value: "int4" },
+    { label: "Quantize: 8-bit", value: "int8" },
+    { label: "Quantize: FP8", value: "fp8" },
+    { label: "Quantize: GGUF", value: "gguf" }
 ]
 
-const TEXT_ENCODER_MODES = [
-    { label: "Text Encoder: Default", value: "default" },
-    { label: "Text Encoder: 4-Bit T5", value: "bnb_4bit" },
-    { label: "Text Encoder: 8-Bit T5", value: "bnb_8bit" },
-    { label: "Text Encoder: FP8 Cast", value: "fp8_cast" },
-    { label: "Text Encoder: Skip T5", value: "none" }
-]
-
-const OFFLOAD_MODES = [
-    { label: "Offload: GPU Resident", value: "none" },
-    { label: "Offload: Model CPU", value: "model_cpu_offload" },
-    { label: "Offload: Sequential CPU", value: "sequential_cpu_offload" }
+const MEMORY_MODES = [
+    { label: "Memory: GPU", value: "gpu" },
+    { label: "Memory: Offload", value: "offload" },
+    { label: "Memory: Sequential", value: "sequential" }
 ]
 
 const FIELD_CLASS =
     "rounded-xl bg-black/4 dark:bg-white/6 border border-black/8 dark:border-white/10 focus-within:border-black/30 dark:focus-within:border-white/30 transition"
+
+function text_encoder_for_precision(backbone: string, skip_text_encoder: boolean): string {
+    if (skip_text_encoder) return "skip"
+    if (backbone === "int4" || backbone === "int8" || backbone === "fp8") return backbone
+    return "default"
+}
 
 function Panel({ title, description, children }: { title: string; description: string; children: ReactNode }) {
     return (
@@ -103,11 +101,11 @@ export function ModelManageView() {
     const state = useController(model_controller, { events: ["change"] })
 
     const [model_url, set_model_url] = useState("eramth/realism-sdxl")
-    const [model_version, set_model_version] = useState("xl")
-    const [quantization, set_quantization] = useState("none")
-    const [text_encoder_mode, set_text_encoder_mode] = useState("default")
-    const [offload_mode, set_offload_mode] = useState("none")
-    const [delete_after_load, set_delete_after_load] = useState(false)
+    const [model_version, set_model_version] = useState("")
+    const [backbone, set_backbone] = useState("fp16")
+    const [skip_text_encoder, set_skip_text_encoder] = useState(false)
+    const [memory, set_memory] = useState("gpu")
+    const [delete_file_after_load, set_delete_file_after_load] = useState(false)
     const [lora_url, set_lora_url] = useState("")
 
     const [lora_name, set_lora_name] = useState("")
@@ -129,26 +127,30 @@ export function ModelManageView() {
 
     const active_loras = state.system_info?.loras ? Object.entries(state.system_info.loras) : []
     const loras_enabled = state.system_info?.loras_enabled !== false
-    const is_flux = state.system_info?.model_version === "flux"
+    const supports_ip_adapter =
+        !state.system_info?.model_version || Boolean(state.system_info.adapters?.includes("ip_adapter"))
     const ip_adapter = state.system_info?.ip_adapter
 
     return (
         <div className="w-full max-w-2xl mx-auto px-4 md:px-6 pt-2 pb-32">
-            <Panel title="Base model" description="Hugging Face repo ID, local path, or download URL">
+            <Panel
+                title="Base model"
+                description="Hugging Face repo, local path, or download URL. Version can stay on Auto. As published keeps a checkpoint's own precision, including a repo that is already 4-bit or GGUF. Quantize converts the backbone and its large text encoder while loading."
+            >
                 <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/4 dark:bg-white/6">
                     <div className="min-w-0">
                         <p className="text-xs text-black/50 dark:text-white/50">Currently loaded</p>
                         <p className="text-sm font-mono truncate">{state.system_info?.current_model || "None"}</p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                        {state.system_info?.quantization && state.system_info.quantization !== "none" && (
+                        {state.system_info?.backbone && state.system_info.backbone !== "fp16" && (
                             <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                                {state.system_info.quantization}
+                                {state.system_info.backbone}
                             </span>
                         )}
-                        {state.system_info?.offload_mode && state.system_info.offload_mode !== "none" && (
+                        {state.system_info?.memory && state.system_info.memory !== "gpu" && (
                             <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                                {state.system_info.offload_mode.replace("_cpu_offload", " offload")}
+                                {state.system_info.memory}
                             </span>
                         )}
                         <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
@@ -166,12 +168,25 @@ export function ModelManageView() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <select
-                        value={quantization}
-                        onChange={(e) => set_quantization(e.target.value)}
+                        value={model_version}
+                        onChange={(e) => set_model_version(e.target.value)}
                         className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="Backbone quantization mode"
+                        aria-label="Model version hint"
                     >
-                        {QUANTIZATION_MODES.map((m) => (
+                        {MODEL_VERSIONS.map((v) => (
+                            <option key={v.value || "auto"} value={v.value}>
+                                {v.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={backbone}
+                        onChange={(e) => set_backbone(e.target.value)}
+                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
+                        aria-label="Checkpoint precision"
+                    >
+                        {BACKBONE_MODES.map((m) => (
                             <option key={m.value} value={m.value}>
                                 {m.label}
                             </option>
@@ -179,25 +194,12 @@ export function ModelManageView() {
                     </select>
 
                     <select
-                        value={text_encoder_mode}
-                        onChange={(e) => set_text_encoder_mode(e.target.value)}
-                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="Text encoder loading mode"
-                    >
-                        {TEXT_ENCODER_MODES.map((m) => (
-                            <option key={m.value} value={m.value}>
-                                {m.label}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select
-                        value={offload_mode}
-                        onChange={(e) => set_offload_mode(e.target.value)}
+                        value={memory}
+                        onChange={(e) => set_memory(e.target.value)}
                         className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
                         aria-label="VRAM offload mode"
                     >
-                        {OFFLOAD_MODES.map((m) => (
+                        {MEMORY_MODES.map((m) => (
                             <option key={m.value} value={m.value}>
                                 {m.label}
                             </option>
@@ -205,54 +207,49 @@ export function ModelManageView() {
                     </select>
                 </div>
 
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col gap-2">
                     <label className="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 cursor-pointer select-none">
                         <input
                             type="checkbox"
-                            checked={delete_after_load}
-                            onChange={(e) => set_delete_after_load(e.target.checked)}
+                            checked={skip_text_encoder}
+                            onChange={(e) => set_skip_text_encoder(e.target.checked)}
+                            className="accent-black dark:accent-white cursor-pointer"
+                        />
+                        Skip the large text encoder
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={delete_file_after_load}
+                            onChange={(e) => set_delete_file_after_load(e.target.checked)}
                             className="accent-black dark:accent-white cursor-pointer"
                         />
                         Purge downloaded archive after loading into memory
                     </label>
                 </div>
 
-                <div className="flex gap-2">
-                    <select
-                        value={model_version}
-                        onChange={(e) => set_model_version(e.target.value)}
-                        className={`flex-1 h-11 px-3 text-sm outline-none cursor-pointer ${FIELD_CLASS}`}
-                    >
-                        {MODEL_VERSIONS.map((v) => (
-                            <option key={v.value} value={v.value}>
-                                {v.label}
-                            </option>
-                        ))}
-                    </select>
-
-                    <NaiveButton
-                        className="h-11 px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                        on_click={() =>
-                            model_url.trim() &&
-                            model_controller.load_model(model_url, model_version, {
-                                quantization,
-                                text_encoder_mode,
-                                offload_mode,
-                                delete_after_load
-                            })
-                        }
-                        disabled={state.is_loading_model}
-                    >
-                        {state.is_loading_model ? (
-                            <span className="flex items-center gap-2">
-                                <RefreshIcon width={14} height={14} className="animate-spin" />
-                                Loading
-                            </span>
-                        ) : (
-                            "Load"
-                        )}
-                    </NaiveButton>
-                </div>
+                <NaiveButton
+                    className="h-11 self-start px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                    on_click={() =>
+                        model_url.trim() &&
+                        model_controller.load_model(model_url, model_version, {
+                            backbone,
+                            text_encoder: text_encoder_for_precision(backbone, skip_text_encoder),
+                            memory,
+                            delete_file_after_load
+                        })
+                    }
+                    disabled={state.is_loading_model}
+                >
+                    {state.is_loading_model ? (
+                        <span className="flex items-center gap-2">
+                            <RefreshIcon width={14} height={14} className="animate-spin" />
+                            Loading
+                        </span>
+                    ) : (
+                        "Load"
+                    )}
+                </NaiveButton>
                 <ErrorText message={state.model_error} />
             </Panel>
 
@@ -328,7 +325,7 @@ export function ModelManageView() {
                 </div>
             </Panel>
 
-            {!is_flux && (
+            {supports_ip_adapter && (
                 <Panel
                     title="IP-Adapter"
                     description="Reference image encoder. Use it from the Create page once loaded"
@@ -336,8 +333,8 @@ export function ModelManageView() {
                     {ip_adapter ? (
                         <div className="flex flex-col gap-3">
                             <div className="p-3.5 rounded-2xl bg-black/4 dark:bg-white/6 text-sm">
-                                <p className="font-mono truncate">{ip_adapter.weight_name}</p>
-                                <p className="text-xs text-black/50 dark:text-white/50 truncate">{ip_adapter.uri}</p>
+                                <p className="font-mono truncate">{ip_adapter.weight}</p>
+                                <p className="text-xs text-black/50 dark:text-white/50 truncate">{ip_adapter.source}</p>
                             </div>
                             <label className={`h-11 flex items-center gap-2 px-3 ${FIELD_CLASS}`}>
                                 <span className="text-xs text-black/50 dark:text-white/50">Strength</span>

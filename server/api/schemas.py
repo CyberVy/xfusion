@@ -1,87 +1,58 @@
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Literal, Union
 from pydantic import BaseModel, Field
 
 MetadataScalar = Union[str, int, float, bool, None]
+Backbone = Literal["fp16", "int4", "int8", "fp8", "gguf"]
+TextEncoderMode = Literal["default", "int4", "int8", "fp8", "skip"]
+MemoryMode = Literal["gpu", "offload", "sequential"]
 
 
-class IpAdapterInfo(BaseModel):
-    uri: str
-    subfolder: str
-    weight_name: str
-    image_encoder_folder: str
+class LoadedIpAdapterInfo(BaseModel):
+    source: str
+    folder: str = ""
+    weight: str
+    encoder_folder: str = "image_encoder"
     strength: float
 
 
-class GenerationExtras(BaseModel):
-    control_image: Optional[str] = Field(default=None, description="Control image; converted to Canny on the server")
-    controlnet_conditioning_scale: Optional[float] = Field(default=0.5, description="ControlNet scale")
-    low_threshold: Optional[int] = Field(default=100, description="Canny low threshold")
-    high_threshold: Optional[int] = Field(default=200, description="Canny high threshold")
-    ip_adapter_image: Optional[str] = Field(default=None, description="IP-Adapter reference image")
-
-
-class Txt2ImgRequest(GenerationExtras):
-    prompt: str = Field(..., description="Prompt describing the image to generate")
-    negative_prompt: Optional[str] = Field(default="", description="Negative prompt")
-    guidance_scale: Optional[float] = Field(default=7.0, description="Guidance scale / CFG scale")
-    num_inference_steps: Optional[int] = Field(default=25, description="Number of denoising steps")
-    clip_skip: Optional[int] = Field(default=0, description="CLIP skip value")
-    width: Optional[int] = Field(default=1024, description="Image width")
-    height: Optional[int] = Field(default=1024, description="Image height")
-    seed: Optional[int] = Field(default=None, description="Random seed (None for random)")
-    num: Optional[int] = Field(default=1, ge=1, le=10, description="Number of images to generate")
-    scheduler: Optional[str] = Field(default=None, description="Scheduler name (e.g. DPM++ 2M KARRAS)")
-
-
-class Img2ImgRequest(GenerationExtras):
-    image: str = Field(..., description="Input image as Base64 Data URL or HTTP URL")
-    prompt: str = Field(..., description="Prompt describing the modification")
-    negative_prompt: Optional[str] = Field(default="", description="Negative prompt")
-    strength: Optional[float] = Field(default=0.75, description="Image strength / transformation ratio")
-    guidance_scale: Optional[float] = Field(default=7.0, description="Guidance scale / CFG scale")
-    num_inference_steps: Optional[int] = Field(default=25, description="Number of denoising steps")
-    clip_skip: Optional[int] = Field(default=0, description="CLIP skip value")
-    width: Optional[int] = Field(default=None, description="Output width (None to preserve)")
-    height: Optional[int] = Field(default=None, description="Output height (None to preserve)")
-    seed: Optional[int] = Field(default=None, description="Random seed")
-    num: Optional[int] = Field(default=1, ge=1, le=10, description="Number of images to generate")
-    scheduler: Optional[str] = Field(default=None, description="Scheduler name")
-
-
-class InpaintRequest(GenerationExtras):
-    image: str = Field(..., description="Original image as Base64 Data URL or HTTP URL")
-    mask_image: str = Field(..., description="Mask image as Base64 Data URL or HTTP URL")
-    prompt: str = Field(..., description="Prompt for inpainting")
-    negative_prompt: Optional[str] = Field(default="", description="Negative prompt")
-    strength: Optional[float] = Field(default=0.8, description="Inpaint strength")
-    guidance_scale: Optional[float] = Field(default=7.0, description="Guidance scale")
-    num_inference_steps: Optional[int] = Field(default=25, description="Denoising steps")
-    clip_skip: Optional[int] = Field(default=0, description="CLIP skip value")
-    width: Optional[int] = Field(default=None, description="Width")
-    height: Optional[int] = Field(default=None, description="Height")
-    seed: Optional[int] = Field(default=None, description="Random seed")
-    num: Optional[int] = Field(default=1, ge=1, le=10, description="Number of images to generate")
-    scheduler: Optional[str] = Field(default=None, description="Scheduler name")
+class GenerationRequest(BaseModel):
+    prompt: str
+    negative_prompt: str = ""
+    guidance: Optional[float] = None
+    steps: int = 25
+    clip_skip: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    seed: Optional[int] = None
+    image_count: int = Field(default=1, ge=1, le=10)
+    scheduler: Optional[str] = None
+    image: Optional[str] = None
+    mask: Optional[str] = None
+    strength: Optional[float] = None
+    control_image: Optional[str] = None
+    control_scale: Optional[float] = None
+    canny_low: int = 100
+    canny_high: int = 200
+    reference_image: Optional[str] = None
 
 
 class ModelLoadRequest(BaseModel):
-    model: str = Field(..., description="Hugging Face repo ID, local path, or Civitai download URL")
-    model_version: Optional[str] = Field(default="xl", description="Model architecture version (e.g., 1.5, xl, pony, 3, 3.5, flux, or empty to auto-detect)")
-    quantization: Optional[str] = Field(default="none", description="Backbone quantization mode: none, bnb_4bit, bnb_8bit, fp8_cast, gguf")
-    text_encoder_mode: Optional[str] = Field(default="default", description="Text encoder loading mode: default, bnb_4bit, bnb_8bit, fp8_cast, none")
-    offload_mode: Optional[str] = Field(default="none", description="VRAM offload mode: none, model_cpu_offload, sequential_cpu_offload")
-    delete_after_load: Optional[bool] = Field(default=False, description="Delete downloaded single-file weights from disk after loading")
-
+    source: str
+    model_version: Optional[str] = None
+    backbone: Backbone = "fp16"
+    text_encoder: TextEncoderMode = "default"
+    memory: MemoryMode = "gpu"
+    delete_file_after_load: bool = False
 
 
 class LoraLoadRequest(BaseModel):
-    url: str = Field(..., description="LoRA URL or Hugging Face path")
-    lora_name: str = Field(..., description="Identifier name for the LoRA adapter")
-    strength: Optional[float] = Field(default=0.4, description="LoRA adapter weight/strength (0.0 - 1.0)")
+    url: str
+    lora_name: str
+    strength: float = 0.4
 
 
 class LoraDeleteRequest(BaseModel):
-    lora_name: str = Field(..., description="Name of the LoRA adapter to remove")
+    lora_name: str
 
 
 class LoraStrengthRequest(BaseModel):
@@ -94,10 +65,10 @@ class LoraEnabledRequest(BaseModel):
 
 
 class IpAdapterLoadRequest(BaseModel):
-    uri: str
-    subfolder: str = ""
-    weight_name: str
-    image_encoder_folder: str = "image_encoder"
+    source: str
+    weight: str
+    folder: str = ""
+    encoder_folder: str = "image_encoder"
     strength: float = Field(default=0.5, ge=0, le=1)
 
 
@@ -106,24 +77,24 @@ class IpAdapterStrengthRequest(BaseModel):
 
 
 class ControlnetLoadRequest(BaseModel):
-    model: Optional[str] = None
+    source: Optional[str] = None
 
 
-class ControlnetPreviewRequest(BaseModel):
+class CannyPreviewRequest(BaseModel):
     image: str
-    low_threshold: int = 100
-    high_threshold: int = 200
+    canny_low: int = 100
+    canny_high: int = 200
 
 
 class SchedulerSetRequest(BaseModel):
-    scheduler: str = Field(..., description="Scheduler name (e.g. DPM++ 2M KARRAS, EULER A)")
+    scheduler: str
 
 
 class GeneratedImage(BaseModel):
-    image_base64: str = Field(..., description="Base64 encoded image with data URI prefix")
-    seed: int = Field(..., description="Random seed used for generation")
-    width: int = Field(..., description="Output image width")
-    height: int = Field(..., description="Output image height")
+    image_base64: str
+    seed: int
+    width: int
+    height: int
 
 
 class GenerationResponse(BaseModel):
@@ -147,14 +118,18 @@ class SystemInfoResponse(BaseModel):
     gpu_names: List[str]
     current_model: Optional[str] = None
     model_version: Optional[str] = None
-    quantization: str = "none"
-    text_encoder_mode: str = "default"
-    offload_mode: str = "none"
-    loras: Dict[str, float] = {}
+    backbone: str = "fp16"
+    text_encoder: str = "default"
+    memory: str = "gpu"
+    adapters: List[str] = Field(default_factory=list)
+    schedulers: List[str] = Field(default_factory=list)
+    default_size: int = 1024
+    default_guidance: float = 7.0
+    accepts_negative_prompt: bool = True
+    accepts_clip_skip: bool = True
+    loras: Dict[str, float] = Field(default_factory=dict)
     loras_enabled: bool = True
-    schedulers: List[str] = []
     controlnet_loaded: bool = False
-    ip_adapter: Optional[IpAdapterInfo] = None
+    ip_adapter: Optional[LoadedIpAdapterInfo] = None
     python_version: str = ""
     os_platform: str = ""
-

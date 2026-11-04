@@ -13,8 +13,8 @@ async def lifespan(app: FastAPI):
     manager.initialize_from_env()
     yield
     # Shutdown cleanup
-    for p in manager.pipelines:
-        p.clear()
+    for model in manager.models:
+        model.clear()
 
 
 app = FastAPI(

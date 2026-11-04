@@ -26,6 +26,8 @@ dependencies = [
     "bitsandbytes>=0.45.3; sys_platform == 'linux'",
     "peft; sys_platform == 'linux'",
     "compel; sys_platform == 'linux'",
+    "protobuf",
+    "sentencepiece",
 ]
 
 [project.scripts]

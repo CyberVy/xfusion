@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
-from typing import Dict, List, Optional, Tuple
+from contextlib import contextmanager
+from typing import Dict, Iterator, List, Optional, Tuple
 import torch
 import torch.nn as nn
 from diffusers import DiffusionPipeline
@@ -77,7 +78,7 @@ def resolve_model_source(
 
 def build_bnb_config(mode: str, target: str = "diffusers"):
     """Build a BitsAndBytesConfig for either 'diffusers' or 'transformers' modules."""
-    if mode not in ("bnb_4bit", "bnb_8bit"):
+    if mode not in ("int4", "int8"):
         return None
 
     if target == "transformers":
@@ -85,7 +86,7 @@ def build_bnb_config(mode: str, target: str = "diffusers"):
     else:
         from diffusers import BitsAndBytesConfig as ConfigCls
 
-    if mode == "bnb_4bit":
+    if mode == "int4":
         return ConfigCls(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -102,23 +103,23 @@ def build_gguf_config():
 
 
 def build_pipeline_quant_config(
-    quantization: str = "none",
-    text_encoder_mode: str = "default",
+    backbone: str = "fp16",
+    text_encoder: str = "default",
     backbone_key: str = "transformer",
     text_encoder_keys: Tuple[str, ...] = ("text_encoder_2",),
 ):
     """Build a Diffusers PipelineQuantizationConfig mapping backbone and text encoders."""
     quant_mapping = {}
-    if quantization in ("bnb_4bit", "bnb_8bit"):
-        cfg = build_bnb_config(quantization, target="diffusers")
+    if backbone in ("int4", "int8"):
+        cfg = build_bnb_config(backbone, target="diffusers")
         if cfg is not None:
             quant_mapping[backbone_key] = cfg
 
-    eff_te_mode = text_encoder_mode
-    if eff_te_mode == "default" and quantization in ("bnb_4bit", "bnb_8bit"):
-        eff_te_mode = quantization
+    eff_te_mode = text_encoder
+    if eff_te_mode == "default" and backbone in ("int4", "int8"):
+        eff_te_mode = backbone
 
-    if eff_te_mode in ("bnb_4bit", "bnb_8bit"):
+    if eff_te_mode in ("int4", "int8"):
         te_cfg = build_bnb_config(eff_te_mode, target="transformers")
         if te_cfg is not None:
             for key in text_encoder_keys:
@@ -150,8 +151,8 @@ def _enable_fp8_cast(module: Optional[nn.Module]) -> None:
 
 def apply_post_load_optimizations(
     pipeline: DiffusionPipeline,
-    quantization: str = "none",
-    text_encoder_mode: str = "default",
+    backbone: str = "fp16",
+    text_encoder: str = "default",
 ) -> DiffusionPipeline:
     """Apply standard Diffusers VAE memory optimizations and optional FP8 layerwise casting."""
     for method_name, vae_method in (("enable_vae_tiling", "enable_tiling"), ("enable_vae_slicing", "enable_slicing")):
@@ -167,14 +168,14 @@ def apply_post_load_optimizations(
                 pass
 
     cast_applied = False
-    if quantization == "fp8_cast":
+    if backbone == "fp8":
         backbone = getattr(pipeline, "transformer", None) or getattr(pipeline, "unet", None)
         if backbone is not None and not getattr(backbone, "_is_fp8_cast", False):
             _enable_fp8_cast(backbone)
             setattr(backbone, "_is_fp8_cast", True)
             cast_applied = True
 
-    if text_encoder_mode == "fp8_cast":
+    if text_encoder == "fp8":
         for attr in ("text_encoder_3", "text_encoder_2"):
             enc = getattr(pipeline, attr, None)
             if (
@@ -193,24 +194,45 @@ def apply_post_load_optimizations(
     return pipeline
 
 
+@contextmanager
+def use_gpu(gpu_id: int) -> Iterator[None]:
+    """Bind this thread to one GPU while weights are created.
+
+    BitsAndBytes places a quantized module on ``torch.cuda.current_device()``
+    when no device map is given. That device is thread-local and defaults to
+    GPU 0, so a second copy would be quantized onto the card that already
+    holds the first copy.
+    """
+    if not torch.cuda.is_available():
+        yield
+        return
+    previous = torch.cuda.current_device()
+    torch.cuda.set_device(gpu_id)
+    try:
+        yield
+    finally:
+        torch.cuda.set_device(previous)
+
+
 def apply_execution_device(
     pipeline: DiffusionPipeline,
-    offload_mode: str = "none",
+    memory: str = "gpu",
     gpu_id: int = 0,
 ) -> DiffusionPipeline:
     """Configure pipeline device placement or Diffusers CPU offload hooks."""
     if not torch.cuda.is_available():
         return pipeline
 
-    mode = (offload_mode or "none").lower()
-    if mode == "model_cpu_offload" and hasattr(pipeline, "enable_model_cpu_offload"):
+    torch.cuda.set_device(gpu_id)
+    mode = (memory or "gpu").lower()
+    if mode == "offload" and hasattr(pipeline, "enable_model_cpu_offload"):
         try:
             pipeline.enable_model_cpu_offload(gpu_id=gpu_id)
             return pipeline
         except Exception as exc:
             print(f"Warning: enable_model_cpu_offload failed ({exc}), falling back to GPU placement.")
 
-    if mode == "sequential_cpu_offload" and hasattr(pipeline, "enable_sequential_cpu_offload"):
+    if mode == "sequential" and hasattr(pipeline, "enable_sequential_cpu_offload"):
         try:
             pipeline.enable_sequential_cpu_offload(gpu_id=gpu_id)
             return pipeline

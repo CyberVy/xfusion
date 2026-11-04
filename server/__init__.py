@@ -11,19 +11,13 @@ from .models import (
     load_flux_pipeline,
     infer_model_version,
 )
-from .engine import (
-    load_engine,
-    SDPipelineEngine,
-    FluxPipelineEngine,
-)
+from .engine import load_model, LoadedModel
 
 __all__ = [
-    "load_engine",
-    "SDPipelineEngine",
-    "FluxPipelineEngine",
+    "load_model",
+    "LoadedModel",
     "load_stable_diffusion_pipeline",
     "load_stable_diffusion_controlnet",
     "load_flux_pipeline",
     "infer_model_version",
 ]
-

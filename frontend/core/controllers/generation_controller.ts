@@ -11,13 +11,13 @@ const logger = create_logger("GenerationController")
 export interface GenerationParams {
     prompt: string
     negative_prompt: string
-    guidance_scale: number
-    num_inference_steps: number
+    guidance: number
+    steps: number
     clip_skip: number
     width: number
     height: number
     seed: number | null
-    num: number
+    image_count: number
     scheduler: string
     img2img_strength: number
     inpaint_strength: number
@@ -28,7 +28,7 @@ export interface GenerationParams {
 
 export interface GenerationExtrasInput {
     control_image?: string | null
-    ip_adapter_image?: string | null
+    reference_image?: string | null
 }
 
 export interface GenerationState extends GenerationParams {
@@ -48,13 +48,13 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
 
     prompt: "",
     negative_prompt: "bad hands, low resolution, blurry, distorted, disfigured, text, watermark",
-    guidance_scale: 7.0,
-    num_inference_steps: 25,
+    guidance: 7.0,
+    steps: 25,
     clip_skip: 0,
     width: 1024,
     height: 1024,
     seed: null,
-    num: 1,
+    image_count: 1,
     scheduler: "DPM++ 2M KARRAS",
     img2img_strength: 0.75,
     inpaint_strength: 0.8,
@@ -184,7 +184,7 @@ export class GenerationController extends BaseController<GenerationState> {
                     ...common,
                     ...this.extra_params(extras),
                     image: image_base64,
-                    mask_image: mask_base64,
+                    mask: mask_base64,
                     strength
                 },
                 signal
@@ -198,12 +198,12 @@ export class GenerationController extends BaseController<GenerationState> {
         return {
             prompt: s.prompt,
             negative_prompt: s.negative_prompt,
-            guidance_scale: s.guidance_scale,
-            num_inference_steps: s.num_inference_steps,
+            guidance: s.guidance,
+            steps: s.steps,
             clip_skip: s.clip_skip,
             width: s.width,
             height: s.height,
-            num: s.num,
+            image_count: s.image_count,
             seed: s.seed,
             scheduler: schedulers.includes(s.scheduler) ? s.scheduler : null
         }
@@ -215,12 +215,12 @@ export class GenerationController extends BaseController<GenerationState> {
             ...(extras?.control_image
                 ? {
                       control_image: extras.control_image,
-                      controlnet_conditioning_scale: s.controlnet_scale,
-                      low_threshold: s.canny_low,
-                      high_threshold: s.canny_high
+                      control_scale: s.controlnet_scale,
+                      canny_low: s.canny_low,
+                      canny_high: s.canny_high
                   }
                 : {}),
-            ...(extras?.ip_adapter_image ? { ip_adapter_image: extras.ip_adapter_image } : {})
+            ...(extras?.reference_image ? { reference_image: extras.reference_image } : {})
         }
     }
 
@@ -234,7 +234,7 @@ export class GenerationController extends BaseController<GenerationState> {
     ): Promise<void> {
         if (this.state.is_generating) return
         const api_url = settings_controller.get_value("api_url", "http://localhost:8000")
-        const { prompt, negative_prompt, num_inference_steps, num } = this.state
+        const { prompt, negative_prompt, steps, image_count } = this.state
 
         const abort_controller = new AbortController()
         this.current_abort_controller = abort_controller
@@ -242,7 +242,7 @@ export class GenerationController extends BaseController<GenerationState> {
         this.update_state({
             is_generating: true,
             error: null,
-            progress: { active: true, step: 0, total_steps: num_inference_steps, image_index: 0, image_count: num }
+            progress: { active: true, step: 0, total_steps: steps, image_index: 0, image_count }
         })
         this.dispatchEvent(new CustomEvent("status_change"))
         this.dispatchEvent(new CustomEvent("change"))

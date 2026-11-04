@@ -59,10 +59,10 @@ export class ModelController extends BaseController<ModelState> {
         }
     }
 
-    public async load_model(model: string, model_version: string, options?: ModelLoadOptions): Promise<void> {
+    public async load_model(source: string, model_version: string, options?: ModelLoadOptions): Promise<void> {
         this.commit({ is_loading_model: true, model_error: null })
         try {
-            await ApiClient.load_model(this.api_url, model, model_version, options)
+            await ApiClient.load_model(this.api_url, source, { model_version, ...options })
             await this.refresh_system_info()
             this.commit({ is_loading_model: false })
         } catch (err: any) {
@@ -104,15 +104,15 @@ export class ModelController extends BaseController<ModelState> {
     }
 
     public async load_ip_adapter(
-        uri: string,
-        subfolder: string,
-        weight_name: string,
-        image_encoder_folder: string,
+        source: string,
+        folder: string,
+        weight: string,
+        encoder_folder: string,
         strength: number
     ): Promise<boolean> {
         this.commit({ is_loading_ip_adapter: true, ip_adapter_error: null })
         try {
-            await ApiClient.load_ip_adapter(this.api_url, uri, subfolder, weight_name, image_encoder_folder, strength)
+            await ApiClient.load_ip_adapter(this.api_url, source, folder, weight, encoder_folder, strength)
             await this.refresh_system_info()
             this.commit({ is_loading_ip_adapter: false })
             return true
@@ -167,8 +167,8 @@ export class ModelController extends BaseController<ModelState> {
         }
     }
 
-    public async preview_canny(image: string, low_threshold: number, high_threshold: number): Promise<string> {
-        const res = await ApiClient.preview_canny(this.api_url, image, low_threshold, high_threshold)
+    public async preview_canny(image: string, canny_low: number, canny_high: number): Promise<string> {
+        const res = await ApiClient.preview_canny(this.api_url, image, canny_low, canny_high)
         return res.image_base64
     }
 

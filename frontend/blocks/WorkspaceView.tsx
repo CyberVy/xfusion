@@ -120,9 +120,10 @@ export function WorkspaceView() {
     const [is_previewing, set_is_previewing] = useState(false)
     const [ip_adapter_image, set_ip_adapter_image] = useState<string | null>(null)
 
-    const model_version = model_state.system_info?.model_version
-    const is_flux = model_version === "flux"
-    const controlnet_unsupported = model_version === "3" || model_version === "3.5"
+    const adapters = model_state.system_info?.adapters
+    const supports_controlnet = !model_state.system_info?.model_version || Boolean(adapters?.includes("controlnet"))
+    const supports_negative_prompt = model_state.system_info?.accepts_negative_prompt !== false
+    const supports_clip_skip = model_state.system_info?.accepts_clip_skip !== false
     const schedulers = model_state.system_info?.schedulers ?? []
     const needs_source = mode !== "txt2img"
     const resolved_control_image = use_controlnet ? control_image || (needs_source ? source_image : null) : null
@@ -144,7 +145,7 @@ export function WorkspaceView() {
 
     const generation_extras = {
         control_image: resolved_control_image,
-        ip_adapter_image: model_state.system_info?.ip_adapter ? ip_adapter_image : null
+        reference_image: model_state.system_info?.ip_adapter ? ip_adapter_image : null
     }
 
     const handle_generate = () => {
@@ -224,7 +225,7 @@ export function WorkspaceView() {
                     )}
 
                     <Section title="ControlNet">
-                        {controlnet_unsupported ? (
+                        {!supports_controlnet ? (
                             <p className="text-sm text-black/50 dark:text-white/50">
                                 ControlNet is not available for this model.
                             </p>
@@ -345,7 +346,7 @@ export function WorkspaceView() {
                             rows={4}
                             className={`${FIELD_CLASS} p-3.5 text-sm leading-relaxed resize-y`}
                         />
-                        {!is_flux && (
+                        {supports_negative_prompt && (
                             <textarea
                                 value={state.negative_prompt}
                                 onChange={(e) => generation_controller.set_params({ negative_prompt: e.target.value })}
@@ -461,29 +462,29 @@ export function WorkspaceView() {
                     <Section title="Sampling">
                         <ParamSlider
                             label="Steps"
-                            value={state.num_inference_steps}
+                            value={state.steps}
                             min={1}
                             max={50}
                             step={1}
-                            on_change={(value) => generation_controller.set_params({ num_inference_steps: value })}
+                            on_change={(value) => generation_controller.set_params({ steps: value })}
                         />
                         <ParamSlider
                             label="Guidance scale"
-                            value={state.guidance_scale}
+                            value={state.guidance}
                             min={0}
                             max={15}
                             step={0.5}
-                            on_change={(value) => generation_controller.set_params({ guidance_scale: value })}
+                            on_change={(value) => generation_controller.set_params({ guidance: value })}
                         />
                         <ParamSlider
                             label="Images"
-                            value={state.num}
+                            value={state.image_count}
                             min={1}
                             max={10}
                             step={1}
-                            on_change={(value) => generation_controller.set_params({ num: value })}
+                            on_change={(value) => generation_controller.set_params({ image_count: value })}
                         />
-                        {!is_flux && (
+                        {supports_clip_skip && (
                             <ParamSlider
                                 label="CLIP skip"
                                 value={state.clip_skip}

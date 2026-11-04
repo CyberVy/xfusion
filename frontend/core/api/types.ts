@@ -1,53 +1,22 @@
-export interface GenerationExtras {
+export interface GenerationBody {
+    prompt: string
+    negative_prompt?: string
+    guidance?: number | null
+    steps?: number
+    clip_skip?: number | null
+    width?: number | null
+    height?: number | null
+    seed?: number | null
+    image_count?: number
+    scheduler?: string | null
+    image?: string
+    mask?: string
+    strength?: number
     control_image?: string | null
-    controlnet_conditioning_scale?: number
-    low_threshold?: number
-    high_threshold?: number
-    ip_adapter_image?: string | null
-}
-
-export interface Txt2ImgParams extends GenerationExtras {
-    prompt: string
-    negative_prompt?: string
-    guidance_scale?: number
-    num_inference_steps?: number
-    clip_skip?: number
-    width?: number
-    height?: number
-    seed?: number | null
-    num?: number
-    scheduler?: string | null
-}
-
-export interface Img2ImgParams extends GenerationExtras {
-    image: string // Base64 data URL or HTTP URL
-    prompt: string
-    negative_prompt?: string
-    strength?: number
-    guidance_scale?: number
-    num_inference_steps?: number
-    clip_skip?: number
-    width?: number
-    height?: number
-    seed?: number | null
-    num?: number
-    scheduler?: string | null
-}
-
-export interface InpaintParams extends GenerationExtras {
-    image: string
-    mask_image: string
-    prompt: string
-    negative_prompt?: string
-    strength?: number
-    guidance_scale?: number
-    num_inference_steps?: number
-    clip_skip?: number
-    width?: number
-    height?: number
-    seed?: number | null
-    num?: number
-    scheduler?: string | null
+    control_scale?: number | null
+    canny_low?: number
+    canny_high?: number
+    reference_image?: string | null
 }
 
 export interface GenerationProgress {
@@ -59,10 +28,10 @@ export interface GenerationProgress {
 }
 
 export interface IpAdapterInfo {
-    uri: string
-    subfolder: string
-    weight_name: string
-    image_encoder_folder: string
+    source: string
+    folder: string
+    weight: string
+    encoder_folder: string
     strength: number
 }
 
@@ -106,10 +75,11 @@ export interface GeneratedImageItem {
 }
 
 export interface ModelLoadOptions {
-    quantization?: string
-    text_encoder_mode?: string
-    offload_mode?: string
-    delete_after_load?: boolean
+    model_version?: string | null
+    backbone?: string
+    text_encoder?: string
+    memory?: string
+    delete_file_after_load?: boolean
 }
 
 export interface SystemInfo {
@@ -118,9 +88,14 @@ export interface SystemInfo {
     gpu_names: string[]
     current_model: string | null
     model_version: string | null
-    quantization?: string
-    text_encoder_mode?: string
-    offload_mode?: string
+    backbone?: string
+    text_encoder?: string
+    memory?: string
+    adapters?: string[]
+    default_size?: number
+    default_guidance?: number
+    accepts_negative_prompt?: boolean
+    accepts_clip_skip?: boolean
     loras: Record<string, number>
     loras_enabled?: boolean
     schedulers: string[]

@@ -20,16 +20,16 @@ LoaderKwargValue = Union[str, float, int, bool, None, object]
 def load_flux_pipeline(
     model: Optional[str] = None,
     download_kwargs: Optional[Dict[str, str]] = None,
-    quantization: str = "none",
-    text_encoder_mode: str = "default",
-    delete_after_load: bool = False,
+    backbone: str = "fp16",
+    text_encoder: str = "default",
+    delete_file_after_load: bool = False,
     **kwargs: LoaderKwargValue,
 ) -> FluxPipeline:
     """Load FluxPipeline from Hugging Face repo, local directory, or single-file checkpoint."""
     model_name = model or default_flux_transformer_url
-    quant_mode = (quantization or "none").lower()
-    te_mode = (text_encoder_mode or "default").lower()
-    should_delete = delete_after_load or config.DELETE_AFTER_LOAD
+    quant_mode = (backbone or "fp16").lower()
+    te_mode = (text_encoder or "default").lower()
+    should_delete = delete_file_after_load or config.DELETE_FILE_AFTER_LOAD
     dl_kwargs = dict(download_kwargs or {})
 
     call_kwargs: Dict[str, LoaderKwargValue] = dict(kwargs)
@@ -41,7 +41,7 @@ def load_flux_pipeline(
 
     resolved, is_single_file, was_downloaded = resolve_model_source(model_name, dl_kwargs)
 
-    if te_mode == "none":
+    if te_mode == "skip":
         call_kwargs["text_encoder_2"] = None
         call_kwargs["tokenizer_2"] = None
 
@@ -55,7 +55,7 @@ def load_flux_pipeline(
                     quantization_config=build_gguf_config(),
                     torch_dtype=call_kwargs["torch_dtype"],
                 )
-            elif quant_mode in ("bnb_4bit", "bnb_8bit"):
+            elif quant_mode in ("int4", "int8"):
                 call_kwargs["transformer"] = FluxTransformer2DModel.from_single_file(
                     resolved,
                     config=FLUX_CONFIG_PATH,
@@ -68,10 +68,10 @@ def load_flux_pipeline(
             if should_delete and was_downloaded and os.path.exists(resolved):
                 os.remove(resolved)
     else:
-        if te_mode != "none" and "quantization_config" not in call_kwargs:
+        if te_mode != "skip" and "quantization_config" not in call_kwargs:
             quant_cfg = build_pipeline_quant_config(
-                quantization=quant_mode,
-                text_encoder_mode=te_mode,
+                backbone=quant_mode,
+                text_encoder=te_mode,
                 backbone_key="transformer",
                 text_encoder_keys=("text_encoder_2",),
             )
@@ -79,4 +79,4 @@ def load_flux_pipeline(
                 call_kwargs["quantization_config"] = quant_cfg
         pipe = FluxPipeline.from_pretrained(resolved, **call_kwargs)
 
-    return apply_post_load_optimizations(pipe, quantization=quant_mode, text_encoder_mode=te_mode)
+    return apply_post_load_optimizations(pipe, backbone=quant_mode, text_encoder=te_mode)
