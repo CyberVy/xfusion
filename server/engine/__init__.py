@@ -4,7 +4,7 @@ from typing import Dict, Optional
 
 from ..models.inspect import apply_execution_device, use_gpu
 from .contracts import ModelLoadSettings
-from .families import FLUX_FAMILY, SD_FAMILY, find_model_family
+from .families import FLUX_FAMILY, MOSS_FAMILY, SD_FAMILY, find_model_family
 from .runtime import LoadedModel
 from .schedulers import DIFFUSION_SCHEDULER_MAP
 
@@ -20,6 +20,9 @@ def load_model(
     if hint:
         family = find_model_family(hint)
         requested_version = hint
+    elif "moss" in settings.source.lower():
+        family = MOSS_FAMILY
+        requested_version = "moss"
     elif "flux" in settings.source.lower():
         family = FLUX_FAMILY
         requested_version = "flux"

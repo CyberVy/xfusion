@@ -92,6 +92,7 @@ export interface SystemInfo {
     text_encoder?: string
     memory?: string
     adapters?: string[]
+    tasks?: string[]
     default_size?: number
     default_guidance?: number
     accepts_negative_prompt?: boolean

@@ -9,6 +9,7 @@ from .models import (
     load_stable_diffusion_pipeline,
     load_stable_diffusion_controlnet,
     load_flux_pipeline,
+    load_moss_pipeline,
     infer_model_version,
 )
 from .engine import load_model, LoadedModel
@@ -19,5 +20,6 @@ __all__ = [
     "load_stable_diffusion_pipeline",
     "load_stable_diffusion_controlnet",
     "load_flux_pipeline",
+    "load_moss_pipeline",
     "infer_model_version",
 ]

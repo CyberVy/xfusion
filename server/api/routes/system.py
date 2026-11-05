@@ -32,6 +32,7 @@ async def get_system_info():
         text_encoder=manager.settings.text_encoder,
         memory=manager.settings.memory,
         adapters=sorted(manager.models[0].features.adapters) if manager.models else [],
+        tasks=sorted(manager.models[0].features.tasks) if manager.models else [],
         schedulers=manager.get_schedulers(),
         default_size=manager.models[0].features.default_size if manager.models else 1024,
         default_guidance=manager.models[0].features.default_guidance if manager.models else 7.0,

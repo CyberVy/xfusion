@@ -103,20 +103,28 @@ class LoadedModel:
         with use_gpu(self.gpu_id), self._prompt_gated_loras(prepared.prompt, prepared.negative_prompt):
             try:
                 call_kwargs = self.family.build_generation_inputs(self, prepared)
-                exec_device = self.execution_device
-                if exec_device is not None:
-                    call_kwargs["generator"] = torch.Generator(exec_device).manual_seed(seed)
-                if on_step is not None:
-                    total_steps = int(prepared.steps)
-
-                    def callback_on_step_end(_pipe, step, _timestep, callback_kwargs):
-                        on_step(int(step) + 1, total_steps)
-                        return callback_kwargs
-
-                    call_kwargs["callback_on_step_end"] = callback_on_step_end
+                generator_device = self.execution_device
+                custom_device = getattr(self.family, "generator_device", None)
+                if callable(custom_device):
+                    generator_device = custom_device(self)
+                if generator_device is not None:
+                    call_kwargs["generator"] = torch.Generator(generator_device).manual_seed(seed)
 
                 pipe = self._pipeline_for_task(prepared.task, controlnet=prepared.control_image is not None)
                 self._active_pipe = pipe
+                if on_step is not None:
+                    params = inspect.signature(pipe.__call__).parameters
+                    accepts_callback = "callback_on_step_end" in params or any(
+                        param.kind == inspect.Parameter.VAR_KEYWORD for param in params.values()
+                    )
+                    if accepts_callback:
+                        total_steps = int(prepared.steps)
+
+                        def callback_on_step_end(_pipe, step, _timestep, callback_kwargs):
+                            on_step(int(step) + 1, total_steps)
+                            return callback_kwargs
+
+                        call_kwargs["callback_on_step_end"] = callback_on_step_end
                 output = pipe(**call_kwargs)
             finally:
                 self._active_pipe = self.pipeline

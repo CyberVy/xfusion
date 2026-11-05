@@ -15,7 +15,8 @@ const MODEL_VERSIONS = [
     { label: "Version: Pony", value: "pony" },
     { label: "Version: SD 3", value: "3" },
     { label: "Version: SD 3.5", value: "3.5" },
-    { label: "Version: FLUX", value: "flux" }
+    { label: "Version: FLUX", value: "flux" },
+    { label: "Version: MOSS", value: "moss" }
 ]
 
 const BACKBONE_MODES = [
@@ -127,15 +128,18 @@ export function ModelManageView() {
 
     const active_loras = state.system_info?.loras ? Object.entries(state.system_info.loras) : []
     const loras_enabled = state.system_info?.loras_enabled !== false
-    const supports_ip_adapter =
-        !state.system_info?.model_version || Boolean(state.system_info.adapters?.includes("ip_adapter"))
+    const model_loaded = Boolean(state.system_info?.model_version)
+    const adapters = state.system_info?.adapters
+    const supports_lora = !model_loaded || Boolean(adapters?.includes("lora"))
+    const supports_controlnet = !model_loaded || Boolean(adapters?.includes("controlnet"))
+    const supports_ip_adapter = !model_loaded || Boolean(adapters?.includes("ip_adapter"))
     const ip_adapter = state.system_info?.ip_adapter
 
     return (
         <div className="w-full max-w-2xl mx-auto px-4 md:px-6 pt-2 pb-32">
             <Panel
                 title="Base model"
-                description="Hugging Face repo, local path, or download URL. Version can stay on Auto. As published keeps a checkpoint's own precision, including a repo that is already 4-bit or GGUF. Quantize converts the backbone and its large text encoder while loading."
+                description="Hugging Face repo, local path, or download URL. Version can stay on Auto. As published keeps a checkpoint's own precision, including a repo that is already 4-bit or GGUF. Quantize converts the backbone and its large text encoder while loading. MOSS-Image uses OpenMOSS-Team/MOSS-Image-SFT."
             >
                 <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/4 dark:bg-white/6">
                     <div className="min-w-0">
@@ -162,7 +166,7 @@ export function ModelManageView() {
                 <StringInput
                     value={model_url}
                     on_change={set_model_url}
-                    placeholder="e.g. eramth/realism-sdxl"
+                    placeholder={model_version === "moss" ? "OpenMOSS-Team/MOSS-Image-SFT" : "e.g. eramth/realism-sdxl"}
                     className={`h-11 ${FIELD_CLASS}`}
                 />
 
@@ -253,77 +257,81 @@ export function ModelManageView() {
                 <ErrorText message={state.model_error} />
             </Panel>
 
-            <Panel title="LoRA adapters" description="Drag a loaded adapter's strength, then release to apply it">
-                <StringInput
-                    value={lora_url}
-                    on_change={set_lora_url}
-                    placeholder="LoRA URL or local path"
-                    className={`h-11 ${FIELD_CLASS}`}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+            {supports_lora && (
+                <Panel title="LoRA adapters" description="Drag a loaded adapter's strength, then release to apply it">
                     <StringInput
-                        value={lora_name}
-                        on_change={set_lora_name}
-                        placeholder="Adapter name"
+                        value={lora_url}
+                        on_change={set_lora_url}
+                        placeholder="LoRA URL or local path"
                         className={`h-11 ${FIELD_CLASS}`}
                     />
 
-                    <label className={`h-11 flex items-center gap-2 px-3 ${FIELD_CLASS}`}>
-                        <span className="text-xs text-black/50 dark:text-white/50">Strength</span>
-                        <input
-                            type="range"
-                            min={0}
-                            max={1}
-                            step={0.05}
-                            value={lora_strength}
-                            onChange={(e) => set_lora_strength(Number(e.target.value))}
-                            className="flex-1 min-w-0 accent-black dark:accent-white cursor-pointer"
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+                        <StringInput
+                            value={lora_name}
+                            on_change={set_lora_name}
+                            placeholder="Adapter name"
+                            className={`h-11 ${FIELD_CLASS}`}
                         />
-                        <span className="w-8 text-right font-mono text-xs">{lora_strength}</span>
-                    </label>
 
-                    <NaiveButton
-                        className="h-11 px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                        on_click={handle_load_lora}
-                        disabled={state.is_loading_lora || !lora_url.trim() || !lora_name.trim()}
-                    >
-                        {state.is_loading_lora ? "Loading" : "Add"}
-                    </NaiveButton>
-                </div>
-                <ErrorText message={state.lora_error} />
+                        <label className={`h-11 flex items-center gap-2 px-3 ${FIELD_CLASS}`}>
+                            <span className="text-xs text-black/50 dark:text-white/50">Strength</span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={1}
+                                step={0.05}
+                                value={lora_strength}
+                                onChange={(e) => set_lora_strength(Number(e.target.value))}
+                                className="flex-1 min-w-0 accent-black dark:accent-white cursor-pointer"
+                            />
+                            <span className="w-8 text-right font-mono text-xs">{lora_strength}</span>
+                        </label>
 
-                <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-medium text-black/50 dark:text-white/50">
-                            Active ({active_loras.length})
-                        </span>
-                        <div className="flex gap-1.5">
-                            <NaiveButton
-                                className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                                on_click={() => model_controller.set_loras_enabled(true)}
-                                disabled={active_loras.length === 0 || loras_enabled}
-                            >
-                                Enable all
-                            </NaiveButton>
-                            <NaiveButton
-                                className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                                on_click={() => model_controller.set_loras_enabled(false)}
-                                disabled={active_loras.length === 0 || !loras_enabled}
-                            >
-                                Disable all
-                            </NaiveButton>
-                        </div>
+                        <NaiveButton
+                            className="h-11 px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                            on_click={handle_load_lora}
+                            disabled={state.is_loading_lora || !lora_url.trim() || !lora_name.trim()}
+                        >
+                            {state.is_loading_lora ? "Loading" : "Add"}
+                        </NaiveButton>
                     </div>
-                    {active_loras.length === 0 ? (
-                        <div className="py-6 text-center text-sm text-black/35 dark:text-white/35 border border-dashed border-black/12 dark:border-white/12 rounded-2xl">
-                            No LoRA adapters loaded
+                    <ErrorText message={state.lora_error} />
+
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-medium text-black/50 dark:text-white/50">
+                                Active ({active_loras.length})
+                            </span>
+                            <div className="flex gap-1.5">
+                                <NaiveButton
+                                    className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                                    on_click={() => model_controller.set_loras_enabled(true)}
+                                    disabled={active_loras.length === 0 || loras_enabled}
+                                >
+                                    Enable all
+                                </NaiveButton>
+                                <NaiveButton
+                                    className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                                    on_click={() => model_controller.set_loras_enabled(false)}
+                                    disabled={active_loras.length === 0 || !loras_enabled}
+                                >
+                                    Disable all
+                                </NaiveButton>
+                            </div>
                         </div>
-                    ) : (
-                        active_loras.map(([name, weight]) => <LoraAdapterRow key={name} name={name} weight={weight} />)
-                    )}
-                </div>
-            </Panel>
+                        {active_loras.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-black/35 dark:text-white/35 border border-dashed border-black/12 dark:border-white/12 rounded-2xl">
+                                No LoRA adapters loaded
+                            </div>
+                        ) : (
+                            active_loras.map(([name, weight]) => (
+                                <LoraAdapterRow key={name} name={name} weight={weight} />
+                            ))
+                        )}
+                    </div>
+                </Panel>
+            )}
 
             {supports_ip_adapter && (
                 <Panel
@@ -423,40 +431,44 @@ export function ModelManageView() {
                 </Panel>
             )}
 
-            <Panel
-                title="ControlNet"
-                description="Leave the model empty to use the built-in default. Offload before switching models"
-            >
-                <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/4 dark:bg-white/6">
-                    <span className="text-sm">{state.system_info?.controlnet_loaded ? "Loaded" : "Not loaded"}</span>
-                    <span className="text-xs font-mono text-black/50 dark:text-white/50 truncate">
-                        {controlnet_model || "default"}
-                    </span>
-                </div>
-                <StringInput
-                    value={controlnet_model}
-                    on_change={set_controlnet_model}
-                    placeholder="ControlNet URL or repo (optional)"
-                    className={`h-11 ${FIELD_CLASS}`}
-                />
-                <div className="flex gap-2">
-                    <NaiveButton
-                        className="flex-1 h-11 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                        on_click={() => model_controller.load_controlnet(controlnet_model)}
-                        disabled={state.is_loading_controlnet}
-                    >
-                        {state.is_loading_controlnet ? "Working" : "Load"}
-                    </NaiveButton>
-                    <NaiveButton
-                        className="flex-1 h-11 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                        on_click={() => model_controller.offload_controlnet()}
-                        disabled={state.is_loading_controlnet || !state.system_info?.controlnet_loaded}
-                    >
-                        Offload
-                    </NaiveButton>
-                </div>
-                <ErrorText message={state.controlnet_error} />
-            </Panel>
+            {supports_controlnet && (
+                <Panel
+                    title="ControlNet"
+                    description="Leave the model empty to use the built-in default. Offload before switching models"
+                >
+                    <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/4 dark:bg-white/6">
+                        <span className="text-sm">
+                            {state.system_info?.controlnet_loaded ? "Loaded" : "Not loaded"}
+                        </span>
+                        <span className="text-xs font-mono text-black/50 dark:text-white/50 truncate">
+                            {controlnet_model || "default"}
+                        </span>
+                    </div>
+                    <StringInput
+                        value={controlnet_model}
+                        on_change={set_controlnet_model}
+                        placeholder="ControlNet URL or repo (optional)"
+                        className={`h-11 ${FIELD_CLASS}`}
+                    />
+                    <div className="flex gap-2">
+                        <NaiveButton
+                            className="flex-1 h-11 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                            on_click={() => model_controller.load_controlnet(controlnet_model)}
+                            disabled={state.is_loading_controlnet}
+                        >
+                            {state.is_loading_controlnet ? "Working" : "Load"}
+                        </NaiveButton>
+                        <NaiveButton
+                            className="flex-1 h-11 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                            on_click={() => model_controller.offload_controlnet()}
+                            disabled={state.is_loading_controlnet || !state.system_info?.controlnet_loaded}
+                        >
+                            Offload
+                        </NaiveButton>
+                    </div>
+                    <ErrorText message={state.controlnet_error} />
+                </Panel>
+            )}
         </div>
     )
 }

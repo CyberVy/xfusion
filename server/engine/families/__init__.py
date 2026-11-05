@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from .flux import FluxFamily
+from .moss import MossFamily
 from .sd import SdFamily
 
 SD_FAMILY = SdFamily()
 FLUX_FAMILY = FluxFamily()
-_FAMILIES = (SD_FAMILY, FLUX_FAMILY)
+MOSS_FAMILY = MossFamily()
+_FAMILIES = (SD_FAMILY, FLUX_FAMILY, MOSS_FAMILY)
 
 
 def find_model_family(model_version: str):

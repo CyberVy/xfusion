@@ -13,6 +13,7 @@ from .constants import (
 )
 from .loaders.sd import load_stable_diffusion_pipeline, load_stable_diffusion_controlnet
 from .loaders.flux import load_flux_pipeline
+from .loaders.moss import load_moss_pipeline
 from .inspect import (
     infer_model_version,
     get_tokenizers_and_text_encoders_from_pipeline,
@@ -24,6 +25,7 @@ __all__ = [
     "load_stable_diffusion_pipeline",
     "load_stable_diffusion_controlnet",
     "load_flux_pipeline",
+    "load_moss_pipeline",
     "infer_model_version",
     "get_tokenizers_and_text_encoders_from_pipeline",
     "apply_execution_device",

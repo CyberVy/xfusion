@@ -64,6 +64,10 @@ export class ModelController extends BaseController<ModelState> {
         try {
             await ApiClient.load_model(this.api_url, source, { model_version, ...options })
             await this.refresh_system_info()
+            if (this.state.system_info?.model_version === "moss") {
+                const { generation_controller } = await import("./generation_controller")
+                generation_controller.set_params({ steps: 50, guidance: 3 })
+            }
             this.commit({ is_loading_model: false })
         } catch (err: any) {
             this.commit({ is_loading_model: false, model_error: err.message || "Failed to load model" })

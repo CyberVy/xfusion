@@ -122,6 +122,7 @@ class SystemInfoResponse(BaseModel):
     text_encoder: str = "default"
     memory: str = "gpu"
     adapters: List[str] = Field(default_factory=list)
+    tasks: List[str] = Field(default_factory=list)
     schedulers: List[str] = Field(default_factory=list)
     default_size: int = 1024
     default_guidance: float = 7.0

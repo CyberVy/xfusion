@@ -121,16 +121,20 @@ export function WorkspaceView() {
     const [ip_adapter_image, set_ip_adapter_image] = useState<string | null>(null)
 
     const adapters = model_state.system_info?.adapters
+    const reported_tasks = model_state.system_info?.tasks
+    const visible_modes =
+        reported_tasks && reported_tasks.length > 0 ? MODES.filter((item) => reported_tasks.includes(item.id)) : MODES
     const supports_controlnet = !model_state.system_info?.model_version || Boolean(adapters?.includes("controlnet"))
     const supports_negative_prompt = model_state.system_info?.accepts_negative_prompt !== false
     const supports_clip_skip = model_state.system_info?.accepts_clip_skip !== false
     const schedulers = model_state.system_info?.schedulers ?? []
-    const needs_source = mode !== "txt2img"
+    const selected_mode = visible_modes.some((item) => item.id === mode) ? mode : (visible_modes[0]?.id ?? "txt2img")
+    const needs_source = selected_mode !== "txt2img"
     const resolved_control_image = use_controlnet ? control_image || (needs_source ? source_image : null) : null
     const can_generate =
         !state.is_generating &&
         (!needs_source || source_image !== null) &&
-        (mode !== "inpaint" || mask_image !== null) &&
+        (selected_mode !== "inpaint" || mask_image !== null) &&
         (!use_controlnet || resolved_control_image !== null)
 
     const handle_mode_change = (next_mode: WorkspaceMode) => {
@@ -149,11 +153,11 @@ export function WorkspaceView() {
     }
 
     const handle_generate = () => {
-        if (mode === "txt2img") {
+        if (selected_mode === "txt2img") {
             generation_controller.generate_txt2img(generation_extras)
-        } else if (mode === "img2img" && source_image) {
+        } else if (selected_mode === "img2img" && source_image) {
             generation_controller.generate_img2img(source_image, generation_extras)
-        } else if (mode === "inpaint" && source_image && mask_image) {
+        } else if (selected_mode === "inpaint" && source_image && mask_image) {
             generation_controller.generate_inpaint(source_image, mask_image, generation_extras)
         }
     }
@@ -175,7 +179,7 @@ export function WorkspaceView() {
 
     let generate_hint: string | null = null
     if (needs_source && !source_image) generate_hint = "Add a source image to continue"
-    else if (mode === "inpaint" && !mask_image) generate_hint = "Paint over the area you want to change"
+    else if (selected_mode === "inpaint" && !mask_image) generate_hint = "Paint over the area you want to change"
     else if (use_controlnet && !resolved_control_image) generate_hint = "Add a control image to continue"
 
     return (
@@ -186,14 +190,22 @@ export function WorkspaceView() {
                 </div>
 
                 <div className="min-w-0 flex flex-col gap-6">
-                    <div className="grid grid-cols-3 p-1 rounded-full bg-black/5 dark:bg-white/8">
-                        {MODES.map((item) => (
+                    <div
+                        className={`grid p-1 rounded-full bg-black/5 dark:bg-white/8 ${
+                            visible_modes.length <= 1
+                                ? "grid-cols-1"
+                                : visible_modes.length === 2
+                                  ? "grid-cols-2"
+                                  : "grid-cols-3"
+                        }`}
+                    >
+                        {visible_modes.map((item) => (
                             <button
                                 key={item.id}
                                 type="button"
                                 onClick={() => handle_mode_change(item.id)}
                                 className={`h-9 rounded-full text-xs sm:text-sm font-medium cursor-pointer transition ${
-                                    mode === item.id
+                                    selected_mode === item.id
                                         ? "bg-white text-black shadow-sm dark:bg-white/15 dark:text-white"
                                         : "text-black/55 dark:text-white/55 hover:text-black dark:hover:text-white"
                                 }`}
@@ -204,10 +216,10 @@ export function WorkspaceView() {
                     </div>
 
                     {needs_source && (
-                        <Section title={mode === "inpaint" ? "Source image and mask" : "Source image"}>
+                        <Section title={selected_mode === "inpaint" ? "Source image and mask" : "Source image"}>
                             <ImageSourceInput image={source_image} on_change={handle_source_change}>
                                 {source_image &&
-                                    (mode === "inpaint" ? (
+                                    (selected_mode === "inpaint" ? (
                                         <MaskPainter
                                             key={source_image}
                                             image_src={source_image}
@@ -339,7 +351,7 @@ export function WorkspaceView() {
                             value={state.prompt}
                             onChange={(e) => generation_controller.set_params({ prompt: e.target.value })}
                             placeholder={
-                                mode === "inpaint"
+                                selected_mode === "inpaint"
                                     ? "Describe what should appear in the painted area"
                                     : "Describe the image you want"
                             }
@@ -398,17 +410,19 @@ export function WorkspaceView() {
                         )}
                     </div>
 
-                    {mode !== "txt2img" && (
+                    {selected_mode !== "txt2img" && (
                         <Section title="Strength">
                             <ParamSlider
-                                label={mode === "inpaint" ? "Inpaint strength" : "Denoising strength"}
-                                value={mode === "inpaint" ? state.inpaint_strength : state.img2img_strength}
+                                label={selected_mode === "inpaint" ? "Inpaint strength" : "Denoising strength"}
+                                value={selected_mode === "inpaint" ? state.inpaint_strength : state.img2img_strength}
                                 min={0.05}
                                 max={1}
                                 step={0.05}
                                 on_change={(value) =>
                                     generation_controller.set_params(
-                                        mode === "inpaint" ? { inpaint_strength: value } : { img2img_strength: value }
+                                        selected_mode === "inpaint"
+                                            ? { inpaint_strength: value }
+                                            : { img2img_strength: value }
                                     )
                                 }
                             />
