@@ -24,6 +24,10 @@ class FeatureNotSupported(RuntimeError):
         self.feature = feature
 
 
+class GenerationInterrupted(Exception):
+    """Raised when in-flight generation is cancelled by the user."""
+
+
 @dataclass(frozen=True)
 class ModelLoadSettings:
     source: str

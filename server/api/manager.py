@@ -18,7 +18,7 @@ from ..infra.image import (
 )
 from ..engine import load_model
 from ..engine.contracts import GenerationRequest as ModelRequest
-from ..engine.contracts import IpAdapterSource, ModelLoadSettings
+from ..engine.contracts import GenerationInterrupted, IpAdapterSource, ModelLoadSettings
 from ..engine.runtime import LoadedModel
 
 
@@ -35,10 +35,6 @@ class GeneratedImageItem(TypedDict):
     seed: int
     width: int
     height: int
-
-
-class GenerationInterrupted(Exception):
-    """Raised when in-flight generation is cancelled by the user."""
 
 
 class PipelineManager:

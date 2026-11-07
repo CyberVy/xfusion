@@ -20,6 +20,7 @@ from ..infra.memory import delete, free_memory_to_system
 from ..models.inspect import apply_execution_device, use_gpu
 from .contracts import (
     FeatureNotSupported,
+    GenerationInterrupted,
     GenerationRequest,
     GenerationResult,
     IpAdapterSource,
@@ -29,6 +30,60 @@ from .contracts import (
     StepCallback,
 )
 from .schedulers import DIFFUSION_SCHEDULER_MAP
+
+
+class _ProgressBarWrapper:
+    """Wraps Diffusers progress bar for pipelines that lack native callback support."""
+
+    def __init__(self, pbar: Any, on_step: StepCallback, total_steps: int, pipe: Any):
+        self._pbar = pbar
+        self._on_step = on_step
+        self._total_steps = total_steps
+        self._pipe = pipe
+        self._current_step = 0
+
+    def __iter__(self):
+        it = iter(self._pbar)
+        step = 0
+        while True:
+            if getattr(self._pipe, "_interrupt", False):
+                raise GenerationInterrupted("Generation cancelled by user")
+            try:
+                item = next(it)
+            except StopIteration:
+                break
+            yield item
+            step += 1
+            if self._on_step is not None:
+                self._on_step(step, self._total_steps)
+
+    def __enter__(self):
+        if hasattr(self._pbar, "__enter__"):
+            self._pbar.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if hasattr(self._pbar, "__exit__"):
+            return self._pbar.__exit__(exc_type, exc_val, exc_tb)
+        return False
+
+    def __len__(self) -> int:
+        if hasattr(self._pbar, "__len__"):
+            return len(self._pbar)
+        return self._total_steps
+
+    def update(self, n: int = 1) -> None:
+        if hasattr(self._pbar, "update"):
+            self._pbar.update(n)
+        if getattr(self._pipe, "_interrupt", False):
+            raise GenerationInterrupted("Generation cancelled by user")
+        self._current_step += n
+        if self._on_step is not None:
+            current = getattr(self._pbar, "n", self._current_step)
+            self._on_step(current, self._total_steps)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._pbar, name)
 
 
 class LoadedModel:
@@ -101,6 +156,8 @@ class LoadedModel:
             self.set_ip_adapter_strength(0.0)
 
         with use_gpu(self.gpu_id), self._prompt_gated_loras(prepared.prompt, prepared.negative_prompt):
+            orig_progress_bar = None
+            pipe = None
             try:
                 call_kwargs = self.family.build_generation_inputs(self, prepared)
                 generator_device = self.execution_device
@@ -117,16 +174,34 @@ class LoadedModel:
                     accepts_callback = "callback_on_step_end" in params or any(
                         param.kind == inspect.Parameter.VAR_KEYWORD for param in params.values()
                     )
+                    total_steps = int(prepared.steps)
                     if accepts_callback:
-                        total_steps = int(prepared.steps)
-
                         def callback_on_step_end(_pipe, step, _timestep, callback_kwargs):
                             on_step(int(step) + 1, total_steps)
                             return callback_kwargs
 
                         call_kwargs["callback_on_step_end"] = callback_on_step_end
+                    elif "callback" in params:
+                        call_kwargs["callback"] = lambda step, _timestep, _latents: on_step(int(step) + 1, total_steps)
+                        if "callback_steps" in params:
+                            call_kwargs["callback_steps"] = 1
+                    elif hasattr(pipe, "progress_bar"):
+                        orig_progress_bar = pipe.progress_bar
+
+                        def custom_progress_bar(iterable=None, total=None):
+                            pbar = orig_progress_bar(iterable=iterable, total=total)
+                            pbar_total = total or (
+                                len(iterable)
+                                if iterable is not None and hasattr(iterable, "__len__")
+                                else total_steps
+                            )
+                            return _ProgressBarWrapper(pbar, on_step, pbar_total, pipe)
+
+                        pipe.progress_bar = custom_progress_bar
                 output = pipe(**call_kwargs)
             finally:
+                if orig_progress_bar is not None and pipe is not None and hasattr(pipe, "progress_bar"):
+                    pipe.progress_bar = orig_progress_bar
                 self._active_pipe = self.pipeline
                 if restore_ip_strength is not None:
                     self.set_ip_adapter_strength(restore_ip_strength)
