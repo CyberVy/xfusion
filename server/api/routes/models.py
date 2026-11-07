@@ -27,6 +27,7 @@ async def load_model(req: ModelLoadRequest):
             backbone=req.backbone,
             text_encoder=req.text_encoder,
             memory=req.memory,
+            dtype=req.dtype,
             delete_file_after_load=req.delete_file_after_load,
         )
         return await manager.load_model(settings)

@@ -5,6 +5,7 @@ MetadataScalar = Union[str, int, float, bool, None]
 Backbone = Literal["fp16", "int4", "int8", "fp8", "gguf"]
 TextEncoderMode = Literal["default", "int4", "int8", "fp8", "skip"]
 MemoryMode = Literal["gpu", "offload", "sequential"]
+DtypeMode = Literal["auto", "fp16", "bf16"]
 
 
 class LoadedIpAdapterInfo(BaseModel):
@@ -42,6 +43,7 @@ class ModelLoadRequest(BaseModel):
     backbone: Backbone = "fp16"
     text_encoder: TextEncoderMode = "default"
     memory: MemoryMode = "gpu"
+    dtype: DtypeMode = "auto"
     delete_file_after_load: bool = False
 
 
@@ -121,6 +123,7 @@ class SystemInfoResponse(BaseModel):
     backbone: str = "fp16"
     text_encoder: str = "default"
     memory: str = "gpu"
+    dtype: str = "auto"
     adapters: List[str] = Field(default_factory=list)
     tasks: List[str] = Field(default_factory=list)
     schedulers: List[str] = Field(default_factory=list)

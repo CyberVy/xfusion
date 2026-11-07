@@ -76,7 +76,31 @@ def resolve_model_source(
     return source, False, False
 
 
-def build_bnb_config(mode: str, target: str = "diffusers"):
+def resolve_torch_dtype(dtype: str = "auto", default: Optional[torch.dtype] = None) -> torch.dtype:
+    """Resolve an execution torch.dtype from requested mode, with GPU capability awareness."""
+    mode = (dtype or "auto").strip().lower()
+    if mode == "fp16":
+        return torch.float16
+    if mode == "bf16":
+        return torch.bfloat16
+    if mode == "fp32":
+        return torch.float32
+
+    if default is not None:
+        return default
+
+    if torch.cuda.is_available():
+        # Native BF16 Tensor Cores require Compute Capability >= 8.0 (Ampere, Ada, Hopper)
+        try:
+            major, _ = torch.cuda.get_device_capability()
+            if major >= 8:
+                return torch.bfloat16
+        except Exception:
+            pass
+    return torch.float16
+
+
+def build_bnb_config(mode: str, target: str = "diffusers", compute_dtype: Optional[torch.dtype] = None):
     """Build a BitsAndBytesConfig for either 'diffusers' or 'transformers' modules."""
     if mode not in ("int4", "int8"):
         return None
@@ -86,20 +110,21 @@ def build_bnb_config(mode: str, target: str = "diffusers"):
     else:
         from diffusers import BitsAndBytesConfig as ConfigCls
 
+    calc_dtype = compute_dtype or torch.float16
     if mode == "int4":
         return ConfigCls(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_compute_dtype=calc_dtype,
             bnb_4bit_use_double_quant=True,
         )
     return ConfigCls(load_in_8bit=True)
 
 
-def build_gguf_config():
-    """Build a GGUFQuantizationConfig with float16 compute dtype for T4 compatibility."""
+def build_gguf_config(compute_dtype: Optional[torch.dtype] = None):
+    """Build a GGUFQuantizationConfig with given or float16 compute dtype."""
     from diffusers import GGUFQuantizationConfig
-    return GGUFQuantizationConfig(compute_dtype=torch.float16)
+    return GGUFQuantizationConfig(compute_dtype=compute_dtype or torch.float16)
 
 
 def build_pipeline_quant_config(
@@ -107,11 +132,12 @@ def build_pipeline_quant_config(
     text_encoder: str = "default",
     backbone_key: str = "transformer",
     text_encoder_keys: Tuple[str, ...] = ("text_encoder_2",),
+    compute_dtype: Optional[torch.dtype] = None,
 ):
     """Build a Diffusers PipelineQuantizationConfig mapping backbone and text encoders."""
     quant_mapping = {}
     if backbone in ("int4", "int8"):
-        cfg = build_bnb_config(backbone, target="diffusers")
+        cfg = build_bnb_config(backbone, target="diffusers", compute_dtype=compute_dtype)
         if cfg is not None:
             quant_mapping[backbone_key] = cfg
 
@@ -120,7 +146,7 @@ def build_pipeline_quant_config(
         eff_te_mode = backbone
 
     if eff_te_mode in ("int4", "int8"):
-        te_cfg = build_bnb_config(eff_te_mode, target="transformers")
+        te_cfg = build_bnb_config(eff_te_mode, target="transformers", compute_dtype=compute_dtype)
         if te_cfg is not None:
             for key in text_encoder_keys:
                 quant_mapping[key] = te_cfg

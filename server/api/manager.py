@@ -88,6 +88,7 @@ class PipelineManager:
             backbone=os.environ.get("BACKBONE", "fp16"),
             text_encoder=os.environ.get("TEXT_ENCODER", "default"),
             memory=os.environ.get("MEMORY", "gpu"),
+            dtype=os.environ.get("DTYPE", "auto"),
             delete_file_after_load=DELETE_FILE_AFTER_LOAD,
         )
         print(f"Initializing {max(GPU_COUNT, 1)} model(s) for model_version='{settings.model_version or ''}'...")
@@ -108,6 +109,7 @@ class PipelineManager:
                 "backbone": settings.backbone,
                 "text_encoder": settings.text_encoder,
                 "memory": settings.memory,
+                "dtype": settings.dtype,
             }
 
     def _load_sync(self, settings: ModelLoadSettings) -> None:

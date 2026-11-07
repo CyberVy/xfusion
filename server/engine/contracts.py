@@ -6,11 +6,13 @@ from PIL import Image
 Backbone = Literal["fp16", "int4", "int8", "fp8", "gguf"]
 TextEncoderMode = Literal["default", "int4", "int8", "fp8", "skip"]
 MemoryMode = Literal["gpu", "offload", "sequential"]
+DtypeMode = Literal["auto", "fp16", "bf16"]
 GenerationTask = Literal["txt2img", "img2img", "inpaint"]
 
 BACKBONES = ("fp16", "int4", "int8", "fp8", "gguf")
 TEXT_ENCODER_MODES = ("default", "int4", "int8", "fp8", "skip")
 MEMORY_MODES = ("gpu", "offload", "sequential")
+DTYPE_MODES = ("auto", "fp16", "bf16")
 GENERATION_TASKS = ("txt2img", "img2img", "inpaint")
 
 StepCallback = Callable[[int, int], None]
@@ -29,6 +31,7 @@ class ModelLoadSettings:
     backbone: str = "fp16"
     text_encoder: str = "default"
     memory: str = "gpu"
+    dtype: str = "auto"
     delete_file_after_load: bool = False
 
     def __post_init__(self) -> None:
@@ -38,6 +41,8 @@ class ModelLoadSettings:
             raise ValueError(f"Text encoder mode '{self.text_encoder}' is not supported.")
         if self.memory not in MEMORY_MODES:
             raise ValueError(f"Memory mode '{self.memory}' is not supported.")
+        if self.dtype not in DTYPE_MODES:
+            raise ValueError(f"Dtype mode '{self.dtype}' is not supported.")
 
 
 @dataclass(frozen=True)

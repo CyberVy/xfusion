@@ -6,7 +6,7 @@ from typing import Dict, Optional, Union
 import torch
 from diffusers import DiffusionPipeline
 
-from ..inspect import apply_post_load_optimizations, resolve_model_source
+from ..inspect import apply_post_load_optimizations, resolve_model_source, resolve_torch_dtype
 from ...infra import config
 
 LoaderKwargValue = Union[str, float, int, bool, None, object]
@@ -18,6 +18,7 @@ def load_moss_pipeline(
     download_kwargs: Optional[Dict[str, str]] = None,
     backbone: str = "fp16",
     text_encoder: str = "default",
+    dtype: str = "auto",
     delete_file_after_load: bool = False,
 ) -> DiffusionPipeline:
     """Load MOSS-Image from a Diffusers repository at its published precision."""
@@ -37,14 +38,12 @@ def load_moss_pipeline(
             os.remove(resolved)
         raise ValueError("MOSS-Image loads from a Diffusers repository, not a single checkpoint file.")
 
-    has_cuda = torch.cuda.is_available()
-    supports_bf16 = has_cuda and hasattr(torch.cuda, "is_bf16_supported") and torch.cuda.is_bf16_supported()
-    default_dtype = torch.bfloat16 if supports_bf16 else torch.float16
+    target_dtype = resolve_torch_dtype(dtype)
 
     call_kwargs: Dict[str, LoaderKwargValue] = {
         "custom_pipeline": "pipeline_moss_image",
         "trust_remote_code": True,
-        "torch_dtype": {"default": default_dtype, "vae": torch.float32},
+        "torch_dtype": {"default": target_dtype, "vae": torch.float32},
         "token": config.HF_HUB_TOKEN,
         "cache_dir": dl_kwargs.get("directory") or config.DOWNLOAD_PATH,
     }

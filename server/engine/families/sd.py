@@ -121,6 +121,7 @@ class SdFamily:
             download_kwargs=download_kwargs,
             backbone=settings.backbone,
             text_encoder=settings.text_encoder,
+            dtype=settings.dtype,
             delete_file_after_load=settings.delete_file_after_load,
         )
 

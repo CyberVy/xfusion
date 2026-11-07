@@ -31,6 +31,7 @@ async def get_system_info():
         backbone=manager.settings.backbone,
         text_encoder=manager.settings.text_encoder,
         memory=manager.settings.memory,
+        dtype=manager.settings.dtype,
         adapters=sorted(manager.models[0].features.adapters) if manager.models else [],
         tasks=sorted(manager.models[0].features.tasks) if manager.models else [],
         schedulers=manager.get_schedulers(),

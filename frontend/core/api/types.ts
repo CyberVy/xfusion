@@ -78,6 +78,7 @@ export interface ModelLoadOptions {
     model_version?: string | null
     backbone?: string
     text_encoder?: string
+    dtype?: string
     memory?: string
     delete_file_after_load?: boolean
 }
@@ -90,6 +91,7 @@ export interface SystemInfo {
     model_version: string | null
     backbone?: string
     text_encoder?: string
+    dtype?: string
     memory?: string
     adapters?: string[]
     tasks?: string[]

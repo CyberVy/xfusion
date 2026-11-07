@@ -25,6 +25,7 @@ from ..constants import (
 from ..inspect import (
     infer_model_version,
     resolve_model_source,
+    resolve_torch_dtype,
     build_bnb_config,
     build_gguf_config,
     build_pipeline_quant_config,
@@ -128,6 +129,7 @@ def load_stable_diffusion_pipeline(
     download_kwargs: Optional[Dict[str, str]] = None,
     backbone: str = "fp16",
     text_encoder: str = "default",
+    dtype: str = "auto",
     delete_file_after_load: bool = False,
     **kwargs: LoaderKwargValue,
 ) -> Tuple[DiffusionPipeline, str]:
@@ -136,13 +138,14 @@ def load_stable_diffusion_pipeline(
     version = str(model_version or "").lower()
     quant_mode = (backbone or "fp16").lower()
     te_mode = (text_encoder or "default").lower()
+    target_dtype = resolve_torch_dtype(dtype, default=torch.float16)
     dl_kwargs = dict(download_kwargs or {})
 
     call_kwargs: Dict[str, LoaderKwargValue] = dict(kwargs)
     if call_kwargs.get("token") is None:
         call_kwargs["token"] = config.HF_HUB_TOKEN
     if call_kwargs.get("torch_dtype") is None:
-        call_kwargs["torch_dtype"] = torch.float16
+        call_kwargs["torch_dtype"] = target_dtype
     call_kwargs["cache_dir"] = dl_kwargs.get("directory") or config.DOWNLOAD_PATH
 
     resolved, is_single_file, was_downloaded = resolve_model_source(
@@ -171,7 +174,7 @@ def load_stable_diffusion_pipeline(
                     resolved,
                     config=cfg_path,
                     subfolder=backbone_key,
-                    quantization_config=build_gguf_config(),
+                    quantization_config=build_gguf_config(compute_dtype=target_dtype),
                     torch_dtype=call_kwargs["torch_dtype"],
                 )
             elif quant_mode in ("int4", "int8"):
@@ -179,7 +182,7 @@ def load_stable_diffusion_pipeline(
                     resolved,
                     config=cfg_path,
                     subfolder=backbone_key,
-                    quantization_config=build_bnb_config(quant_mode, target="diffusers"),
+                    quantization_config=build_bnb_config(quant_mode, target="diffusers", compute_dtype=target_dtype),
                     torch_dtype=call_kwargs["torch_dtype"],
                 )
 
@@ -196,6 +199,7 @@ def load_stable_diffusion_pipeline(
                 text_encoder=te_mode,
                 backbone_key=backbone_key,
                 text_encoder_keys=te_keys,
+                compute_dtype=target_dtype,
             )
             if quant_cfg is not None:
                 call_kwargs["quantization_config"] = quant_cfg

@@ -7,6 +7,7 @@ from diffusers import FluxPipeline, FluxTransformer2DModel
 from ..constants import FLUX_CONFIG_PATH, default_flux_transformer_url
 from ..inspect import (
     resolve_model_source,
+    resolve_torch_dtype,
     build_bnb_config,
     build_gguf_config,
     build_pipeline_quant_config,
@@ -22,6 +23,7 @@ def load_flux_pipeline(
     download_kwargs: Optional[Dict[str, str]] = None,
     backbone: str = "fp16",
     text_encoder: str = "default",
+    dtype: str = "auto",
     delete_file_after_load: bool = False,
     **kwargs: LoaderKwargValue,
 ) -> FluxPipeline:
@@ -29,6 +31,7 @@ def load_flux_pipeline(
     model_name = model or default_flux_transformer_url
     quant_mode = (backbone or "fp16").lower()
     te_mode = (text_encoder or "default").lower()
+    target_dtype = resolve_torch_dtype(dtype, default=torch.float16)
     should_delete = delete_file_after_load or config.DELETE_FILE_AFTER_LOAD
     dl_kwargs = dict(download_kwargs or {})
 
@@ -36,7 +39,7 @@ def load_flux_pipeline(
     if call_kwargs.get("token") is None:
         call_kwargs["token"] = config.HF_HUB_TOKEN
     if call_kwargs.get("torch_dtype") is None:
-        call_kwargs["torch_dtype"] = torch.float16
+        call_kwargs["torch_dtype"] = target_dtype
     call_kwargs["cache_dir"] = dl_kwargs.get("directory") or config.DOWNLOAD_PATH
 
     resolved, is_single_file, was_downloaded = resolve_model_source(model_name, dl_kwargs)
@@ -52,7 +55,7 @@ def load_flux_pipeline(
                     resolved,
                     config=FLUX_CONFIG_PATH,
                     subfolder="transformer",
-                    quantization_config=build_gguf_config(),
+                    quantization_config=build_gguf_config(compute_dtype=target_dtype),
                     torch_dtype=call_kwargs["torch_dtype"],
                 )
             elif quant_mode in ("int4", "int8"):
@@ -60,7 +63,7 @@ def load_flux_pipeline(
                     resolved,
                     config=FLUX_CONFIG_PATH,
                     subfolder="transformer",
-                    quantization_config=build_bnb_config(quant_mode, target="diffusers"),
+                    quantization_config=build_bnb_config(quant_mode, target="diffusers", compute_dtype=target_dtype),
                     torch_dtype=call_kwargs["torch_dtype"],
                 )
             pipe = FluxPipeline.from_single_file(resolved, config=FLUX_CONFIG_PATH, **call_kwargs)
@@ -74,6 +77,7 @@ def load_flux_pipeline(
                 text_encoder=te_mode,
                 backbone_key="transformer",
                 text_encoder_keys=("text_encoder_2",),
+                compute_dtype=target_dtype,
             )
             if quant_cfg is not None:
                 call_kwargs["quantization_config"] = quant_cfg
