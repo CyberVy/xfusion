@@ -20,11 +20,19 @@ const MODEL_VERSIONS = [
 ]
 
 const BACKBONE_MODES = [
-    { label: "Precision: As published", value: "fp16" },
-    { label: "Quantize: 4-bit NF4", value: "int4" },
-    { label: "Quantize: 8-bit", value: "int8" },
-    { label: "Quantize: FP8", value: "fp8" },
-    { label: "Quantize: GGUF", value: "gguf" }
+    { label: "Backbone: As published", value: "fp16" },
+    { label: "Backbone: 4-bit NF4", value: "int4" },
+    { label: "Backbone: 8-bit", value: "int8" },
+    { label: "Backbone: FP8", value: "fp8" },
+    { label: "Backbone: GGUF", value: "gguf" }
+]
+
+const TEXT_ENCODER_MODES = [
+    { label: "Encoder: Default (Auto)", value: "default" },
+    { label: "Encoder: 4-bit NF4", value: "int4" },
+    { label: "Encoder: 8-bit", value: "int8" },
+    { label: "Encoder: FP8", value: "fp8" },
+    { label: "Encoder: Skip (Disabled)", value: "skip" }
 ]
 
 const MEMORY_MODES = [
@@ -35,12 +43,6 @@ const MEMORY_MODES = [
 
 const FIELD_CLASS =
     "rounded-xl bg-black/4 dark:bg-white/6 border border-black/8 dark:border-white/10 focus-within:border-black/30 dark:focus-within:border-white/30 transition"
-
-function text_encoder_for_precision(backbone: string, skip_text_encoder: boolean): string {
-    if (skip_text_encoder) return "skip"
-    if (backbone === "int4" || backbone === "int8" || backbone === "fp8") return backbone
-    return "default"
-}
 
 function Panel({ title, description, children }: { title: string; description: string; children: ReactNode }) {
     return (
@@ -104,7 +106,7 @@ export function ModelManageView() {
     const [model_url, set_model_url] = useState("eramth/realism-sdxl")
     const [model_version, set_model_version] = useState("")
     const [backbone, set_backbone] = useState("fp16")
-    const [skip_text_encoder, set_skip_text_encoder] = useState(false)
+    const [text_encoder, set_text_encoder] = useState("default")
     const [memory, set_memory] = useState("gpu")
     const [delete_file_after_load, set_delete_file_after_load] = useState(false)
     const [lora_url, set_lora_url] = useState("")
@@ -139,7 +141,7 @@ export function ModelManageView() {
         <div className="w-full max-w-2xl mx-auto px-4 md:px-6 pt-2 pb-32">
             <Panel
                 title="Base model"
-                description="Hugging Face repo, local path, or download URL. Version can stay on Auto. As published keeps a checkpoint's own precision, including a repo that is already 4-bit or GGUF. Quantize converts the backbone and its large text encoder while loading. MOSS-Image uses OpenMOSS-Team/MOSS-Image-SFT."
+                description="Hugging Face repo, local path, or download URL. Version can stay on Auto. Backbone and text encoder precisions can be configured independently, including 4-bit NF4, FP8, and GGUF. MOSS-Image uses OpenMOSS-Team/MOSS-Image-SFT."
             >
                 <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/4 dark:bg-white/6">
                     <div className="min-w-0">
@@ -149,7 +151,14 @@ export function ModelManageView() {
                     <div className="flex items-center gap-1.5 shrink-0">
                         {state.system_info?.backbone && state.system_info.backbone !== "fp16" && (
                             <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                                {state.system_info.backbone}
+                                {state.system_info.text_encoder && state.system_info.text_encoder !== "default"
+                                    ? `B:${state.system_info.backbone}`
+                                    : state.system_info.backbone}
+                            </span>
+                        )}
+                        {state.system_info?.text_encoder && state.system_info.text_encoder !== "default" && (
+                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                {`TE:${state.system_info.text_encoder}`}
                             </span>
                         )}
                         {state.system_info?.memory && state.system_info.memory !== "gpu" && (
@@ -170,7 +179,7 @@ export function ModelManageView() {
                     className={`h-11 ${FIELD_CLASS}`}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select
                         value={model_version}
                         onChange={(e) => set_model_version(e.target.value)}
@@ -180,19 +189,6 @@ export function ModelManageView() {
                         {MODEL_VERSIONS.map((v) => (
                             <option key={v.value || "auto"} value={v.value}>
                                 {v.label}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select
-                        value={backbone}
-                        onChange={(e) => set_backbone(e.target.value)}
-                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="Checkpoint precision"
-                    >
-                        {BACKBONE_MODES.map((m) => (
-                            <option key={m.value} value={m.value}>
-                                {m.label}
                             </option>
                         ))}
                     </select>
@@ -209,18 +205,35 @@ export function ModelManageView() {
                             </option>
                         ))}
                     </select>
+
+                    <select
+                        value={backbone}
+                        onChange={(e) => set_backbone(e.target.value)}
+                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
+                        aria-label="Backbone precision"
+                    >
+                        {BACKBONE_MODES.map((m) => (
+                            <option key={m.value} value={m.value}>
+                                {m.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={text_encoder}
+                        onChange={(e) => set_text_encoder(e.target.value)}
+                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
+                        aria-label="Text encoder precision"
+                    >
+                        {TEXT_ENCODER_MODES.map((m) => (
+                            <option key={m.value} value={m.value}>
+                                {m.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 cursor-pointer select-none">
-                        <input
-                            type="checkbox"
-                            checked={skip_text_encoder}
-                            onChange={(e) => set_skip_text_encoder(e.target.checked)}
-                            className="accent-black dark:accent-white cursor-pointer"
-                        />
-                        Skip the large text encoder
-                    </label>
                     <label className="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 cursor-pointer select-none">
                         <input
                             type="checkbox"
@@ -238,7 +251,7 @@ export function ModelManageView() {
                         model_url.trim() &&
                         model_controller.load_model(model_url, model_version, {
                             backbone,
-                            text_encoder: text_encoder_for_precision(backbone, skip_text_encoder),
+                            text_encoder,
                             memory,
                             delete_file_after_load
                         })
