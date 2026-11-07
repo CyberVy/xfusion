@@ -23,7 +23,8 @@ def load_moss_pipeline(
     """Load MOSS-Image from a Diffusers repository at its published precision."""
     quant_mode = (backbone or "fp16").lower()
     te_mode = (text_encoder or "default").lower()
-    if quant_mode in _QUANTIZED_BACKBONES or te_mode != "default":
+    is_prequantized = any(tag in model.lower() for tag in ("4bit", "int4", "nf4", "quant"))
+    if not is_prequantized and (quant_mode in _QUANTIZED_BACKBONES or te_mode != "default"):
         raise ValueError("MOSS-Image only loads at its published precision.")
     if not model:
         raise ValueError("MOSS-Image requires a model repository.")
@@ -36,10 +37,14 @@ def load_moss_pipeline(
             os.remove(resolved)
         raise ValueError("MOSS-Image loads from a Diffusers repository, not a single checkpoint file.")
 
+    has_cuda = torch.cuda.is_available()
+    supports_bf16 = has_cuda and hasattr(torch.cuda, "is_bf16_supported") and torch.cuda.is_bf16_supported()
+    default_dtype = torch.bfloat16 if supports_bf16 else torch.float16
+
     call_kwargs: Dict[str, LoaderKwargValue] = {
         "custom_pipeline": "pipeline_moss_image",
         "trust_remote_code": True,
-        "torch_dtype": {"default": torch.bfloat16, "vae": torch.float32},
+        "torch_dtype": {"default": default_dtype, "vae": torch.float32},
         "token": config.HF_HUB_TOKEN,
         "cache_dir": dl_kwargs.get("directory") or config.DOWNLOAD_PATH,
     }

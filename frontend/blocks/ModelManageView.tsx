@@ -175,7 +175,7 @@ export function ModelManageView() {
                 <StringInput
                     value={model_url}
                     on_change={set_model_url}
-                    placeholder={model_version === "moss" ? "OpenMOSS-Team/MOSS-Image-SFT" : "e.g. eramth/realism-sdxl"}
+                    placeholder={model_version === "moss" ? "eramth/MOSS-Image-SFT-4bit" : "e.g. eramth/realism-sdxl"}
                     className={`h-11 ${FIELD_CLASS}`}
                 />
 
