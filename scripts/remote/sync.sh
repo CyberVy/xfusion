@@ -9,28 +9,27 @@ check_rexec
 resolve_remote_dir
 
 log_info "Synchronizing code to remote: $REMOTE_DIR ..."
-rexec "mkdir -p $REMOTE_DIR/server/models"
+rexec "mkdir -p $REMOTE_DIR"
 
-# 1. Sync server code (fast and incremental, ~300 KB)
-log_info "Pushing server/ modules..."
-rexec push -r "$PROJECT_ROOT/server/api" "$REMOTE_DIR/server/api" || true
-rexec push -r "$PROJECT_ROOT/server/engine" "$REMOTE_DIR/server/engine" || true
-rexec push -r "$PROJECT_ROOT/server/infra" "$REMOTE_DIR/server/infra" || true
+# 1. Package and push codebase in a single tarball (~300 KB)
+LOCAL_TAR="/tmp/xfusion_sync_$$.tar.gz"
+REMOTE_TAR="/tmp/xfusion_sync_$$.tar.gz"
+trap 'rm -f "$LOCAL_TAR"' EXIT INT TERM
 
-# Push top-level server Python files
-for pyfile in "$PROJECT_ROOT"/server/*.py; do
-    if [ -f "$pyfile" ]; then
-        rexec push "$pyfile" "$REMOTE_DIR/server/$(basename "$pyfile")" || true
-    fi
-done
+log_info "Archiving codebase (excluding caches and static assets)..."
+COPYFILE_DISABLE=1 tar --no-xattrs --no-mac-metadata -czf "$LOCAL_TAR" \
+    -C "$PROJECT_ROOT" \
+    --exclude='__pycache__' \
+    --exclude='*.pyc' \
+    --exclude='*.pyo' \
+    --exclude='.DS_Store' \
+    --exclude='._*' \
+    --exclude='server/models/configs' \
+    server scripts/remote pyproject.toml README.md $([ -f "$PROJECT_ROOT/uv.lock" ] && echo "uv.lock")
 
-# Push models Python logic
-for pyfile in "$PROJECT_ROOT"/server/models/*.py; do
-    if [ -f "$pyfile" ]; then
-        rexec push "$pyfile" "$REMOTE_DIR/server/models/$(basename "$pyfile")" || true
-    fi
-done
-rexec push -r "$PROJECT_ROOT/server/models/loaders" "$REMOTE_DIR/server/models/loaders" || true
+log_info "Transferring codebase archive..."
+rexec push "$LOCAL_TAR" "$REMOTE_TAR"
+rexec "tar --warning=no-unknown-keyword -xzf '$REMOTE_TAR' -C '$REMOTE_DIR' 2>/dev/null || tar -xzf '$REMOTE_TAR' -C '$REMOTE_DIR' && rm -f '$REMOTE_TAR'"
 
 # 2. Push static tokenizer configs (17MB) only if missing on remote
 if ! rexec "test -d $REMOTE_DIR/server/models/configs" >/dev/null 2>&1; then
@@ -45,18 +44,5 @@ fi
 
 # Clean up obsolete remote directories if present
 rexec "rm -rf $REMOTE_DIR/server/components $REMOTE_DIR/server/enhancement $REMOTE_DIR/server/message" >/dev/null 2>&1 || true
-
-# 3. Push remote scripts
-log_info "Pushing scripts/remote/ ..."
-rexec push -r "$PROJECT_ROOT/scripts/remote" "$REMOTE_DIR/scripts/remote" || true
-
-# 4. Push root configurations (README.md is required by pyproject.toml hatchling build)
-log_info "Pushing entry files and configurations..."
-rexec push "$PROJECT_ROOT/pyproject.toml" "$REMOTE_DIR/pyproject.toml"
-rexec push "$PROJECT_ROOT/README.md" "$REMOTE_DIR/README.md"
-
-if [ -f "$PROJECT_ROOT/uv.lock" ]; then
-    rexec push "$PROJECT_ROOT/uv.lock" "$REMOTE_DIR/uv.lock"
-fi
 
 log_success "Sync completed successfully."
