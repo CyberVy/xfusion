@@ -1,11 +1,33 @@
 "use client"
 
-import { NaiveButton } from "@/components"
+import { NaiveButton, ContextMenu } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
-import { DownloadIcon, RefreshIcon, WandIcon } from "./icons"
+import { DownloadIcon, RefreshIcon, WandIcon, CopyIcon, TrashIcon, ImageIcon } from "./icons"
+import type { GeneratedImageItem } from "@/core/api/types"
 
 const RECENT_RESULT_COUNT = 24
+
+async function copy_image_to_clipboard(base64: string) {
+    try {
+        const res = await fetch(base64)
+        const blob = await res.blob()
+        await navigator.clipboard?.write?.([
+            new ClipboardItem({
+                [blob.type || "image/png"]: blob
+            })
+        ])
+    } catch {
+        // Ignore clipboard write failures
+    }
+}
+
+function download_image_file(item: GeneratedImageItem) {
+    const link = document.createElement("a")
+    link.href = item.image_base64
+    link.download = `xfusion_${item.type}_${item.seed}.png`
+    link.click()
+}
 
 export function ResultPanel() {
     const state = useController(generation_controller, { events: ["change"] })
@@ -13,16 +35,62 @@ export function ResultPanel() {
     const recent_items = state.history.slice(0, RECENT_RESULT_COUNT)
 
     return (
-        <div className="flex flex-col gap-3">
-            <div className="relative flex items-center justify-center min-h-[40vh] md:min-h-[60vh] rounded-3xl bg-black/4 dark:bg-white/5 overflow-hidden">
+        <div className="flex flex-col gap-3.5">
+            <div className="relative flex items-center justify-center min-h-[40vh] md:min-h-[60vh] rounded-3xl bg-black/4 dark:bg-white/5 p-3 sm:p-4 overflow-hidden">
                 {selected ? (
-                    <img
-                        src={selected.image_base64}
-                        alt={selected.prompt}
-                        className={`max-w-full max-h-[70vh] object-contain select-none transition-opacity ${
-                            state.is_generating ? "opacity-30" : ""
-                        }`}
-                    />
+                    <ContextMenu
+                        className="w-full h-full flex items-center justify-center"
+                        sections={[
+                            {
+                                items: [
+                                    {
+                                        key: "reuse",
+                                        label: "Reuse parameters",
+                                        icon: <WandIcon width={16} height={16} />,
+                                        on_click: () => generation_controller.reuse_settings(selected)
+                                    },
+                                    {
+                                        key: "copy_prompt",
+                                        label: "Copy prompt",
+                                        icon: <CopyIcon width={16} height={16} />,
+                                        disabled: !selected.prompt,
+                                        on_click: () => {
+                                            if (selected.prompt) {
+                                                navigator.clipboard?.writeText(selected.prompt)
+                                            }
+                                        }
+                                    },
+                                    {
+                                        key: "copy_image",
+                                        label: "Copy image",
+                                        icon: <ImageIcon width={16} height={16} />,
+                                        on_click: () => copy_image_to_clipboard(selected.image_base64)
+                                    },
+                                    {
+                                        key: "download",
+                                        label: "Download",
+                                        icon: <DownloadIcon width={16} height={16} />,
+                                        on_click: () => download_image_file(selected)
+                                    },
+                                    {
+                                        key: "delete",
+                                        label: "Delete from history",
+                                        icon: <TrashIcon width={16} height={16} />,
+                                        tone: "destructive",
+                                        on_click: () => generation_controller.delete_image(selected.id)
+                                    }
+                                ]
+                            }
+                        ]}
+                    >
+                        <img
+                            src={selected.image_base64}
+                            alt={selected.prompt}
+                            className={`max-w-full max-h-[65vh] object-contain rounded-2xl select-none transition-opacity ${
+                                state.is_generating ? "opacity-30" : ""
+                            }`}
+                        />
+                    </ContextMenu>
                 ) : (
                     !state.is_generating && (
                         <div className="flex flex-col items-center gap-2 text-black/35 dark:text-white/35">
@@ -52,15 +120,15 @@ export function ResultPanel() {
             </div>
 
             {selected && (
-                <div className="flex items-start justify-between gap-4 px-1">
+                <div className="flex items-start justify-between gap-4 px-2 py-0.5">
                     <div className="min-w-0 flex flex-col gap-1">
-                        <p className="text-sm line-clamp-2">{selected.prompt || "(no prompt)"}</p>
+                        <p className="text-sm line-clamp-2 leading-relaxed">{selected.prompt || "(no prompt)"}</p>
                         <p className="text-xs font-mono text-black/50 dark:text-white/50">
                             {selected.type} · {selected.width}×{selected.height} · seed {selected.seed}
                             {selected.elapsed_seconds !== undefined && ` · ${selected.elapsed_seconds}s`}
                         </p>
                     </div>
-                    <div className="flex shrink-0 gap-2">
+                    <div className="flex shrink-0 gap-2 items-center pt-0.5">
                         <NaiveButton
                             className="h-9 px-3.5 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
                             on_click={() => generation_controller.reuse_settings(selected)}
@@ -81,12 +149,53 @@ export function ResultPanel() {
             )}
 
             {recent_items.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 px-1">
+                <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-2 px-1.5">
                     {recent_items.map((item) => (
-                        <button
+                        <ContextMenu
                             key={item.id}
-                            type="button"
-                            onClick={() => generation_controller.select_image(item)}
+                            sections={[
+                                {
+                                    items: [
+                                        {
+                                            key: "select",
+                                            label: "Select image",
+                                            icon: <ImageIcon width={16} height={16} />,
+                                            on_click: () => generation_controller.select_image(item)
+                                        },
+                                        {
+                                            key: "reuse",
+                                            label: "Reuse parameters",
+                                            icon: <WandIcon width={16} height={16} />,
+                                            on_click: () => generation_controller.reuse_settings(item)
+                                        },
+                                        {
+                                            key: "copy_prompt",
+                                            label: "Copy prompt",
+                                            icon: <CopyIcon width={16} height={16} />,
+                                            disabled: !item.prompt,
+                                            on_click: () => {
+                                                if (item.prompt) {
+                                                    navigator.clipboard?.writeText(item.prompt)
+                                                }
+                                            }
+                                        },
+                                        {
+                                            key: "download",
+                                            label: "Download",
+                                            icon: <DownloadIcon width={16} height={16} />,
+                                            on_click: () => download_image_file(item)
+                                        },
+                                        {
+                                            key: "delete",
+                                            label: "Delete",
+                                            icon: <TrashIcon width={16} height={16} />,
+                                            tone: "destructive",
+                                            on_click: () => generation_controller.delete_image(item.id)
+                                        }
+                                    ]
+                                }
+                            ]}
+                            on_click_trigger={() => generation_controller.select_image(item)}
                             className={`shrink-0 size-16 rounded-xl overflow-hidden cursor-pointer transition ${
                                 item.id === selected?.id
                                     ? "ring-2 ring-black dark:ring-white"
@@ -99,7 +208,7 @@ export function ResultPanel() {
                                 className="w-full h-full object-cover"
                                 loading="lazy"
                             />
-                        </button>
+                        </ContextMenu>
                     ))}
                 </div>
             )}

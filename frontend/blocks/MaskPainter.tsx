@@ -91,8 +91,8 @@ export function MaskPainter({ image_src, on_mask_change }: MaskPainterProps) {
                 )}
             </div>
 
-            <div className="flex items-center gap-3 w-full text-xs text-black/60 dark:text-white/60">
-                <span className="shrink-0">Brush</span>
+            <div className="flex items-center gap-3 w-full text-xs text-black/60 dark:text-white/60 px-3 py-2 rounded-xl bg-black/4 dark:bg-white/6">
+                <span className="shrink-0 font-medium">Brush</span>
                 <input
                     type="range"
                     min={8}
@@ -103,7 +103,7 @@ export function MaskPainter({ image_src, on_mask_change }: MaskPainterProps) {
                 />
                 <span className="w-8 font-mono text-right">{brush_size}</span>
                 <NaiveButton
-                    className="h-7 px-3 rounded-full font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
+                    className="h-7 px-3 rounded-lg font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 text-black/75 dark:text-white/75"
                     on_click={clear_mask}
                 >
                     Clear mask

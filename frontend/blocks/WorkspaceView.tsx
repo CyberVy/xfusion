@@ -71,7 +71,7 @@ function DimensionInput({
 function Section({ title, children }: { title: string; children: ReactNode }) {
     return (
         <section className="flex flex-col gap-2.5">
-            <h3 className="text-xs font-medium text-black/50 dark:text-white/50">{title}</h3>
+            <h3 className="text-xs font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">{title}</h3>
             {children}
         </section>
     )
@@ -88,7 +88,7 @@ type ParamSliderProps = {
 
 function ParamSlider({ label, value, min, max, step, on_change }: ParamSliderProps) {
     return (
-        <label className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1.5 px-0.5">
             <span className="flex justify-between text-sm">
                 <span>{label}</span>
                 <span className="font-mono text-black/60 dark:text-white/60">{value}</span>
@@ -191,7 +191,7 @@ export function WorkspaceView() {
 
                 <div className="min-w-0 flex flex-col gap-6">
                     <div
-                        className={`grid p-1 rounded-full bg-black/5 dark:bg-white/8 ${
+                        className={`grid p-1.5 rounded-full bg-black/5 dark:bg-white/8 gap-1 ${
                             visible_modes.length <= 1
                                 ? "grid-cols-1"
                                 : visible_modes.length === 2
@@ -320,11 +320,13 @@ export function WorkspaceView() {
                                         </NaiveButton>
                                         {preview_error && <p className="text-xs wrap-break-word">{preview_error}</p>}
                                         {control_preview && (
-                                            <img
-                                                src={control_preview}
-                                                alt="Canny preview"
-                                                className="max-w-full max-h-[30vh] rounded-xl object-contain bg-black/5 dark:bg-white/6"
-                                            />
+                                            <div className="flex justify-center p-3 rounded-2xl bg-black/4 dark:bg-white/6">
+                                                <img
+                                                    src={control_preview}
+                                                    alt="Canny preview"
+                                                    className="max-w-full max-h-[30vh] rounded-xl object-contain"
+                                                />
+                                            </div>
                                         )}
                                     </>
                                 )}
@@ -434,7 +436,7 @@ export function WorkspaceView() {
                     )}
 
                     <Section title="Size">
-                        <div className="grid grid-cols-6 gap-1.5">
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                             {SIZE_PRESETS.map((item) => {
                                 const active = state.width === item.width && state.height === item.height
                                 return (
@@ -448,10 +450,10 @@ export function WorkspaceView() {
                                             })
                                         }
                                         title={`${item.width} × ${item.height}`}
-                                        className={`h-9 rounded-lg text-xs font-medium cursor-pointer transition ${
+                                        className={`h-9 rounded-xl text-xs font-mono font-medium cursor-pointer transition ${
                                             active
-                                                ? "bg-black text-white dark:bg-white dark:text-black"
-                                                : "bg-black/4 dark:bg-white/6 hover:bg-black/8 dark:hover:bg-white/12"
+                                                ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                                                : "bg-black/5 dark:bg-white/8 hover:bg-black/8 dark:hover:bg-white/12 text-black/70 dark:text-white/70"
                                         }`}
                                     >
                                         {item.label}

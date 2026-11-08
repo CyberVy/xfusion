@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { NaiveButton, StringInput } from "@/components"
-import { CubeIcon, RefreshIcon, TrashIcon } from "./icons"
+import { NaiveButton, StringInput, ContextMenu } from "@/components"
+import { CubeIcon, RefreshIcon, TrashIcon, CopyIcon, WandIcon } from "./icons"
 import { model_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 
@@ -71,29 +71,70 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
     }
 
     return (
-        <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-black/4 dark:bg-white/6">
-            <CubeIcon width={16} height={16} className="shrink-0 text-black/40 dark:text-white/40" />
-            <span className="text-sm font-medium truncate min-w-0 flex-1">{name}</span>
-            <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={strength}
-                onChange={(e) => set_strength(Number(e.target.value))}
-                onPointerUp={() => model_controller.set_lora_strength(name, strength)}
-                className="w-24 accent-black dark:accent-white cursor-pointer"
-                aria-label={`${name} strength`}
-            />
-            <span className="w-8 text-right font-mono text-xs">{strength}</span>
-            <NaiveButton
-                className="size-8 rounded-full text-black/45 dark:text-white/45 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8"
-                on_click={() => model_controller.delete_lora(name)}
-                title="Remove adapter"
-            >
-                <TrashIcon width={15} height={15} />
-            </NaiveButton>
-        </div>
+        <ContextMenu
+            className="w-full"
+            sections={[
+                {
+                    items: [
+                        {
+                            key: "set_full",
+                            label: "Set weight to 1.0",
+                            icon: <RefreshIcon width={16} height={16} />,
+                            on_click: () => {
+                                model_controller.set_lora_strength(name, 1.0)
+                                set_strength(1.0)
+                            }
+                        },
+                        {
+                            key: "set_half",
+                            label: "Set weight to 0.5",
+                            icon: <RefreshIcon width={16} height={16} />,
+                            on_click: () => {
+                                model_controller.set_lora_strength(name, 0.5)
+                                set_strength(0.5)
+                            }
+                        },
+                        {
+                            key: "copy_name",
+                            label: "Copy adapter name",
+                            icon: <CopyIcon width={16} height={16} />,
+                            on_click: () => navigator.clipboard?.writeText(name)
+                        },
+                        {
+                            key: "delete",
+                            label: "Remove adapter",
+                            icon: <TrashIcon width={16} height={16} />,
+                            tone: "destructive",
+                            on_click: () => model_controller.delete_lora(name)
+                        }
+                    ]
+                }
+            ]}
+        >
+            <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-black/4 dark:bg-white/6">
+                <CubeIcon width={16} height={16} className="shrink-0 text-black/40 dark:text-white/40" />
+                <span className="text-sm font-medium truncate min-w-0 flex-1">{name}</span>
+                <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={strength}
+                    onChange={(e) => set_strength(Number(e.target.value))}
+                    onPointerUp={() => model_controller.set_lora_strength(name, strength)}
+                    className="w-24 accent-black dark:accent-white cursor-pointer shrink-0"
+                    aria-label={`${name} strength`}
+                />
+                <span className="w-8 text-right font-mono text-xs shrink-0">{strength}</span>
+                <NaiveButton
+                    className="size-8 rounded-full text-black/45 dark:text-white/45 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8 shrink-0"
+                    on_click={() => model_controller.delete_lora(name)}
+                    title="Remove adapter"
+                >
+                    <TrashIcon width={15} height={15} />
+                </NaiveButton>
+            </div>
+        </ContextMenu>
     )
 }
 
@@ -150,39 +191,66 @@ export function ModelManageView() {
                 title="Base model"
                 description="Hugging Face repo, local path, or download URL. Version can stay on Auto. Dtype, backbone, and text encoder precisions can be configured independently, including 4-bit NF4, FP8, and GGUF. MOSS-Image uses OpenMOSS-Team/MOSS-Image-SFT."
             >
-                <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/4 dark:bg-white/6">
-                    <div className="min-w-0">
-                        <p className="text-xs text-black/50 dark:text-white/50">Currently loaded</p>
-                        <p className="text-sm font-mono truncate">{state.system_info?.current_model || "None"}</p>
+                <ContextMenu
+                    className="w-full"
+                    sections={
+                        state.system_info?.current_model
+                            ? [
+                                  {
+                                      items: [
+                                          {
+                                              key: "copy_model_name",
+                                              label: "Copy model repo/path",
+                                              icon: <CopyIcon width={16} height={16} />,
+                                              on_click: () =>
+                                                  navigator.clipboard?.writeText(state.system_info?.current_model || "")
+                                          },
+                                          {
+                                              key: "paste_to_input",
+                                              label: "Fill into model input",
+                                              icon: <WandIcon width={16} height={16} />,
+                                              on_click: () => set_model_url(state.system_info?.current_model || "")
+                                          }
+                                      ]
+                                  }
+                              ]
+                            : []
+                    }
+                >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-black/4 dark:bg-white/6">
+                        <div className="min-w-0 flex-1">
+                            <p className="text-xs text-black/50 dark:text-white/50">Currently loaded</p>
+                            <p className="text-sm font-mono truncate">{state.system_info?.current_model || "None"}</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                            {state.system_info?.dtype && state.system_info.dtype !== "auto" && (
+                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                    {state.system_info.dtype}
+                                </span>
+                            )}
+                            {state.system_info?.backbone && state.system_info.backbone !== "fp16" && (
+                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                    {state.system_info.text_encoder && state.system_info.text_encoder !== "default"
+                                        ? `B:${state.system_info.backbone}`
+                                        : state.system_info.backbone}
+                                </span>
+                            )}
+                            {state.system_info?.text_encoder && state.system_info.text_encoder !== "default" && (
+                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                    {`TE:${state.system_info.text_encoder}`}
+                                </span>
+                            )}
+                            {state.system_info?.memory && state.system_info.memory !== "gpu" && (
+                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                    {state.system_info.memory}
+                                </span>
+                            )}
+                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                {state.system_info?.model_version || "N/A"}
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        {state.system_info?.dtype && state.system_info.dtype !== "auto" && (
-                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                                {state.system_info.dtype}
-                            </span>
-                        )}
-                        {state.system_info?.backbone && state.system_info.backbone !== "fp16" && (
-                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                                {state.system_info.text_encoder && state.system_info.text_encoder !== "default"
-                                    ? `B:${state.system_info.backbone}`
-                                    : state.system_info.backbone}
-                            </span>
-                        )}
-                        {state.system_info?.text_encoder && state.system_info.text_encoder !== "default" && (
-                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                                {`TE:${state.system_info.text_encoder}`}
-                            </span>
-                        )}
-                        {state.system_info?.memory && state.system_info.memory !== "gpu" && (
-                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                                {state.system_info.memory}
-                            </span>
-                        )}
-                        <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
-                            {state.system_info?.model_version || "N/A"}
-                        </span>
-                    </div>
-                </div>
+                </ContextMenu>
 
                 <StringInput
                     value={model_url}

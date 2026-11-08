@@ -78,7 +78,7 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                     <FullscreenModalContainer
                         enable_escape={is_open}
                         on_escape={handle_close}
-                        className="bg-white/95 dark:bg-[#111111]/95 backdrop-blur-2xl text-foreground pt-[max(env(safe-area-inset-top),16px)] pb-[max(env(safe-area-inset-bottom),20px)] px-5 overflow-y-auto"
+                        className="bg-white/95 dark:bg-[#111111]/95 backdrop-blur-2xl text-foreground pt-[max(env(safe-area-inset-top),24px)] pb-[max(env(safe-area-inset-bottom),32px)] px-5 sm:px-6 overflow-y-auto"
                     >
                         <div className="max-w-xl mx-auto w-full">
                             <div className="flex items-center justify-between pb-4 border-b border-black/10 dark:border-white/10">
@@ -97,8 +97,8 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                             </div>
 
                             {/* API Endpoint Configuration */}
-                            <div className="my-5 p-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10">
-                                <div className="flex items-center justify-between mb-2">
+                            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
+                                <div className="flex items-center justify-between mb-2.5">
                                     <label className="text-sm font-medium">Inference API Endpoint</label>
                                     <span
                                         className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium border ${
@@ -124,7 +124,7 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                     </span>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex gap-2.5">
                                     <StringInput
                                         value={api_url}
                                         on_change={handle_api_change}
@@ -132,7 +132,7 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                         className="flex-1 py-2 px-3 bg-white dark:bg-[#1a1a1a] border border-black/10 dark:border-white/10 rounded-xl focus-within:ring-1 focus-within:ring-black/30 dark:focus-within:ring-white/30"
                                     />
                                     <NaiveButton
-                                        className="px-3.5 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-medium text-xs hover:opacity-90"
+                                        className="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-medium text-xs hover:opacity-90 transition"
                                         on_click={verify_connection}
                                         disabled={is_checking}
                                     >
@@ -144,50 +144,50 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                                         Test
                                     </NaiveButton>
                                 </div>
-                                <p className="text-[11px] text-black/40 dark:text-white/40 mt-2">
+                                <p className="text-[11px] text-black/40 dark:text-white/40 mt-2.5">
                                     Provide the HTTP/HTTPS address where your Python xfusion backend is running (e.g.
                                     local GPU or cloud server).
                                 </p>
                             </div>
 
                             {/* GPU & Model Info */}
-                            <div className="my-5 p-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10">
+                            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
                                 <h3 className="text-xs font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider mb-3">
                                     Hardware & Model State
                                 </h3>
-                                <div className="space-y-2 text-xs">
-                                    <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+                                <div className="space-y-1.5 text-xs">
+                                    <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
                                         <span className="text-black/60 dark:text-white/60">GPU Count</span>
                                         <span className="font-mono">{system_info?.gpu_count ?? 0}</span>
                                     </div>
-                                    <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+                                    <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
                                         <span className="text-black/60 dark:text-white/60">Active Model</span>
                                         <span className="font-mono text-right max-w-xs truncate">
                                             {system_info?.current_model || "None Loaded"}
                                         </span>
                                     </div>
                                     {system_info?.python_version && (
-                                        <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+                                        <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
                                             <span className="text-black/60 dark:text-white/60">Python</span>
                                             <span className="font-mono">{system_info.python_version}</span>
                                         </div>
                                     )}
                                     {system_info?.os_platform && (
-                                        <div className="flex justify-between gap-4 py-1 border-b border-black/5 dark:border-white/5">
+                                        <div className="flex justify-between gap-4 py-1.5 border-b border-black/5 dark:border-white/5">
                                             <span className="shrink-0 text-black/60 dark:text-white/60">OS</span>
                                             <span className="font-mono text-right truncate">
                                                 {system_info.os_platform}
                                             </span>
                                         </div>
                                     )}
-                                    <div className="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+                                    <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
                                         <span className="text-black/60 dark:text-white/60">Architecture Version</span>
                                         <span className="font-mono uppercase">
                                             {system_info?.model_version || "N/A"}
                                         </span>
                                     </div>
                                     {system_info?.gpu_names && system_info.gpu_names.length > 0 && (
-                                        <div className="flex flex-col py-1">
+                                        <div className="flex flex-col py-1.5">
                                             <span className="text-black/60 dark:text-white/60 mb-1">Devices:</span>
                                             {system_info.gpu_names.map((name, i) => (
                                                 <span
@@ -203,7 +203,7 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
                             </div>
 
                             {/* Local Storage & History */}
-                            <div className="my-5 p-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10">
+                            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
                                 <h3 className="text-xs font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider mb-3">
                                     Client Storage
                                 </h3>
