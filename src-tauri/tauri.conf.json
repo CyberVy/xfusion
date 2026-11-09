@@ -15,7 +15,7 @@
       {
         "create": false,
         "visible": false,
-        "url": "/native_entry",
+        "url": "/",
         "title": "xfusion",
         "width": 800,
         "height": 600,
