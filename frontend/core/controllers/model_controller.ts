@@ -47,7 +47,6 @@ export class ModelController extends BaseController<ModelState> {
 
     private commit(partial: Partial<ModelState>): void {
         this.update_state(partial)
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public async refresh_system_info(): Promise<void> {

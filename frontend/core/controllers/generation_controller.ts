@@ -89,19 +89,16 @@ export class GenerationController extends BaseController<GenerationState> {
             selected_image: items[0] || null
         })
         this.dispatchEvent(new CustomEvent("history_change"))
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public set_params(partial: Partial<GenerationParams>): void {
         this.update_state(partial)
         this.dispatchEvent(new CustomEvent("params_change"))
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public clear_error(): void {
         if (this.state.error === null) return
         this.update_state({ error: null })
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public cancel_generation(): void {
@@ -114,7 +111,6 @@ export class GenerationController extends BaseController<GenerationState> {
         ApiClient.cancel_generation(api_url).catch(() => undefined)
         this.update_state({ is_generating: false, progress: null, error: null })
         this.dispatchEvent(new CustomEvent("status_change"))
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public reuse_settings(item: GeneratedImageItem): void {
@@ -129,7 +125,6 @@ export class GenerationController extends BaseController<GenerationState> {
     public select_image(item: GeneratedImageItem | null): void {
         this.update_state({ selected_image: item })
         this.dispatchEvent(new CustomEvent("selection_change"))
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public async delete_image(id: string): Promise<void> {
@@ -138,20 +133,17 @@ export class GenerationController extends BaseController<GenerationState> {
         const selected = this.state.selected_image?.id === id ? updated[0] || null : this.state.selected_image
         this.update_state({ history: updated, selected_image: selected })
         this.dispatchEvent(new CustomEvent("history_change"))
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public async clear_history(): Promise<void> {
         await this.history_store.clear()
         this.update_state({ history: [], selected_image: null })
         this.dispatchEvent(new CustomEvent("history_change"))
-        this.dispatchEvent(new CustomEvent("change"))
     }
 
     public generate_txt2img(extras?: GenerationExtrasInput): Promise<void> {
         if (!this.state.prompt.trim()) {
             this.update_state({ error: "Please enter a prompt" })
-            this.dispatchEvent(new CustomEvent("change"))
             return Promise.resolve()
         }
         return this.run_generation("txt2img", (api_url, common, signal) =>
@@ -245,7 +237,6 @@ export class GenerationController extends BaseController<GenerationState> {
             progress: { active: true, step: 0, total_steps: steps, image_index: 0, image_count }
         })
         this.dispatchEvent(new CustomEvent("status_change"))
-        this.dispatchEvent(new CustomEvent("change"))
 
         let is_polling = false
         let poll_timer: number | null = null
@@ -264,7 +255,6 @@ export class GenerationController extends BaseController<GenerationState> {
                     if (this.state.is_generating && !abort_controller.signal.aborted) {
                         this.update_state({ progress })
                         this.dispatchEvent(new CustomEvent("status_change"))
-                        this.dispatchEvent(new CustomEvent("change"))
                     }
                 } catch {
                     // Ignore non-fatal progress poll failures
@@ -305,11 +295,9 @@ export class GenerationController extends BaseController<GenerationState> {
                         selected_image: item
                     })
                     this.dispatchEvent(new CustomEvent("history_change"))
-                    this.dispatchEvent(new CustomEvent("change"))
                 } else if (event.type === "progress") {
                     this.update_state({ progress: event.data })
                     this.dispatchEvent(new CustomEvent("status_change"))
-                    this.dispatchEvent(new CustomEvent("change"))
                 }
             }
 
@@ -332,7 +320,6 @@ export class GenerationController extends BaseController<GenerationState> {
             }
         }
         this.dispatchEvent(new CustomEvent("status_change"))
-        this.dispatchEvent(new CustomEvent("change"))
     }
 }
 
