@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import { NaiveButton, BodyPortal, AnimationContainer, FullscreenModalContainer, StringInput } from "@/components"
 import { SettingIcon, CloseIcon } from "@/components/icons"
 import { RefreshIcon, TrashIcon } from "./icons"
@@ -28,13 +28,6 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
     const [connection_status, set_connection_status] = useState<"connected" | "disconnected" | "checking">("checking")
     const [is_confirming_clear, set_is_confirming_clear] = useState(false)
 
-    const handle_open = useCallback(() => set_is_open(true), [])
-    const handle_close = useCallback(() => {
-        set_is_open(false)
-        set_is_confirming_clear(false)
-    }, [])
-    const handle_toggle = useCallback(() => set_is_open((prev) => !prev), [])
-
     const verify_connection = useCallback(async () => {
         set_is_checking(true)
         set_connection_status("checking")
@@ -43,11 +36,25 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
         set_is_checking(false)
     }, [])
 
-    useEffect(() => {
-        if (is_open) {
-            verify_connection()
-        }
-    }, [is_open, verify_connection])
+    const handle_open = useCallback(() => {
+        set_is_open(true)
+        verify_connection()
+    }, [verify_connection])
+
+    const handle_close = useCallback(() => {
+        set_is_open(false)
+        set_is_confirming_clear(false)
+    }, [])
+
+    const handle_toggle = useCallback(() => {
+        set_is_open((prev) => {
+            const next = !prev
+            if (next) {
+                verify_connection()
+            }
+            return next
+        })
+    }, [verify_connection])
 
     const handle_api_change = (new_url: string) => {
         settings_controller.set("api_url", new_url)
