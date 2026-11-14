@@ -36,25 +36,19 @@ export function GlobalSettingButton({ className = "" }: GlobalSettingButtonProps
         set_is_checking(false)
     }, [])
 
-    const handle_open = useCallback(() => {
-        set_is_open(true)
-        verify_connection()
-    }, [verify_connection])
-
     const handle_close = useCallback(() => {
         set_is_open(false)
         set_is_confirming_clear(false)
     }, [])
 
     const handle_toggle = useCallback(() => {
-        set_is_open((prev) => {
-            const next = !prev
-            if (next) {
-                verify_connection()
-            }
-            return next
-        })
-    }, [verify_connection])
+        if (is_open) {
+            handle_close()
+            return
+        }
+        set_is_open(true)
+        verify_connection()
+    }, [handle_close, is_open, verify_connection])
 
     const handle_api_change = (new_url: string) => {
         settings_controller.set("api_url", new_url)
