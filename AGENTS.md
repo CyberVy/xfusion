@@ -1,26 +1,27 @@
 ## Project Structure
 
-- `frontend/app/`: Application UI entry points and shells.
-    - `index.html`: SPA HTML shell entry.
-    - `main.tsx`: SPA entry mount point.
-    - `App.tsx`: main application root component.
-    - `globals.css`: global styles, font imports, and Tailwind setup.
-- `frontend/blocks/`: business-facing React UI blocks composed from base components.
-    - Put app-specific composite UI here and bind it directly to domain controllers.
-- `frontend/components/`: base reusable UI components and UI infrastructure.
-    - Put framework-level or reusable domain-agnostic primitives here.
-    - Commonly categorized into `base/` (atomic UI), `composite/` (generic composite components), and `animation/` (transitions/animations).
-- `frontend/core/`: domain logic, algorithms, data generators, and application state coordination.
-    - `controllers/`: centralized reactive state and data controllers.
-- `frontend/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
-    - `*.client.ts`: browser/webview-only client integrations.
-    - `web_ipc.client.ts`: frontend-side Tauri IPC adapter.
-- `frontend/inject/`: client-side scripts injected directly into external WebViews.
-    - Organized into `infra/` (environment/IPC polyfills) and `core/` (business/product logic injections), each using `index.ts` as the entry point.
-- `frontend/sw/`: service worker source (packaged to `dist/sw.js` in build, served in-memory by Vite in dev).
-    - `core/`: core service worker logic (e.g., image/video cache, playlist handlers).
-    - `infra/`: service worker infrastructure/adapters (e.g., static resource cache).
-    - `main.worker.ts`: entry worker script.
+- `frontend/`: Browser/WebView frontend workspace (isolated via `frontend/tsconfig.json`).
+    - `frontend/app/`: Application UI entry points and shells.
+        - `index.html`: SPA HTML shell entry.
+        - `main.tsx`: SPA entry mount point.
+        - `App.tsx`: main application root component.
+        - `globals.css`: global styles, font imports, and Tailwind setup.
+    - `frontend/blocks/`: business-facing React UI blocks composed from base components.
+        - Put app-specific composite UI here and bind it directly to domain controllers.
+    - `frontend/components/`: base reusable UI components and UI infrastructure.
+        - Put framework-level or reusable domain-agnostic primitives here.
+        - Commonly categorized into `base/` (atomic UI), `composite/` (generic composite components), and `animation/` (transitions/animations).
+    - `frontend/core/`: domain logic, algorithms, data generators, and application state coordination.
+        - `controllers/`: centralized reactive state and data controllers.
+    - `frontend/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
+        - `*.client.ts`: browser/webview-only client integrations.
+        - `web_ipc.client.ts`: frontend-side Tauri IPC adapter.
+    - `frontend/inject/`: client-side scripts injected directly into external WebViews.
+        - Organized into `infra/` (environment/IPC polyfills) and `core/` (business/product logic injections), each using `index.ts` as the entry point.
+    - `frontend/sw/`: service worker source (packaged to `dist/sw.js` in build, served in-memory by Vite in dev).
+        - `core/`: core service worker logic (e.g., image/video cache, playlist handlers).
+        - `infra/`: service worker infrastructure/adapters (e.g., static resource cache).
+        - `main.worker.ts`: entry worker script.
 - `public/`: static assets, icons, and `manifest.json`.
 - `scripts/`: local scripts.
 - `cli/`: local CLI helper utilities.
@@ -204,7 +205,7 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 
 When running the development server via `npm run dev`, a debug bridge is automatically mounted via [plugin.ts](cli/debug/plugin.ts) that allows direct, silent bidirectional communication with the browser/Tauri webview context. Before starting the dev server, check if the dev server is already running to avoid duplicate/repeated runs.
 
-- **Frontend Logs**: Read [logs.jsonl](.debug/logs.jsonl) (in JSON Lines format) to inspect console output and errors in real-time.
+- **Frontend Logs**: Read [logs.jsonl](.debug/frontend/logs.jsonl) (in JSON Lines format) to inspect console output and errors in real-time.
 - **Execute Commands**: Synchronously execute JavaScript code in the browser/Tauri webview context using [eval.ts](cli/debug/host/eval.ts):
     ```bash
     npm run debug:eval -- "document.title"
@@ -221,5 +222,5 @@ When running the development server via `npm run dev`, a debug bridge is automat
     npm run debug:ui -- snap
     npm run debug:ui -- tap "<target>"
     ```
-- **Execution History**: The history of executed commands and their results is stored in [history.jsonl](.debug/history.jsonl).
-- **Sub-Agent Delegation**: When implementing features or fixing bugs that affect frontend runtime behavior, prefer delegating validation and log monitoring to a sub-agent. The sub-agent should actively use the Frontend Debug Bridge to execute tests, verify UI correctness, and tail [logs.jsonl](.debug/logs.jsonl) to ensure no regressions or runtime console errors are introduced.
+- **Execution History**: The history of executed commands and their results is stored in [history.jsonl](.debug/frontend/history.jsonl).
+- **Sub-Agent Delegation**: When implementing features or fixing bugs that affect frontend runtime behavior, prefer delegating validation and log monitoring to a sub-agent. The sub-agent should actively use the Frontend Debug Bridge to execute tests, verify UI correctness, and tail [logs.jsonl](.debug/frontend/logs.jsonl) to ensure no regressions or runtime console errors are introduced.

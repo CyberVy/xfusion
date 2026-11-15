@@ -10,8 +10,10 @@ target/
 node_modules/
 draft/
 .debug/
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 /buildServer.json
+/public/sw.js
+/public/debug_bridge.js
 
 # Local environment files
 .env
