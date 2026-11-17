@@ -198,10 +198,13 @@ class LoadedModel:
                             return _ProgressBarWrapper(pbar, on_step, pbar_total, pipe)
 
                         pipe.progress_bar = custom_progress_bar
+                if getattr(pipe, "_interrupt", False):
+                    raise GenerationInterrupted("Generation cancelled by user")
                 output = pipe(**call_kwargs)
             finally:
                 if orig_progress_bar is not None and pipe is not None and hasattr(pipe, "progress_bar"):
                     pipe.progress_bar = orig_progress_bar
+                self.reset_interrupt()
                 self._active_pipe = self.pipeline
                 if restore_ip_strength is not None:
                     self.set_ip_adapter_strength(restore_ip_strength)
@@ -216,13 +219,23 @@ class LoadedModel:
             raise RuntimeError("The pipeline did not return an image.")
         return GenerationResult(image=images[0], seed=seed)
 
+    def _set_interrupt_flag(self, interrupted: bool) -> None:
+        for pipe in (self._active_pipe, self.pipeline, *self._task_pipes.values()):
+            if pipe is None:
+                continue
+            if not interrupted and not getattr(pipe, "_interrupt", False):
+                continue
+            try:
+                pipe._interrupt = interrupted
+            except Exception:
+                pass
+
     def interrupt(self) -> None:
-        for pipe in (self._active_pipe, self.pipeline):
-            if pipe is not None:
-                try:
-                    pipe._interrupt = True
-                except Exception:
-                    pass
+        self._set_interrupt_flag(True)
+
+    def reset_interrupt(self) -> None:
+        """Clear stale pipeline interrupt flags (custom pipelines may not reset them on __call__)."""
+        self._set_interrupt_flag(False)
 
     def clear(self) -> None:
         self._embed_cache.clear()

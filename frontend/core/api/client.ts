@@ -318,6 +318,7 @@ export class ApiClient {
         const reader = res.body.getReader()
         const decoder = new TextDecoder("utf-8")
         let buffer = ""
+        let received_done = false
 
         try {
             while (true) {
@@ -332,6 +333,7 @@ export class ApiClient {
 
                     const event = this.parse_sse_block(block)
                     if (event) {
+                        if (event.type === "done") received_done = true
                         yield event
                     }
                     boundary_index = buffer.indexOf("\n\n")
@@ -341,8 +343,13 @@ export class ApiClient {
             if (buffer.trim()) {
                 const event = this.parse_sse_block(buffer)
                 if (event) {
+                    if (event.type === "done") received_done = true
                     yield event
                 }
+            }
+
+            if (!signal?.aborted && !received_done) {
+                throw new Error("Generation stream ended unexpectedly before completion")
             }
         } finally {
             reader.releaseLock()

@@ -3,8 +3,11 @@ import random
 import asyncio
 import json
 import os
-from concurrent.futures import ThreadPoolExecutor
+import threading
+from concurrent.futures import Future, ThreadPoolExecutor, wait as wait_futures
+from contextlib import aclosing
 from typing import List, Dict, Optional, Tuple, Union, TypedDict, AsyncGenerator, Any
+import anyio
 from PIL import Image
 
 from .schemas import GenerationRequest
@@ -44,7 +47,9 @@ class PipelineManager:
         self.settings = ModelLoadSettings(source="")
         self.lock = asyncio.Lock()
         self.download_kwargs: Dict[str, str] = {"directory": DOWNLOAD_PATH}
-        self.cancel_requested: bool = False
+        self._cancel_event: Optional[threading.Event] = None
+        self._progress_lock = threading.Lock()
+        self._active_futures: List[Future[None]] = []
         self.progress: ProgressDict = {
             "active": False,
             "step": 0,
@@ -66,9 +71,10 @@ class PipelineManager:
         return self.models[0].loras_enabled
 
     def cancel(self) -> bool:
-        if not self.progress.get("active"):
+        if not self.progress.get("active") and self._cancel_event is None:
             return False
-        self.cancel_requested = True
+        if self._cancel_event is not None:
+            self._cancel_event.set()
         for model in self.models:
             model.interrupt()
         return True
@@ -96,6 +102,7 @@ class PipelineManager:
 
     async def load_model(self, settings: ModelLoadSettings) -> Dict[str, str]:
         async with self.lock:
+            await self._wait_for_workers()
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._load_sync, settings)
             return {
@@ -131,13 +138,25 @@ class PipelineManager:
         if not self.models:
             raise RuntimeError("No model is currently loaded.")
 
+    async def _wait_for_workers(self) -> None:
+        pending = [future for future in self._active_futures if not future.done()]
+        if pending:
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, wait_futures, pending)
+            free_memory_to_system()
+        self._active_futures.clear()
+
+    async def _require_idle_models(self) -> None:
+        await self._wait_for_workers()
+        self._require_models()
+
     def _primary(self) -> LoadedModel:
         self._require_models()
         return self.models[0]
 
     async def set_lora(self, url: str, lora_name: str, strength: float = 0.4) -> Dict[str, Union[str, float]]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             loop = asyncio.get_running_loop()
 
             def _sync() -> None:
@@ -149,7 +168,7 @@ class PipelineManager:
 
     async def delete_lora(self, lora_name: str) -> Dict[str, str]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             for model in self.models:
                 model.delete_lora(lora_name)
             free_memory_to_system()
@@ -162,14 +181,14 @@ class PipelineManager:
 
     async def set_lora_strength(self, lora_name: str, strength: float) -> Dict[str, Union[str, float]]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             for model in self.models:
                 model.set_lora_strength(lora_name, strength)
             return {"status": "success", "lora_name": lora_name, "strength": strength}
 
     async def set_loras_enabled(self, enabled: bool) -> Dict[str, Union[str, bool]]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             for model in self.models:
                 model.set_loras_enabled(enabled)
             return {"status": "success", "enabled": enabled}
@@ -195,7 +214,7 @@ class PipelineManager:
         strength: float,
     ) -> Dict[str, Any]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             loop = asyncio.get_running_loop()
             spec = IpAdapterSource(
                 source=source,
@@ -213,14 +232,14 @@ class PipelineManager:
 
     async def set_ip_adapter_strength(self, strength: float) -> Dict[str, Union[str, float]]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             for model in self.models:
                 model.set_ip_adapter_strength(strength)
             return {"status": "success", "strength": strength}
 
     async def delete_ip_adapter(self) -> Dict[str, str]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             for model in self.models:
                 model.clear_ip_adapter()
             free_memory_to_system()
@@ -228,7 +247,7 @@ class PipelineManager:
 
     async def load_controlnet(self, source: Optional[str]) -> Dict[str, Union[str, bool, None]]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             loop = asyncio.get_running_loop()
 
             def _sync() -> None:
@@ -240,7 +259,7 @@ class PipelineManager:
 
     async def clear_controlnet(self) -> Dict[str, Union[str, bool]]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             for model in self.models:
                 model.clear_controlnet()
             return {"status": "success", "loaded": self.controlnet_is_loaded()}
@@ -257,7 +276,7 @@ class PipelineManager:
 
     async def set_scheduler(self, scheduler: str) -> Dict[str, str]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             for model in self.models:
                 model.set_scheduler(scheduler)
             return {"status": "success", "scheduler": scheduler}
@@ -308,11 +327,14 @@ class PipelineManager:
         req: GenerationRequest,
     ) -> AsyncGenerator[Tuple[str, Any], None]:
         async with self.lock:
-            self._require_models()
+            await self._require_idle_models()
             if req.control_image:
                 for model in self.models:
                     if not model.controlnet_loaded:
                         model.load_controlnet(None)
+
+            for model in self.models:
+                model.reset_interrupt()
 
             image_count = max(1, min(int(req.image_count or 1), 10))
             seeds = (
@@ -321,14 +343,16 @@ class PipelineManager:
                 else [random.randint(1, 2**31 - 1) for _ in range(image_count)]
             )
 
-            self.cancel_requested = False
-            self.progress = {
-                "active": True,
-                "step": 0,
-                "total_steps": int(req.steps or 0),
-                "image_index": 0,
-                "image_count": len(seeds),
-            }
+            cancel_event = threading.Event()
+            self._cancel_event = cancel_event
+            with self._progress_lock:
+                self.progress = {
+                    "active": True,
+                    "step": 0,
+                    "total_steps": int(req.steps or 0),
+                    "image_index": 0,
+                    "image_count": len(seeds),
+                }
 
             loop = asyncio.get_running_loop()
             queue: asyncio.Queue[Tuple[str, Any]] = asyncio.Queue()
@@ -336,20 +360,31 @@ class PipelineManager:
             for index, item_seed in enumerate(seeds):
                 assignments[index % len(self.models)].append((index, item_seed))
 
+            def emit(msg_type: str, payload: Any) -> None:
+                if not loop.is_closed():
+                    loop.call_soon_threadsafe(queue.put_nowait, (msg_type, payload))
+
             def run_worker(model_index: int, task_list: List[Tuple[int, int]]) -> None:
                 model = self.models[model_index]
                 for index, item_seed in task_list:
-                    if self.cancel_requested:
+                    if cancel_event.is_set():
+                        emit("cancelled", None)
                         break
                     try:
                         started = time.time()
-                        self.progress = {**self.progress, "image_index": index, "step": 0}
+                        with self._progress_lock:
+                            self.progress = {**self.progress, "image_index": index, "step": 0}
+                            progress_snapshot = dict(self.progress)
+                        emit("progress", progress_snapshot)
 
                         def on_step(step: int, total: int) -> None:
-                            if self.cancel_requested:
+                            if cancel_event.is_set():
                                 model.interrupt()
                                 raise GenerationInterrupted("Generation cancelled by user")
-                            self.progress = {**self.progress, "step": step, "total_steps": total}
+                            with self._progress_lock:
+                                self.progress = {**self.progress, "step": step, "total_steps": total}
+                                progress_snapshot = dict(self.progress)
+                            emit("progress", progress_snapshot)
 
                         result = model.generate(self._engine_request(task, req, item_seed), on_step=on_step)
                         item = {
@@ -360,58 +395,95 @@ class PipelineManager:
                             "index": index,
                             "elapsed_seconds": round(time.time() - started, 3),
                         }
-                        loop.call_soon_threadsafe(queue.put_nowait, ("image", item))
+                        emit("image", item)
                     except GenerationInterrupted:
-                        loop.call_soon_threadsafe(queue.put_nowait, ("cancelled", None))
+                        emit("cancelled", None)
                         break
                     except Exception as exc:
-                        loop.call_soon_threadsafe(queue.put_nowait, ("error", str(exc)))
+                        emit("error", str(exc))
                         break
 
             active_workers = [index for index in range(len(self.models)) if assignments[index]]
             pool = ThreadPoolExecutor(max_workers=max(1, len(active_workers)))
-            for model_index in active_workers:
-                pool.submit(run_worker, model_index, assignments[model_index])
+            futures: List[Future[None]] = [
+                pool.submit(run_worker, model_index, assignments[model_index]) for model_index in active_workers
+            ]
 
             completed_count = 0
+            loop_finished = False
+            is_generator_exit = False
+            last_activity = time.monotonic()
             try:
-                while completed_count < len(seeds) and not self.cancel_requested:
+                while completed_count < len(seeds) and not cancel_event.is_set():
                     try:
                         msg_type, payload = await asyncio.wait_for(queue.get(), timeout=0.5)
                     except asyncio.TimeoutError:
+                        now = time.monotonic()
+                        if now - last_activity >= 10.0:
+                            last_activity = now
+                            yield ("keepalive", None)
                         continue
+                    last_activity = time.monotonic()
                     if msg_type == "cancelled":
+                        yield ("cancelled", None)
                         break
+                    if msg_type == "progress":
+                        yield ("progress", payload)
+                        continue
                     if msg_type == "image":
                         completed_count += 1
                         yield ("image", payload)
                     elif msg_type == "error":
                         yield ("error", payload)
                         break
+                else:
+                    if cancel_event.is_set() and completed_count < len(seeds):
+                        yield ("cancelled", None)
+                loop_finished = True
+            except GeneratorExit:
+                is_generator_exit = True
+                raise
             finally:
-                self.cancel_requested = True
-                pool.shutdown(wait=False, cancel_futures=True)
-                self.progress = {**self.progress, "active": False}
-                free_memory_to_system()
+                if not loop_finished or completed_count < len(seeds):
+                    cancel_event.set()
+                    for model in self.models:
+                        model.interrupt()
+                if is_generator_exit:
+                    pool.shutdown(wait=False, cancel_futures=True)
+                    self._active_futures = futures
+                else:
+                    with anyio.CancelScope(shield=True):
+                        await loop.run_in_executor(None, pool.shutdown, True)
+                    for model in self.models:
+                        model.reset_interrupt()
+                    self._active_futures = []
+                    free_memory_to_system()
+                if self._cancel_event is cancel_event:
+                    self._cancel_event = None
+                with self._progress_lock:
+                    self.progress = {**self.progress, "active": False}
 
     async def generate(self, task: str, req: GenerationRequest) -> Tuple[List[GeneratedImageItem], float]:
         started = time.time()
         indexed: List[Tuple[int, GeneratedImageItem]] = []
-        async for msg_type, payload in self._iter_generated_images(task, req):
-            if msg_type == "error":
-                raise RuntimeError(str(payload))
-            if msg_type == "image":
-                indexed.append(
-                    (
-                        int(payload["index"]),
-                        {
-                            "image_base64": payload["image_base64"],
-                            "seed": payload["seed"],
-                            "width": payload["width"],
-                            "height": payload["height"],
-                        },
+        async with aclosing(self._iter_generated_images(task, req)) as stream:
+            async for msg_type, payload in stream:
+                if msg_type == "error":
+                    raise RuntimeError(str(payload))
+                if msg_type == "cancelled":
+                    raise RuntimeError("Generation cancelled")
+                if msg_type == "image":
+                    indexed.append(
+                        (
+                            int(payload["index"]),
+                            {
+                                "image_base64": payload["image_base64"],
+                                "seed": payload["seed"],
+                                "width": payload["width"],
+                                "height": payload["height"],
+                            },
+                        )
                     )
-                )
         indexed.sort(key=lambda pair: pair[0])
         return [item for _, item in indexed], time.time() - started
 
@@ -419,21 +491,33 @@ class PipelineManager:
         started = time.time()
         completed_count = 0
         had_error = False
-        async for msg_type, payload in self._iter_generated_images(task, req):
-            if msg_type == "image":
-                completed_count += 1
-                yield f"event: image\ndata: {json.dumps(payload)}\n\n"
-            elif msg_type == "error":
-                had_error = True
-                yield f"event: error\ndata: {json.dumps({'detail': payload})}\n\n"
-                break
-        if not had_error and completed_count > 0:
-            done_payload = {
-                "status": "success",
-                "total_images": completed_count,
-                "elapsed_seconds": round(time.time() - started, 3),
-            }
-            yield f"event: done\ndata: {json.dumps(done_payload)}\n\n"
+        async with aclosing(self._iter_generated_images(task, req)) as stream:
+            async for msg_type, payload in stream:
+                if msg_type == "image":
+                    completed_count += 1
+                    yield f"event: image\ndata: {json.dumps(payload)}\n\n"
+                elif msg_type == "progress":
+                    yield f"event: progress\ndata: {json.dumps(payload)}\n\n"
+                elif msg_type == "keepalive":
+                    yield ": keepalive\n\n"
+                elif msg_type == "error":
+                    had_error = True
+                    yield f"event: error\ndata: {json.dumps({'detail': payload})}\n\n"
+                    break
+                elif msg_type == "cancelled":
+                    had_error = True
+                    yield f"event: error\ndata: {json.dumps({'detail': 'Generation cancelled'})}\n\n"
+                    break
+        if not had_error:
+            if completed_count > 0:
+                done_payload = {
+                    "status": "success",
+                    "total_images": completed_count,
+                    "elapsed_seconds": round(time.time() - started, 3),
+                }
+                yield f"event: done\ndata: {json.dumps(done_payload)}\n\n"
+            else:
+                yield f"event: error\ndata: {json.dumps({'detail': 'Generation ended without producing an image'})}\n\n"
 
 
 manager = PipelineManager()
