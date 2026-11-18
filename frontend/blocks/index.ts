@@ -1,4 +1,4 @@
-export * from "./GlobalSettingButton"
+export * from "./SettingsView"
 export * from "./WorkspaceView"
 export * from "./ModelManageView"
 export * from "./GalleryView"
