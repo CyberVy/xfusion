@@ -51,7 +51,7 @@ export default function App() {
                         {
                             id: "create",
                             icon: <WandIcon width={22} height={22} />,
-                            native_toolbar: { icon: "wand.and.stars" },
+                            native_icon: "wand.and.stars",
                             label: "Create",
                             swipe_enabled: false,
                             content: <WorkspaceView />
@@ -59,7 +59,7 @@ export default function App() {
                         {
                             id: "models",
                             icon: <CubeIcon width={22} height={22} />,
-                            native_toolbar: { icon: "cube" },
+                            native_icon: "cube",
                             label: "Models",
                             swipe_enabled: false,
                             content: <ModelManageView />
@@ -67,7 +67,7 @@ export default function App() {
                         {
                             id: "gallery",
                             icon: <GalleryIcon width={22} height={22} />,
-                            native_toolbar: { icon: "photo.on.rectangle.angled" },
+                            native_icon: "photo.on.rectangle.angled",
                             label: "Gallery",
                             swipe_enabled: false,
                             content: <GalleryView />
@@ -75,7 +75,7 @@ export default function App() {
                         {
                             id: "settings",
                             icon: <SettingIcon width={22} height={22} />,
-                            native_toolbar: { icon: "gearshape" },
+                            native_icon: "gearshape",
                             label: "Settings",
                             swipe_enabled: false,
                             content: <SettingsView />

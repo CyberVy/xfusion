@@ -23,23 +23,16 @@ export function GalleryView() {
     const [inspected_item, set_inspected_item] = useState<GeneratedImageItem | null>(null)
     const [cached_item, set_cached_item] = useState<GeneratedImageItem | null>(null)
 
-    const open_inspection = useCallback(
-        (item: GeneratedImageItem) => {
-            if (!inspected_item) {
-                view_switcher_controller.hide_all_toolbars()
-            }
-            set_inspected_item(item)
-            set_cached_item(item)
-        },
-        [inspected_item]
-    )
+    const open_inspection = useCallback((item: GeneratedImageItem) => {
+        view_switcher_controller.hide_toolbar()
+        set_inspected_item(item)
+        set_cached_item(item)
+    }, [])
 
     const close_inspection = useCallback(() => {
-        if (inspected_item) {
-            view_switcher_controller.show_all_toolbars()
-            set_inspected_item(null)
-        }
-    }, [inspected_item])
+        view_switcher_controller.show_toolbar()
+        set_inspected_item(null)
+    }, [])
 
     const current_modal_item = inspected_item ?? cached_item
 
