@@ -1,9 +1,10 @@
 "use client"
 
+
+import { Download as DownloadIcon, RefreshCw as RefreshIcon, WandSparkles as WandIcon, Copy as CopyIcon, Trash2 as TrashIcon, Image as ImageIcon } from "lucide-react"
 import { NaiveButton, ContextMenu } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
-import { DownloadIcon, RefreshIcon, WandIcon, CopyIcon, TrashIcon, ImageIcon } from "./icons"
 import type { GeneratedImageItem } from "@/core/api/types"
 
 const RECENT_RESULT_COUNT = 24

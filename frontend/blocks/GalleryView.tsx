@@ -1,5 +1,7 @@
 "use client"
 
+
+import { X as CloseIcon, Images as GalleryIcon, Download as DownloadIcon, Trash2 as TrashIcon, WandSparkles as WandIcon, Copy as CopyIcon, Eye as EyeIcon } from "lucide-react"
 import { useState, useCallback } from "react"
 import {
     NaiveButton,
@@ -9,8 +11,6 @@ import {
     ContextMenu,
     view_switcher_controller
 } from "@/components"
-import { CloseIcon } from "@/components/icons"
-import { GalleryIcon, DownloadIcon, TrashIcon, WandIcon, CopyIcon, EyeIcon } from "./icons"
 import { generation_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 import type { GeneratedImageItem } from "@/core/api/types"

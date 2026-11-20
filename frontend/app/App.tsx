@@ -1,17 +1,10 @@
 "use client"
 
+
+import { WandSparkles as WandIcon, Box as CubeIcon, Images as GalleryIcon, Settings as SettingIcon } from "lucide-react"
 import { useState, useEffect } from "react"
-import {
-    WorkspaceView,
-    ModelManageView,
-    GalleryView,
-    SettingsView,
-    LaunchAnimation,
-    WandIcon,
-    CubeIcon,
-    GalleryIcon
-} from "@/blocks"
-import { ViewSwitcher, SettingIcon } from "@/components"
+import { WorkspaceView, ModelManageView, GalleryView, SettingsView, LaunchAnimation } from "@/blocks"
+import { ViewSwitcher } from "@/components"
 import { settings_controller } from "@/core/controllers/settings_controller"
 import { mount_debug_controllers } from "@/core/controllers/mount"
 

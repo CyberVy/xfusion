@@ -1,10 +1,10 @@
 "use client"
 
+
+import { Image as ImageIcon, Trash2 as TrashIcon, Copy as CopyIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { NaiveButton, ContextMenu } from "@/components"
-import { ImageIcon, TrashIcon, CopyIcon } from "./icons"
-
 export type ImageSourceInputProps = {
     image: string | null
     on_change: (image: string | null) => void

@@ -1,9 +1,10 @@
 "use client"
 
+
+import { Box as CubeIcon, RefreshCw as RefreshIcon, Trash2 as TrashIcon, Copy as CopyIcon, WandSparkles as WandIcon } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
 import { NaiveButton, StringInput, ContextMenu } from "@/components"
-import { CubeIcon, RefreshIcon, TrashIcon, CopyIcon, WandIcon } from "./icons"
 import { model_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 

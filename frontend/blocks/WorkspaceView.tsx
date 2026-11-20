@@ -1,5 +1,7 @@
 "use client"
 
+
+import { RefreshCw as RefreshIcon, WandSparkles as WandIcon } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
 import { NaiveButton } from "@/components"
@@ -8,8 +10,6 @@ import { generation_controller, model_controller } from "@/core/controllers"
 import { ImageSourceInput } from "./ImageSourceInput"
 import { MaskPainter } from "./MaskPainter"
 import { ResultPanel } from "./ResultPanel"
-import { RefreshIcon, WandIcon } from "./icons"
-
 type WorkspaceMode = "txt2img" | "img2img" | "inpaint"
 
 const MODES: { id: WorkspaceMode; label: string }[] = [

@@ -1,8 +1,9 @@
 "use client"
 
+
+import { RefreshCw as RefreshIcon, Trash2 as TrashIcon } from "lucide-react"
 import { useState, useCallback, useSyncExternalStore } from "react"
 import { NaiveButton, StringInput } from "@/components"
-import { RefreshIcon, TrashIcon } from "./icons"
 import { settings_controller, generation_controller, model_controller } from "@/core/controllers"
 import { useKeyedController, useController } from "@/components/hooks"
 import type { GenerationState, ModelState } from "@/core/controllers"
