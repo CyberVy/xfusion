@@ -1,7 +1,14 @@
 "use client"
 
-
-import { X as CloseIcon, Images as GalleryIcon, Download as DownloadIcon, Trash2 as TrashIcon, WandSparkles as WandIcon, Copy as CopyIcon, Eye as EyeIcon } from "lucide-react"
+import {
+    X as CloseIcon,
+    Images as GalleryIcon,
+    Download as DownloadIcon,
+    Trash2 as TrashIcon,
+    WandSparkles as WandIcon,
+    Copy as CopyIcon,
+    Eye as EyeIcon
+} from "lucide-react"
 import { useState, useCallback } from "react"
 import {
     NaiveButton,
@@ -128,6 +135,7 @@ export function GalleryView() {
                             ]}
                             on_click_trigger={() => open_inspection(item)}
                             className="group relative aspect-square rounded-2xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 cursor-pointer hover:shadow-lg transition"
+                            close_label="Close"
                         >
                             <img
                                 src={item.image_base64}
@@ -179,7 +187,6 @@ export function GalleryView() {
                         enable_escape={!!inspected_item}
                         on_escape={close_inspection}
                         className="relative z-52 p-5 sm:p-6 max-w-3xl w-full max-h-[88vh] overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
                     >
                         {current_modal_item && (
                             <div className="flex flex-col md:flex-row gap-6">
@@ -199,7 +206,7 @@ export function GalleryView() {
                                             </span>
                                             <NaiveButton
                                                 className="size-7 rounded-full border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
-                                                on_click={close_inspection}
+                                                onClick={close_inspection}
                                             >
                                                 <CloseIcon width={14} height={14} />
                                             </NaiveButton>
@@ -239,7 +246,7 @@ export function GalleryView() {
                                     <div className="flex gap-2.5 mt-6">
                                         <NaiveButton
                                             className="flex-1 py-2.5 rounded-xl border border-black/15 dark:border-white/15 text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/5"
-                                            on_click={() => handle_reuse_prompt(current_modal_item)}
+                                            onClick={() => handle_reuse_prompt(current_modal_item)}
                                         >
                                             <WandIcon width={14} height={14} className="mr-1.5" />
                                             Reuse Prompt

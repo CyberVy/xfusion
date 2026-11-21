@@ -1,7 +1,13 @@
 "use client"
 
-
-import { Box as CubeIcon, RefreshCw as RefreshIcon, Trash2 as TrashIcon, Copy as CopyIcon, WandSparkles as WandIcon } from "lucide-react"
+import {
+    Box as CubeIcon,
+    RefreshCw as RefreshIcon,
+    Trash2 as TrashIcon,
+    Copy as CopyIcon,
+    WandSparkles as WandIcon,
+    X
+} from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
 import { NaiveButton, StringInput, ContextMenu } from "@/components"
@@ -111,6 +117,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                     ]
                 }
             ]}
+            close_label="Close"
         >
             <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-black/4 dark:bg-white/6">
                 <CubeIcon width={16} height={16} className="shrink-0 text-black/40 dark:text-white/40" />
@@ -129,7 +136,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                 <span className="w-8 text-right font-mono text-xs shrink-0">{strength}</span>
                 <NaiveButton
                     className="size-8 rounded-full text-black/45 dark:text-white/45 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8 shrink-0"
-                    on_click={() => model_controller.delete_lora(name)}
+                    onClick={() => model_controller.delete_lora(name)}
                     title="Remove adapter"
                 >
                     <TrashIcon width={15} height={15} />
@@ -217,6 +224,7 @@ export function ModelManageView() {
                               ]
                             : []
                     }
+                    close_label="Close"
                 >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-black/4 dark:bg-white/6">
                         <div className="min-w-0 flex-1">
@@ -254,6 +262,8 @@ export function ModelManageView() {
                 </ContextMenu>
 
                 <StringInput
+                    clear_label="Clear"
+                    clear_icon={<X width={12} height={12} />}
                     value={model_url}
                     on_change={set_model_url}
                     placeholder={model_version === "moss" ? "eramth/MOSS-Image-SFT-4bit" : "e.g. eramth/realism-sdxl"}
@@ -343,7 +353,7 @@ export function ModelManageView() {
 
                 <NaiveButton
                     className="h-11 self-start px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                    on_click={() =>
+                    onClick={() =>
                         model_url.trim() &&
                         model_controller.load_model(model_url, model_version, {
                             backbone,
@@ -370,6 +380,8 @@ export function ModelManageView() {
             {supports_lora && (
                 <Panel title="LoRA adapters" description="Drag a loaded adapter's strength, then release to apply it">
                     <StringInput
+                        clear_label="Clear"
+                        clear_icon={<X width={12} height={12} />}
                         value={lora_url}
                         on_change={set_lora_url}
                         placeholder="LoRA URL or local path"
@@ -378,6 +390,8 @@ export function ModelManageView() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
                         <StringInput
+                            clear_label="Clear"
+                            clear_icon={<X width={12} height={12} />}
                             value={lora_name}
                             on_change={set_lora_name}
                             placeholder="Adapter name"
@@ -400,7 +414,7 @@ export function ModelManageView() {
 
                         <NaiveButton
                             className="h-11 px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                            on_click={handle_load_lora}
+                            onClick={handle_load_lora}
                             disabled={state.is_loading_lora || !lora_url.trim() || !lora_name.trim()}
                         >
                             {state.is_loading_lora ? "Loading" : "Add"}
@@ -416,14 +430,14 @@ export function ModelManageView() {
                             <div className="flex gap-1.5">
                                 <NaiveButton
                                     className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                                    on_click={() => model_controller.set_loras_enabled(true)}
+                                    onClick={() => model_controller.set_loras_enabled(true)}
                                     disabled={active_loras.length === 0 || loras_enabled}
                                 >
                                     Enable all
                                 </NaiveButton>
                                 <NaiveButton
                                     className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                                    on_click={() => model_controller.set_loras_enabled(false)}
+                                    onClick={() => model_controller.set_loras_enabled(false)}
                                     disabled={active_loras.length === 0 || !loras_enabled}
                                 >
                                     Disable all
@@ -472,7 +486,7 @@ export function ModelManageView() {
                             </label>
                             <NaiveButton
                                 className="h-10 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
-                                on_click={() => model_controller.delete_ip_adapter()}
+                                onClick={() => model_controller.delete_ip_adapter()}
                             >
                                 Remove IP-Adapter
                             </NaiveButton>
@@ -480,6 +494,8 @@ export function ModelManageView() {
                     ) : (
                         <div className="flex flex-col gap-2">
                             <StringInput
+                                clear_label="Clear"
+                                clear_icon={<X width={12} height={12} />}
                                 value={ip_uri}
                                 on_change={set_ip_uri}
                                 placeholder="Repo, e.g. h94/IP-Adapter"
@@ -487,12 +503,16 @@ export function ModelManageView() {
                             />
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <StringInput
+                                    clear_label="Clear"
+                                    clear_icon={<X width={12} height={12} />}
                                     value={ip_subfolder}
                                     on_change={set_ip_subfolder}
                                     placeholder="Subfolder"
                                     className={`h-11 ${FIELD_CLASS}`}
                                 />
                                 <StringInput
+                                    clear_label="Clear"
+                                    clear_icon={<X width={12} height={12} />}
                                     value={ip_name}
                                     on_change={set_ip_name}
                                     placeholder="Weight file name"
@@ -500,6 +520,8 @@ export function ModelManageView() {
                                 />
                             </div>
                             <StringInput
+                                clear_label="Clear"
+                                clear_icon={<X width={12} height={12} />}
                                 value={ip_encoder}
                                 on_change={set_ip_encoder}
                                 placeholder="Image encoder folder"
@@ -520,7 +542,7 @@ export function ModelManageView() {
                             </label>
                             <NaiveButton
                                 className="h-11 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                                on_click={() =>
+                                onClick={() =>
                                     ip_uri.trim() &&
                                     ip_name.trim() &&
                                     model_controller.load_ip_adapter(
@@ -555,6 +577,8 @@ export function ModelManageView() {
                         </span>
                     </div>
                     <StringInput
+                        clear_label="Clear"
+                        clear_icon={<X width={12} height={12} />}
                         value={controlnet_model}
                         on_change={set_controlnet_model}
                         placeholder="ControlNet URL or repo (optional)"
@@ -563,14 +587,14 @@ export function ModelManageView() {
                     <div className="flex gap-2">
                         <NaiveButton
                             className="flex-1 h-11 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
-                            on_click={() => model_controller.load_controlnet(controlnet_model)}
+                            onClick={() => model_controller.load_controlnet(controlnet_model)}
                             disabled={state.is_loading_controlnet}
                         >
                             {state.is_loading_controlnet ? "Working" : "Load"}
                         </NaiveButton>
                         <NaiveButton
                             className="flex-1 h-11 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                            on_click={() => model_controller.offload_controlnet()}
+                            onClick={() => model_controller.offload_controlnet()}
                             disabled={state.is_loading_controlnet || !state.system_info?.controlnet_loaded}
                         >
                             Offload

@@ -1,7 +1,6 @@
 "use client"
 
-
-import { RefreshCw as RefreshIcon, Trash2 as TrashIcon } from "lucide-react"
+import { RefreshCw as RefreshIcon, Trash2 as TrashIcon, X } from "lucide-react"
 import { useState, useCallback, useSyncExternalStore } from "react"
 import { NaiveButton, StringInput } from "@/components"
 import { settings_controller, generation_controller, model_controller } from "@/core/controllers"
@@ -101,14 +100,16 @@ export function SettingsView() {
 
                 <div className="flex gap-2.5">
                     <StringInput
+                        clear_label="Clear"
+                        clear_icon={<X width={12} height={12} />}
                         value={api_url}
                         on_change={handle_api_change}
                         placeholder="http://localhost:8000"
-                        className="flex-1 py-2 px-3 bg-white dark:bg-[#1a1a1a] border border-black/10 dark:border-white/10 rounded-xl focus-within:ring-1 focus-within:ring-black/30 dark:focus-within:ring-white/30"
+                        className="flex-1 bg-white dark:bg-[#1a1a1a] text-sm"
                     />
                     <NaiveButton
                         className="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-medium text-xs hover:opacity-90 transition"
-                        on_click={verify_connection}
+                        onClick={verify_connection}
                         disabled={is_checking}
                     >
                         <RefreshIcon width={14} height={14} className={`mr-1.5 ${is_checking ? "animate-spin" : ""}`} />
@@ -184,7 +185,7 @@ export function SettingsView() {
                                 ? "bg-black text-white border-transparent dark:bg-white dark:text-black"
                                 : "border-black/15 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/8"
                         }`}
-                        on_click={handle_clear_history}
+                        onClick={handle_clear_history}
                         disabled={history_count === 0}
                     >
                         <TrashIcon width={13} height={13} className="mr-1" />

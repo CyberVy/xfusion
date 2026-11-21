@@ -1,7 +1,13 @@
 "use client"
 
-
-import { Download as DownloadIcon, RefreshCw as RefreshIcon, WandSparkles as WandIcon, Copy as CopyIcon, Trash2 as TrashIcon, Image as ImageIcon } from "lucide-react"
+import {
+    Download as DownloadIcon,
+    RefreshCw as RefreshIcon,
+    WandSparkles as WandIcon,
+    Copy as CopyIcon,
+    Trash2 as TrashIcon,
+    Image as ImageIcon
+} from "lucide-react"
 import { NaiveButton, ContextMenu } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
@@ -83,6 +89,7 @@ export function ResultPanel() {
                                 ]
                             }
                         ]}
+                        close_label="Close"
                     >
                         <img
                             src={selected.image_base64}
@@ -132,7 +139,7 @@ export function ResultPanel() {
                     <div className="flex shrink-0 gap-2 items-center pt-0.5">
                         <NaiveButton
                             className="h-9 px-3.5 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
-                            on_click={() => generation_controller.reuse_settings(selected)}
+                            onClick={() => generation_controller.reuse_settings(selected)}
                             title="Copy prompt, seed and size into the editor"
                         >
                             Reuse
@@ -202,6 +209,7 @@ export function ResultPanel() {
                                     ? "ring-2 ring-black dark:ring-white"
                                     : "opacity-60 hover:opacity-100"
                             }`}
+                            close_label="Close"
                         >
                             <img
                                 src={item.image_base64}

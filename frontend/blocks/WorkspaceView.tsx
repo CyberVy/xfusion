@@ -1,6 +1,5 @@
 "use client"
 
-
 import { RefreshCw as RefreshIcon, WandSparkles as WandIcon } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
@@ -313,7 +312,7 @@ export function WorkspaceView() {
                                         </div>
                                         <NaiveButton
                                             className="h-10 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                                            on_click={handle_preview}
+                                            onClick={handle_preview}
                                             disabled={!resolved_control_image || is_previewing}
                                         >
                                             {is_previewing ? "Rendering preview" : "Preview edges"}
@@ -384,7 +383,7 @@ export function WorkspaceView() {
                                 </div>
                                 <NaiveButton
                                     className="h-12 px-5 rounded-2xl bg-black/5 dark:bg-white/10 text-black dark:text-white text-sm font-medium hover:bg-black/10 dark:hover:bg-white/15 shrink-0"
-                                    on_click={() => generation_controller.cancel_generation()}
+                                    onClick={() => generation_controller.cancel_generation()}
                                     title="Cancel current generation"
                                 >
                                     Cancel
@@ -393,7 +392,7 @@ export function WorkspaceView() {
                         ) : (
                             <NaiveButton
                                 className="w-full h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                                on_click={handle_generate}
+                                onClick={handle_generate}
                                 disabled={!can_generate}
                             >
                                 <span className="flex items-center gap-2">
@@ -542,7 +541,7 @@ export function WorkspaceView() {
                                 />
                                 <NaiveButton
                                     className="h-10 px-3.5 rounded-xl text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
-                                    on_click={() =>
+                                    onClick={() =>
                                         generation_controller.set_params({
                                             seed: Math.floor(Math.random() * 2147483646) + 1
                                         })
@@ -552,7 +551,7 @@ export function WorkspaceView() {
                                 </NaiveButton>
                                 <NaiveButton
                                     className="h-10 px-3.5 rounded-xl text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
-                                    on_click={() => generation_controller.set_params({ seed: null })}
+                                    onClick={() => generation_controller.set_params({ seed: null })}
                                     disabled={state.seed === null}
                                 >
                                     Random

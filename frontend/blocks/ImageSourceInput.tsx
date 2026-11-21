@@ -1,6 +1,5 @@
 "use client"
 
-
 import { Image as ImageIcon, Trash2 as TrashIcon, Copy as CopyIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import type { ReactNode } from "react"
@@ -101,6 +100,7 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                                 ]
                             }
                         ]}
+                        close_label="Close"
                     >
                         <div
                             className={`flex justify-center rounded-2xl p-3 sm:p-3.5 bg-black/4 dark:bg-white/6 transition ${
@@ -113,13 +113,13 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                     <div className="flex gap-2 px-1">
                         <NaiveButton
                             className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
-                            on_click={open_file_picker}
+                            onClick={open_file_picker}
                         >
                             Replace
                         </NaiveButton>
                         <NaiveButton
                             className="h-8 px-3 rounded-full text-xs font-medium text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/8"
-                            on_click={() => on_change(null)}
+                            onClick={() => on_change(null)}
                         >
                             Remove
                         </NaiveButton>
