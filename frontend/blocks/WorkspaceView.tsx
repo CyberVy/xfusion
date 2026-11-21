@@ -3,7 +3,7 @@
 import { RefreshCw as RefreshIcon, WandSparkles as WandIcon } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { NaiveButton } from "@/components"
+import { Button } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller, model_controller } from "@/core/controllers"
 import { ImageSourceInput } from "./ImageSourceInput"
@@ -310,13 +310,13 @@ export function WorkspaceView() {
                                                 }
                                             />
                                         </div>
-                                        <NaiveButton
+                                        <Button
                                             className="h-10 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
                                             onClick={handle_preview}
                                             disabled={!resolved_control_image || is_previewing}
                                         >
                                             {is_previewing ? "Rendering preview" : "Preview edges"}
-                                        </NaiveButton>
+                                        </Button>
                                         {preview_error && <p className="text-xs wrap-break-word">{preview_error}</p>}
                                         {control_preview && (
                                             <div className="flex justify-center p-3 rounded-2xl bg-black/4 dark:bg-white/6">
@@ -381,16 +381,16 @@ export function WorkspaceView() {
                                             : "Generating..."}
                                     </span>
                                 </div>
-                                <NaiveButton
+                                <Button
                                     className="h-12 px-5 rounded-2xl bg-black/5 dark:bg-white/10 text-black dark:text-white text-sm font-medium hover:bg-black/10 dark:hover:bg-white/15 shrink-0"
                                     onClick={() => generation_controller.cancel_generation()}
                                     title="Cancel current generation"
                                 >
                                     Cancel
-                                </NaiveButton>
+                                </Button>
                             </div>
                         ) : (
-                            <NaiveButton
+                            <Button
                                 className="w-full h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                                 onClick={handle_generate}
                                 disabled={!can_generate}
@@ -399,7 +399,7 @@ export function WorkspaceView() {
                                     <WandIcon width={18} height={18} />
                                     Generate
                                 </span>
-                            </NaiveButton>
+                            </Button>
                         )}
                         {generate_hint && !state.is_generating && (
                             <p className="text-xs text-center text-black/45 dark:text-white/45">{generate_hint}</p>
@@ -539,7 +539,7 @@ export function WorkspaceView() {
                                     }
                                     className={`${FIELD_CLASS} flex-1 h-10 px-3 text-sm font-mono`}
                                 />
-                                <NaiveButton
+                                <Button
                                     className="h-10 px-3.5 rounded-xl text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
                                     onClick={() =>
                                         generation_controller.set_params({
@@ -548,14 +548,14 @@ export function WorkspaceView() {
                                     }
                                 >
                                     Pick
-                                </NaiveButton>
-                                <NaiveButton
+                                </Button>
+                                <Button
                                     className="h-10 px-3.5 rounded-xl text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
                                     onClick={() => generation_controller.set_params({ seed: null })}
                                     disabled={state.seed === null}
                                 >
                                     Random
-                                </NaiveButton>
+                                </Button>
                             </div>
                         </div>
                     </Section>

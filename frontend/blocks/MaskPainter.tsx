@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import type { PointerEvent } from "react"
-import { NaiveButton } from "@/components"
+import { Button } from "@/components"
 
 export type MaskPainterProps = {
     image_src: string
@@ -102,12 +102,12 @@ export function MaskPainter({ image_src, on_mask_change }: MaskPainterProps) {
                     className="flex-1 accent-black dark:accent-white cursor-pointer"
                 />
                 <span className="w-8 font-mono text-right">{brush_size}</span>
-                <NaiveButton
+                <Button
                     className="h-7 px-3 rounded-lg font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 text-black/75 dark:text-white/75"
                     onClick={clear_mask}
                 >
                     Clear mask
-                </NaiveButton>
+                </Button>
             </div>
         </div>
     )

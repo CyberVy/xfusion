@@ -10,17 +10,14 @@ import {
     Eye as EyeIcon
 } from "lucide-react"
 import { useState, useCallback } from "react"
-import {
-    NaiveButton,
-    FloatingModalContainer,
-    AnimationContainer,
-    BodyPortal,
-    ContextMenu,
-    view_switcher_controller
-} from "@/components"
+import { Button, Modal, ContextMenu, view_switcher_controller } from "@/components"
 import { generation_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 import type { GeneratedImageItem } from "@/core/api/types"
+
+function menu_label(text: string) {
+    return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
+}
 
 export function GalleryView() {
     const state = useController(generation_controller, {
@@ -100,32 +97,32 @@ export function GalleryView() {
                                     items: [
                                         {
                                             key: "inspect",
-                                            label: "View details",
+                                            label: menu_label("View details"),
                                             icon: <EyeIcon width={16} height={16} />,
                                             on_click: () => open_inspection(item)
                                         },
                                         {
                                             key: "reuse",
-                                            label: "Reuse parameters",
+                                            label: menu_label("Reuse parameters"),
                                             icon: <WandIcon width={16} height={16} />,
                                             on_click: () => handle_reuse_prompt(item)
                                         },
                                         {
                                             key: "copy_prompt",
-                                            label: "Copy prompt",
+                                            label: menu_label("Copy prompt"),
                                             icon: <CopyIcon width={16} height={16} />,
                                             disabled: !item.prompt,
                                             on_click: () => handle_copy_prompt(item.prompt)
                                         },
                                         {
                                             key: "download",
-                                            label: "Download",
+                                            label: menu_label("Download"),
                                             icon: <DownloadIcon width={16} height={16} />,
                                             on_click: () => handle_download(item)
                                         },
                                         {
                                             key: "delete",
-                                            label: "Delete artwork",
+                                            label: menu_label("Delete artwork"),
                                             icon: <TrashIcon width={16} height={16} />,
                                             tone: "destructive",
                                             on_click: () => handle_delete(item.id)
@@ -170,102 +167,90 @@ export function GalleryView() {
             )}
 
             {/* Artwork Details Modal */}
-            <BodyPortal>
-                <AnimationContainer
-                    enter_from={{ opacity: 0 }}
-                    enter_to={{ opacity: 1 }}
-                    exit_from={{ opacity: 1 }}
-                    exit_to={{ opacity: 0 }}
-                    duration={200}
-                    unmount_on_exit={true}
-                    show={!!inspected_item}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-xs"
-                    onClick={close_inspection}
-                >
-                    <FloatingModalContainer
-                        center={false}
-                        enable_escape={!!inspected_item}
-                        on_escape={close_inspection}
-                        className="relative z-52 p-5 sm:p-6 max-w-3xl w-full max-h-[88vh] overflow-y-auto"
-                    >
-                        {current_modal_item && (
-                            <div className="flex flex-col md:flex-row gap-6">
-                                <div className="md:w-1/2 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-2xl overflow-hidden aspect-square p-2.5 sm:p-3">
-                                    <img
-                                        src={current_modal_item.image_base64}
-                                        alt={current_modal_item.prompt}
-                                        className="max-w-full max-h-full object-contain rounded-xl select-none"
-                                    />
+            <Modal
+                open={!!inspected_item}
+                on_close={close_inspection}
+                duration={200}
+                backdrop_class_name="bg-black/40"
+                container_class_name="p-4 sm:p-6"
+                className="p-5 sm:p-6 max-w-3xl w-full max-h-[88vh] overflow-y-auto"
+            >
+                {current_modal_item && (
+                    <div className="flex flex-col md:flex-row gap-6">
+                        <div className="md:w-1/2 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-2xl overflow-hidden aspect-square p-2.5 sm:p-3">
+                            <img
+                                src={current_modal_item.image_base64}
+                                alt={current_modal_item.prompt}
+                                className="max-w-full max-h-full object-contain rounded-xl select-none"
+                            />
+                        </div>
+
+                        <div className="md:w-1/2 flex flex-col justify-between">
+                            <div className="flex flex-col gap-3.5">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-[10px] uppercase font-mono px-2.5 py-1 rounded-md bg-black/8 dark:bg-white/10 text-black/70 dark:text-white/70">
+                                        {current_modal_item.type}
+                                    </span>
+                                    <Button
+                                        className="size-7 rounded-full border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
+                                        onClick={close_inspection}
+                                    >
+                                        <CloseIcon width={14} height={14} />
+                                    </Button>
                                 </div>
 
-                                <div className="md:w-1/2 flex flex-col justify-between">
-                                    <div className="flex flex-col gap-3.5">
-                                        <div className="flex justify-between items-start">
-                                            <span className="text-[10px] uppercase font-mono px-2.5 py-1 rounded-md bg-black/8 dark:bg-white/10 text-black/70 dark:text-white/70">
-                                                {current_modal_item.type}
-                                            </span>
-                                            <NaiveButton
-                                                className="size-7 rounded-full border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
-                                                onClick={close_inspection}
-                                            >
-                                                <CloseIcon width={14} height={14} />
-                                            </NaiveButton>
-                                        </div>
+                                <div>
+                                    <h4 className="text-[11px] font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">
+                                        Prompt
+                                    </h4>
+                                    <p className="text-xs mt-1.5 p-3 rounded-xl bg-black/4 dark:bg-white/6 max-h-24 overflow-y-auto leading-relaxed">
+                                        {current_modal_item.prompt || "(no prompt)"}
+                                    </p>
+                                </div>
 
-                                        <div>
-                                            <h4 className="text-[11px] font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">
-                                                Prompt
-                                            </h4>
-                                            <p className="text-xs mt-1.5 p-3 rounded-xl bg-black/4 dark:bg-white/6 max-h-24 overflow-y-auto leading-relaxed">
-                                                {current_modal_item.prompt || "(no prompt)"}
-                                            </p>
-                                        </div>
-
-                                        {current_modal_item.negative_prompt && (
-                                            <div>
-                                                <h4 className="text-[11px] font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">
-                                                    Negative Prompt
-                                                </h4>
-                                                <p className="text-[11px] text-black/60 dark:text-white/60 mt-1.5 p-2.5 rounded-xl bg-black/4 dark:bg-white/6 max-h-16 overflow-y-auto leading-relaxed">
-                                                    {current_modal_item.negative_prompt}
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        <div className="grid grid-cols-2 gap-2 text-[11px] p-3.5 rounded-xl bg-black/4 dark:bg-white/6 font-mono text-black/75 dark:text-white/75">
-                                            <div>Seed: {current_modal_item.seed}</div>
-                                            <div>
-                                                Size: {current_modal_item.width}×{current_modal_item.height}
-                                            </div>
-                                            {current_modal_item.elapsed_seconds && (
-                                                <div>Time: {current_modal_item.elapsed_seconds}s</div>
-                                            )}
-                                        </div>
+                                {current_modal_item.negative_prompt && (
+                                    <div>
+                                        <h4 className="text-[11px] font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">
+                                            Negative Prompt
+                                        </h4>
+                                        <p className="text-[11px] text-black/60 dark:text-white/60 mt-1.5 p-2.5 rounded-xl bg-black/4 dark:bg-white/6 max-h-16 overflow-y-auto leading-relaxed">
+                                            {current_modal_item.negative_prompt}
+                                        </p>
                                     </div>
+                                )}
 
-                                    <div className="flex gap-2.5 mt-6">
-                                        <NaiveButton
-                                            className="flex-1 py-2.5 rounded-xl border border-black/15 dark:border-white/15 text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/5"
-                                            onClick={() => handle_reuse_prompt(current_modal_item)}
-                                        >
-                                            <WandIcon width={14} height={14} className="mr-1.5" />
-                                            Reuse Prompt
-                                        </NaiveButton>
-                                        <a
-                                            href={current_modal_item.image_base64}
-                                            download={`xfusion_${current_modal_item.seed}.png`}
-                                            className="flex-1 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-semibold flex items-center justify-center hover:opacity-90 transition"
-                                        >
-                                            <DownloadIcon width={14} height={14} className="mr-1.5" />
-                                            Download
-                                        </a>
+                                <div className="grid grid-cols-2 gap-2 text-[11px] p-3.5 rounded-xl bg-black/4 dark:bg-white/6 font-mono text-black/75 dark:text-white/75">
+                                    <div>Seed: {current_modal_item.seed}</div>
+                                    <div>
+                                        Size: {current_modal_item.width}×{current_modal_item.height}
                                     </div>
+                                    {current_modal_item.elapsed_seconds && (
+                                        <div>Time: {current_modal_item.elapsed_seconds}s</div>
+                                    )}
                                 </div>
                             </div>
-                        )}
-                    </FloatingModalContainer>
-                </AnimationContainer>
-            </BodyPortal>
+
+                            <div className="flex gap-2.5 mt-6">
+                                <Button
+                                    className="flex-1 py-2.5 rounded-xl border border-black/15 dark:border-white/15 text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/5"
+                                    onClick={() => handle_reuse_prompt(current_modal_item)}
+                                >
+                                    <WandIcon width={14} height={14} className="mr-1.5" />
+                                    Reuse Prompt
+                                </Button>
+                                <a
+                                    href={current_modal_item.image_base64}
+                                    download={`xfusion_${current_modal_item.seed}.png`}
+                                    className="flex-1 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-semibold flex items-center justify-center hover:opacity-90 transition"
+                                >
+                                    <DownloadIcon width={14} height={14} className="mr-1.5" />
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

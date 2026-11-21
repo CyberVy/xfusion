@@ -2,7 +2,7 @@
 
 import { RefreshCw as RefreshIcon, Trash2 as TrashIcon, X } from "lucide-react"
 import { useState, useCallback, useSyncExternalStore } from "react"
-import { NaiveButton, StringInput } from "@/components"
+import { Button, TextField } from "@/components"
 import { settings_controller, generation_controller, model_controller } from "@/core/controllers"
 import { useKeyedController, useController } from "@/components/hooks"
 import type { GenerationState, ModelState } from "@/core/controllers"
@@ -99,7 +99,7 @@ export function SettingsView() {
                 </div>
 
                 <div className="flex gap-2.5">
-                    <StringInput
+                    <TextField
                         clear_label="Clear"
                         clear_icon={<X width={12} height={12} />}
                         value={api_url}
@@ -107,14 +107,14 @@ export function SettingsView() {
                         placeholder="http://localhost:8000"
                         className="flex-1 bg-white dark:bg-[#1a1a1a] text-sm"
                     />
-                    <NaiveButton
+                    <Button
                         className="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-medium text-xs hover:opacity-90 transition"
                         onClick={verify_connection}
                         disabled={is_checking}
                     >
                         <RefreshIcon width={14} height={14} className={`mr-1.5 ${is_checking ? "animate-spin" : ""}`} />
                         Test
-                    </NaiveButton>
+                    </Button>
                 </div>
                 <p className="text-[11px] text-black/40 dark:text-white/40 mt-2.5">
                     Provide the HTTP/HTTPS address where your Python xfusion backend is running (e.g. local GPU or cloud
@@ -179,7 +179,7 @@ export function SettingsView() {
                             {history_count} images saved in client database
                         </div>
                     </div>
-                    <NaiveButton
+                    <Button
                         className={`px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-40 ${
                             is_confirming_clear
                                 ? "bg-black text-white border-transparent dark:bg-white dark:text-black"
@@ -190,7 +190,7 @@ export function SettingsView() {
                     >
                         <TrashIcon width={13} height={13} className="mr-1" />
                         {is_confirming_clear ? "Tap again to clear" : "Clear"}
-                    </NaiveButton>
+                    </Button>
                 </div>
             </div>
         </div>

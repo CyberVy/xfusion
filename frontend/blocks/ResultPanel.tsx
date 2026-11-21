@@ -8,12 +8,16 @@ import {
     Trash2 as TrashIcon,
     Image as ImageIcon
 } from "lucide-react"
-import { NaiveButton, ContextMenu } from "@/components"
+import { Button, ContextMenu } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
 import type { GeneratedImageItem } from "@/core/api/types"
 
 const RECENT_RESULT_COUNT = 24
+
+function menu_label(text: string) {
+    return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
+}
 
 async function copy_image_to_clipboard(base64: string) {
     try {
@@ -52,13 +56,13 @@ export function ResultPanel() {
                                 items: [
                                     {
                                         key: "reuse",
-                                        label: "Reuse parameters",
+                                        label: menu_label("Reuse parameters"),
                                         icon: <WandIcon width={16} height={16} />,
                                         on_click: () => generation_controller.reuse_settings(selected)
                                     },
                                     {
                                         key: "copy_prompt",
-                                        label: "Copy prompt",
+                                        label: menu_label("Copy prompt"),
                                         icon: <CopyIcon width={16} height={16} />,
                                         disabled: !selected.prompt,
                                         on_click: () => {
@@ -69,19 +73,19 @@ export function ResultPanel() {
                                     },
                                     {
                                         key: "copy_image",
-                                        label: "Copy image",
+                                        label: menu_label("Copy image"),
                                         icon: <ImageIcon width={16} height={16} />,
                                         on_click: () => copy_image_to_clipboard(selected.image_base64)
                                     },
                                     {
                                         key: "download",
-                                        label: "Download",
+                                        label: menu_label("Download"),
                                         icon: <DownloadIcon width={16} height={16} />,
                                         on_click: () => download_image_file(selected)
                                     },
                                     {
                                         key: "delete",
-                                        label: "Delete from history",
+                                        label: menu_label("Delete from history"),
                                         icon: <TrashIcon width={16} height={16} />,
                                         tone: "destructive",
                                         on_click: () => generation_controller.delete_image(selected.id)
@@ -137,13 +141,13 @@ export function ResultPanel() {
                         </p>
                     </div>
                     <div className="flex shrink-0 gap-2 items-center pt-0.5">
-                        <NaiveButton
+                        <Button
                             className="h-9 px-3.5 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
                             onClick={() => generation_controller.reuse_settings(selected)}
                             title="Copy prompt, seed and size into the editor"
                         >
                             Reuse
-                        </NaiveButton>
+                        </Button>
                         <a
                             href={selected.image_base64}
                             download={`xfusion_${selected.type}_${selected.seed}.png`}
@@ -166,19 +170,19 @@ export function ResultPanel() {
                                     items: [
                                         {
                                             key: "select",
-                                            label: "Select image",
+                                            label: menu_label("Select image"),
                                             icon: <ImageIcon width={16} height={16} />,
                                             on_click: () => generation_controller.select_image(item)
                                         },
                                         {
                                             key: "reuse",
-                                            label: "Reuse parameters",
+                                            label: menu_label("Reuse parameters"),
                                             icon: <WandIcon width={16} height={16} />,
                                             on_click: () => generation_controller.reuse_settings(item)
                                         },
                                         {
                                             key: "copy_prompt",
-                                            label: "Copy prompt",
+                                            label: menu_label("Copy prompt"),
                                             icon: <CopyIcon width={16} height={16} />,
                                             disabled: !item.prompt,
                                             on_click: () => {
@@ -189,13 +193,13 @@ export function ResultPanel() {
                                         },
                                         {
                                             key: "download",
-                                            label: "Download",
+                                            label: menu_label("Download"),
                                             icon: <DownloadIcon width={16} height={16} />,
                                             on_click: () => download_image_file(item)
                                         },
                                         {
                                             key: "delete",
-                                            label: "Delete",
+                                            label: menu_label("Delete"),
                                             icon: <TrashIcon width={16} height={16} />,
                                             tone: "destructive",
                                             on_click: () => generation_controller.delete_image(item.id)

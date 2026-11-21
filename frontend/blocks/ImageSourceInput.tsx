@@ -3,11 +3,15 @@
 import { Image as ImageIcon, Trash2 as TrashIcon, Copy as CopyIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import type { ReactNode } from "react"
-import { NaiveButton, ContextMenu } from "@/components"
+import { Button, ContextMenu } from "@/components"
 export type ImageSourceInputProps = {
     image: string | null
     on_change: (image: string | null) => void
     children?: ReactNode
+}
+
+function menu_label(text: string) {
+    return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
 }
 
 function read_file_as_data_url(file: File): Promise<string> {
@@ -80,19 +84,19 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                                 items: [
                                     {
                                         key: "replace",
-                                        label: "Replace image",
+                                        label: menu_label("Replace image"),
                                         icon: <ImageIcon width={16} height={16} />,
                                         on_click: open_file_picker
                                     },
                                     {
                                         key: "paste",
-                                        label: "Paste from clipboard",
+                                        label: menu_label("Paste from clipboard"),
                                         icon: <CopyIcon width={16} height={16} />,
                                         on_click: paste_from_clipboard
                                     },
                                     {
                                         key: "remove",
-                                        label: "Remove image",
+                                        label: menu_label("Remove image"),
                                         icon: <TrashIcon width={16} height={16} />,
                                         tone: "destructive",
                                         on_click: () => on_change(null)
@@ -111,18 +115,18 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                         </div>
                     </ContextMenu>
                     <div className="flex gap-2 px-1">
-                        <NaiveButton
+                        <Button
                             className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
                             onClick={open_file_picker}
                         >
                             Replace
-                        </NaiveButton>
-                        <NaiveButton
+                        </Button>
+                        <Button
                             className="h-8 px-3 rounded-full text-xs font-medium text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/8"
                             onClick={() => on_change(null)}
                         >
                             Remove
-                        </NaiveButton>
+                        </Button>
                     </div>
                 </div>
             ) : (
