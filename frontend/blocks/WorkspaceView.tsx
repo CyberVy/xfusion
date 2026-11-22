@@ -1,14 +1,15 @@
 "use client"
 
-import { RefreshCw as RefreshIcon, WandSparkles as WandIcon } from "lucide-react"
+import { Check, ChevronDown, RefreshCw as RefreshIcon, WandSparkles as WandIcon } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { Button } from "@/components"
+import { Button, SectionHeader, Select } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller, model_controller } from "@/core/controllers"
 import { ImageSourceInput } from "./ImageSourceInput"
 import { MaskPainter } from "./MaskPainter"
 import { ResultPanel } from "./ResultPanel"
+
 type WorkspaceMode = "txt2img" | "img2img" | "inpaint"
 
 const MODES: { id: WorkspaceMode; label: string }[] = [
@@ -70,7 +71,7 @@ function DimensionInput({
 function Section({ title, children }: { title: string; children: ReactNode }) {
     return (
         <section className="flex flex-col gap-2.5">
-            <h3 className="text-xs font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">{title}</h3>
+            <SectionHeader title={title} />
             {children}
         </section>
     )
@@ -199,18 +200,20 @@ export function WorkspaceView() {
                         }`}
                     >
                         {visible_modes.map((item) => (
-                            <button
+                            <Button
                                 key={item.id}
-                                type="button"
+                                variant="unstyled"
+                                shape="pill"
+                                aria-pressed={selected_mode === item.id}
                                 onClick={() => handle_mode_change(item.id)}
-                                className={`h-9 rounded-full text-xs sm:text-sm font-medium cursor-pointer transition ${
+                                className={`h-9 text-xs sm:text-sm font-medium ${
                                     selected_mode === item.id
                                         ? "bg-white text-black shadow-sm dark:bg-white/15 dark:text-white"
                                         : "text-black/55 dark:text-white/55 hover:text-black dark:hover:text-white"
                                 }`}
                             >
                                 {item.label}
-                            </button>
+                            </Button>
                         ))}
                     </div>
 
@@ -242,20 +245,19 @@ export function WorkspaceView() {
                             </p>
                         ) : (
                             <>
-                                <button
-                                    type="button"
+                                <Button
+                                    variant={use_controlnet ? "primary" : "secondary"}
+                                    size="auto"
+                                    shape="pill"
+                                    aria-pressed={use_controlnet}
                                     onClick={() => {
                                         set_use_controlnet((prev) => !prev)
                                         set_control_preview(null)
                                     }}
-                                    className={`h-10 px-4 rounded-full text-sm font-medium cursor-pointer transition ${
-                                        use_controlnet
-                                            ? "bg-black text-white dark:bg-white dark:text-black"
-                                            : "bg-black/5 dark:bg-white/8"
-                                    }`}
+                                    className="h-10 px-4 text-sm font-medium"
                                 >
                                     {use_controlnet ? "Control image on" : "Control image off"}
-                                </button>
+                                </Button>
                                 {use_controlnet && (
                                     <>
                                         <ImageSourceInput
@@ -311,7 +313,9 @@ export function WorkspaceView() {
                                             />
                                         </div>
                                         <Button
-                                            className="h-10 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                                            variant="secondary"
+                                            size="auto"
+                                            className="h-10 px-4 text-sm font-medium"
                                             onClick={handle_preview}
                                             disabled={!resolved_control_image || is_previewing}
                                         >
@@ -382,7 +386,10 @@ export function WorkspaceView() {
                                     </span>
                                 </div>
                                 <Button
-                                    className="h-12 px-5 rounded-2xl bg-black/5 dark:bg-white/10 text-black dark:text-white text-sm font-medium hover:bg-black/10 dark:hover:bg-white/15 shrink-0"
+                                    variant="secondary"
+                                    size="auto"
+                                    shape="none"
+                                    className="h-12 px-5 rounded-2xl text-sm font-medium shrink-0"
                                     onClick={() => generation_controller.cancel_generation()}
                                     title="Cancel current generation"
                                 >
@@ -391,7 +398,10 @@ export function WorkspaceView() {
                             </div>
                         ) : (
                             <Button
-                                className="w-full h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                                variant="primary"
+                                size="auto"
+                                shape="none"
+                                className="w-full h-12 rounded-2xl text-sm font-semibold"
                                 onClick={handle_generate}
                                 disabled={!can_generate}
                             >
@@ -439,9 +449,12 @@ export function WorkspaceView() {
                             {SIZE_PRESETS.map((item) => {
                                 const active = state.width === item.width && state.height === item.height
                                 return (
-                                    <button
+                                    <Button
                                         key={item.label}
-                                        type="button"
+                                        variant={active ? "primary" : "secondary"}
+                                        size="xs"
+                                        shape="rounded"
+                                        aria-pressed={active}
                                         onClick={() =>
                                             generation_controller.set_params({
                                                 width: item.width,
@@ -449,14 +462,10 @@ export function WorkspaceView() {
                                             })
                                         }
                                         title={`${item.width} × ${item.height}`}
-                                        className={`h-9 rounded-xl text-xs font-mono font-medium cursor-pointer transition ${
-                                            active
-                                                ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
-                                                : "bg-black/5 dark:bg-white/8 hover:bg-black/8 dark:hover:bg-white/12 text-black/70 dark:text-white/70"
-                                        }`}
+                                        className="h-9 font-mono"
                                     >
                                         {item.label}
-                                    </button>
+                                    </Button>
                                 )
                             })}
                         </div>
@@ -510,20 +519,20 @@ export function WorkspaceView() {
                             />
                         )}
                         {schedulers.length > 0 && (
-                            <label className="flex flex-col gap-1.5">
+                            <div className="flex flex-col gap-1.5">
                                 <span className="text-sm">Scheduler</span>
-                                <select
+                                <Select
+                                    aria_label="Scheduler"
+                                    align="left"
+                                    className="w-full"
+                                    trigger_class_name="w-full min-w-0 h-10 px-3 text-sm"
                                     value={schedulers.includes(state.scheduler) ? state.scheduler : schedulers[0]}
-                                    onChange={(e) => generation_controller.set_params({ scheduler: e.target.value })}
-                                    className={`${FIELD_CLASS} h-10 px-3 text-sm cursor-pointer`}
-                                >
-                                    {schedulers.map((name) => (
-                                        <option key={name} value={name}>
-                                            {name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
+                                    on_change={(scheduler) => generation_controller.set_params({ scheduler })}
+                                    indicator={<ChevronDown width={14} height={14} className="opacity-55" />}
+                                    selected_indicator={<Check width={14} height={14} />}
+                                    options={schedulers.map((name) => ({ value: name, label: name }))}
+                                />
+                            </div>
                         )}
                         <div className="flex flex-col gap-1.5">
                             <span className="text-sm">Seed</span>
@@ -540,7 +549,9 @@ export function WorkspaceView() {
                                     className={`${FIELD_CLASS} flex-1 h-10 px-3 text-sm font-mono`}
                                 />
                                 <Button
-                                    className="h-10 px-3.5 rounded-xl text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-10 px-3.5 font-medium"
                                     onClick={() =>
                                         generation_controller.set_params({
                                             seed: Math.floor(Math.random() * 2147483646) + 1
@@ -550,7 +561,9 @@ export function WorkspaceView() {
                                     Pick
                                 </Button>
                                 <Button
-                                    className="h-10 px-3.5 rounded-xl text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-10 px-3.5 font-medium"
                                     onClick={() => generation_controller.set_params({ seed: null })}
                                     disabled={state.seed === null}
                                 >

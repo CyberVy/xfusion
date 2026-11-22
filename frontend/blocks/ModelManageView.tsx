@@ -6,11 +6,13 @@ import {
     Trash2 as TrashIcon,
     Copy as CopyIcon,
     WandSparkles as WandIcon,
+    ChevronDown,
+    Check,
     X
 } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { Button, TextField, ContextMenu } from "@/components"
+import { Badge, Button, ContextMenu, EmptyState, ListRow, SectionHeader, Select, TextField } from "@/components"
 import { model_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 
@@ -56,6 +58,9 @@ const MEMORY_MODES = [
 
 const FIELD_CLASS =
     "rounded-xl bg-black/4 dark:bg-white/6 border border-black/8 dark:border-white/10 focus-within:border-black/30 dark:focus-within:border-white/30 transition"
+
+const SELECT_INDICATOR = <ChevronDown width={14} height={14} className="opacity-55" />
+const SELECT_SELECTED_INDICATOR = <Check width={14} height={14} />
 
 function menu_label(text: string) {
     return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
@@ -123,29 +128,38 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
             ]}
             close_label="Close"
         >
-            <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-black/4 dark:bg-white/6">
-                <CubeIcon width={16} height={16} className="shrink-0 text-black/40 dark:text-white/40" />
-                <span className="text-sm font-medium truncate min-w-0 flex-1">{name}</span>
-                <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={strength}
-                    onChange={(e) => set_strength(Number(e.target.value))}
-                    onPointerUp={() => model_controller.set_lora_strength(name, strength)}
-                    className="w-24 accent-black dark:accent-white cursor-pointer shrink-0"
-                    aria-label={`${name} strength`}
-                />
-                <span className="w-8 text-right font-mono text-xs shrink-0">{strength}</span>
-                <Button
-                    className="size-8 rounded-full text-black/45 dark:text-white/45 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8 shrink-0"
-                    onClick={() => model_controller.delete_lora(name)}
-                    title="Remove adapter"
-                >
-                    <TrashIcon width={15} height={15} />
-                </Button>
-            </div>
+            <ListRow
+                size="sm"
+                variant="filled"
+                leading={<CubeIcon width={16} height={16} className="text-black/40 dark:text-white/40" />}
+                title={name}
+                trailing={
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="range"
+                            min={0}
+                            max={1}
+                            step={0.05}
+                            value={strength}
+                            onChange={(e) => set_strength(Number(e.target.value))}
+                            onPointerUp={() => model_controller.set_lora_strength(name, strength)}
+                            className="w-24 accent-black dark:accent-white cursor-pointer shrink-0"
+                            aria-label={`${name} strength`}
+                        />
+                        <span className="w-8 text-right font-mono text-xs shrink-0">{strength}</span>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            shape="pill"
+                            onClick={() => model_controller.delete_lora(name)}
+                            title="Remove adapter"
+                            aria-label={`Remove ${name}`}
+                        >
+                            <TrashIcon width={15} height={15} />
+                        </Button>
+                    </div>
+                }
+            />
         </ContextMenu>
     )
 }
@@ -237,30 +251,30 @@ export function ModelManageView() {
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                             {state.system_info?.dtype && state.system_info.dtype !== "auto" && (
-                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                <Badge tone="subtle" mono className="px-2 py-1 text-xs uppercase">
                                     {state.system_info.dtype}
-                                </span>
+                                </Badge>
                             )}
                             {state.system_info?.backbone && state.system_info.backbone !== "fp16" && (
-                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                <Badge tone="subtle" mono className="px-2 py-1 text-xs uppercase">
                                     {state.system_info.text_encoder && state.system_info.text_encoder !== "default"
                                         ? `B:${state.system_info.backbone}`
                                         : state.system_info.backbone}
-                                </span>
+                                </Badge>
                             )}
                             {state.system_info?.text_encoder && state.system_info.text_encoder !== "default" && (
-                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                <Badge tone="subtle" mono className="px-2 py-1 text-xs uppercase">
                                     {`TE:${state.system_info.text_encoder}`}
-                                </span>
+                                </Badge>
                             )}
                             {state.system_info?.memory && state.system_info.memory !== "gpu" && (
-                                <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                                <Badge tone="subtle" mono className="px-2 py-1 text-xs uppercase">
                                     {state.system_info.memory}
-                                </span>
+                                </Badge>
                             )}
-                            <span className="text-xs uppercase font-mono px-2 py-1 rounded-md bg-black/8 dark:bg-white/10">
+                            <Badge tone="subtle" mono className="px-2 py-1 text-xs uppercase">
                                 {state.system_info?.model_version || "N/A"}
-                            </span>
+                            </Badge>
                         </div>
                     </div>
                 </ContextMenu>
@@ -275,72 +289,67 @@ export function ModelManageView() {
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <select
+                    <Select
+                        aria_label="Model version hint"
+                        align="left"
+                        className="w-full"
+                        trigger_class_name="w-full min-w-0 h-10 px-3"
                         value={model_version}
-                        onChange={(e) => set_model_version(e.target.value)}
-                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="Model version hint"
-                    >
-                        {MODEL_VERSIONS.map((v) => (
-                            <option key={v.value || "auto"} value={v.value}>
-                                {v.label}
-                            </option>
-                        ))}
-                    </select>
+                        on_change={set_model_version}
+                        indicator={SELECT_INDICATOR}
+                        selected_indicator={SELECT_SELECTED_INDICATOR}
+                        options={MODEL_VERSIONS}
+                    />
 
-                    <select
+                    <Select
+                        aria_label="Compute and weight dtype"
+                        align="left"
+                        className="w-full"
+                        trigger_class_name="w-full min-w-0 h-10 px-3"
                         value={dtype}
-                        onChange={(e) => set_dtype(e.target.value)}
-                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="Compute and weight dtype"
-                    >
-                        {DTYPE_MODES.map((d) => (
-                            <option key={d.value} value={d.value}>
-                                {d.label}
-                            </option>
-                        ))}
-                    </select>
+                        on_change={set_dtype}
+                        indicator={SELECT_INDICATOR}
+                        selected_indicator={SELECT_SELECTED_INDICATOR}
+                        options={DTYPE_MODES}
+                    />
 
-                    <select
+                    <Select
+                        aria_label="VRAM offload mode"
+                        align="right"
+                        className="w-full"
+                        trigger_class_name="w-full min-w-0 h-10 px-3"
                         value={memory}
-                        onChange={(e) => set_memory(e.target.value)}
-                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="VRAM offload mode"
-                    >
-                        {MEMORY_MODES.map((m) => (
-                            <option key={m.value} value={m.value}>
-                                {m.label}
-                            </option>
-                        ))}
-                    </select>
+                        on_change={set_memory}
+                        indicator={SELECT_INDICATOR}
+                        selected_indicator={SELECT_SELECTED_INDICATOR}
+                        options={MEMORY_MODES}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <select
+                    <Select
+                        aria_label="Backbone precision"
+                        align="left"
+                        className="w-full"
+                        trigger_class_name="w-full min-w-0 h-10 px-3"
                         value={backbone}
-                        onChange={(e) => set_backbone(e.target.value)}
-                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="Backbone precision"
-                    >
-                        {BACKBONE_MODES.map((m) => (
-                            <option key={m.value} value={m.value}>
-                                {m.label}
-                            </option>
-                        ))}
-                    </select>
+                        on_change={set_backbone}
+                        indicator={SELECT_INDICATOR}
+                        selected_indicator={SELECT_SELECTED_INDICATOR}
+                        options={BACKBONE_MODES}
+                    />
 
-                    <select
+                    <Select
+                        aria_label="Text encoder precision"
+                        align="right"
+                        className="w-full"
+                        trigger_class_name="w-full min-w-0 h-10 px-3"
                         value={text_encoder}
-                        onChange={(e) => set_text_encoder(e.target.value)}
-                        className={`h-10 px-3 text-xs outline-none cursor-pointer ${FIELD_CLASS}`}
-                        aria-label="Text encoder precision"
-                    >
-                        {TEXT_ENCODER_MODES.map((m) => (
-                            <option key={m.value} value={m.value}>
-                                {m.label}
-                            </option>
-                        ))}
-                    </select>
+                        on_change={set_text_encoder}
+                        indicator={SELECT_INDICATOR}
+                        selected_indicator={SELECT_SELECTED_INDICATOR}
+                        options={TEXT_ENCODER_MODES}
+                    />
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -356,7 +365,9 @@ export function ModelManageView() {
                 </div>
 
                 <Button
-                    className="h-11 self-start px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                    variant="primary"
+                    size="auto"
+                    className="h-11 self-start px-5 text-sm font-semibold"
                     onClick={() =>
                         model_url.trim() &&
                         model_controller.load_model(model_url, model_version, {
@@ -417,7 +428,9 @@ export function ModelManageView() {
                         </label>
 
                         <Button
-                            className="h-11 px-5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                            variant="primary"
+                            size="auto"
+                            className="h-11 px-5 text-sm font-semibold"
                             onClick={handle_load_lora}
                             disabled={state.is_loading_lora || !lora_url.trim() || !lora_name.trim()}
                         >
@@ -428,19 +441,23 @@ export function ModelManageView() {
 
                     <div className="flex flex-col gap-1.5">
                         <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-medium text-black/50 dark:text-white/50">
-                                Active ({active_loras.length})
-                            </span>
+                            <SectionHeader title="Active" count={active_loras.length} />
                             <div className="flex gap-1.5">
                                 <Button
-                                    className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                                    variant="secondary"
+                                    size="sm"
+                                    shape="pill"
+                                    className="h-8 font-medium"
                                     onClick={() => model_controller.set_loras_enabled(true)}
                                     disabled={active_loras.length === 0 || loras_enabled}
                                 >
                                     Enable all
                                 </Button>
                                 <Button
-                                    className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                                    variant="secondary"
+                                    size="sm"
+                                    shape="pill"
+                                    className="h-8 font-medium"
                                     onClick={() => model_controller.set_loras_enabled(false)}
                                     disabled={active_loras.length === 0 || !loras_enabled}
                                 >
@@ -449,9 +466,10 @@ export function ModelManageView() {
                             </div>
                         </div>
                         {active_loras.length === 0 ? (
-                            <div className="py-6 text-center text-sm text-black/35 dark:text-white/35 border border-dashed border-black/12 dark:border-white/12 rounded-2xl">
-                                No LoRA adapters loaded
-                            </div>
+                            <EmptyState
+                                title="No LoRA adapters loaded"
+                                className="py-6! border border-dashed border-black/12 dark:border-white/12 rounded-2xl"
+                            />
                         ) : (
                             active_loras.map(([name, weight]) => (
                                 <LoraAdapterRow key={name} name={name} weight={weight} />
@@ -468,10 +486,13 @@ export function ModelManageView() {
                 >
                     {ip_adapter ? (
                         <div className="flex flex-col gap-3">
-                            <div className="p-3.5 rounded-2xl bg-black/4 dark:bg-white/6 text-sm">
-                                <p className="font-mono truncate">{ip_adapter.weight}</p>
-                                <p className="text-xs text-black/50 dark:text-white/50 truncate">{ip_adapter.source}</p>
-                            </div>
+                            <ListRow
+                                size="sm"
+                                variant="filled"
+                                title={<span className="font-mono">{ip_adapter.weight}</span>}
+                                subtitle={ip_adapter.source}
+                                className="rounded-2xl px-3.5 py-3"
+                            />
                             <label className={`h-11 flex items-center gap-2 px-3 ${FIELD_CLASS}`}>
                                 <span className="text-xs text-black/50 dark:text-white/50">Strength</span>
                                 <input
@@ -489,7 +510,9 @@ export function ModelManageView() {
                                 <span className="w-8 text-right font-mono text-xs">{ip_adapter.strength}</span>
                             </label>
                             <Button
-                                className="h-10 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
+                                variant="secondary"
+                                size="auto"
+                                className="h-10 px-4 text-sm font-medium"
                                 onClick={() => model_controller.delete_ip_adapter()}
                             >
                                 Remove IP-Adapter
@@ -545,7 +568,9 @@ export function ModelManageView() {
                                 <span className="w-8 text-right font-mono text-xs">{ip_strength}</span>
                             </label>
                             <Button
-                                className="h-11 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                                variant="primary"
+                                size="auto"
+                                className="h-11 px-5 text-sm font-semibold"
                                 onClick={() =>
                                     ip_uri.trim() &&
                                     ip_name.trim() &&
@@ -572,14 +597,17 @@ export function ModelManageView() {
                     title="ControlNet"
                     description="Leave the model empty to use the built-in default. Offload before switching models"
                 >
-                    <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-black/4 dark:bg-white/6">
-                        <span className="text-sm">
-                            {state.system_info?.controlnet_loaded ? "Loaded" : "Not loaded"}
-                        </span>
-                        <span className="text-xs font-mono text-black/50 dark:text-white/50 truncate">
-                            {controlnet_model || "default"}
-                        </span>
-                    </div>
+                    <ListRow
+                        size="sm"
+                        variant="filled"
+                        title={state.system_info?.controlnet_loaded ? "Loaded" : "Not loaded"}
+                        trailing={
+                            <span className="text-xs font-mono text-black/50 dark:text-white/50 truncate max-w-48">
+                                {controlnet_model || "default"}
+                            </span>
+                        }
+                        className="rounded-2xl px-3.5 py-3"
+                    />
                     <TextField
                         clear_label="Clear"
                         clear_icon={<X width={12} height={12} />}
@@ -590,14 +618,18 @@ export function ModelManageView() {
                     />
                     <div className="flex gap-2">
                         <Button
-                            className="flex-1 h-11 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                            variant="primary"
+                            size="auto"
+                            className="flex-1 h-11 px-4 text-sm font-semibold"
                             onClick={() => model_controller.load_controlnet(controlnet_model)}
                             disabled={state.is_loading_controlnet}
                         >
                             {state.is_loading_controlnet ? "Working" : "Load"}
                         </Button>
                         <Button
-                            className="flex-1 h-11 rounded-xl text-sm font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12 disabled:opacity-40"
+                            variant="secondary"
+                            size="auto"
+                            className="flex-1 h-11 px-4 text-sm font-medium"
                             onClick={() => model_controller.offload_controlnet()}
                             disabled={state.is_loading_controlnet || !state.system_info?.controlnet_loaded}
                         >

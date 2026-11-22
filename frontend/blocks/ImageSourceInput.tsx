@@ -4,6 +4,7 @@ import { Image as ImageIcon, Trash2 as TrashIcon, Copy as CopyIcon } from "lucid
 import { useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { Button, ContextMenu } from "@/components"
+
 export type ImageSourceInputProps = {
     image: string | null
     on_change: (image: string | null) => void
@@ -116,13 +117,19 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                     </ContextMenu>
                     <div className="flex gap-2 px-1">
                         <Button
-                            className="h-8 px-3 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
+                            variant="secondary"
+                            size="sm"
+                            shape="pill"
+                            className="h-8 font-medium"
                             onClick={open_file_picker}
                         >
                             Replace
                         </Button>
                         <Button
-                            className="h-8 px-3 rounded-full text-xs font-medium text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/8"
+                            variant="ghost"
+                            size="sm"
+                            shape="pill"
+                            className="h-8 font-medium"
                             onClick={() => on_change(null)}
                         >
                             Remove
@@ -130,18 +137,20 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                     </div>
                 </div>
             ) : (
-                <button
-                    type="button"
+                <Button
+                    variant="unstyled"
                     onClick={open_file_picker}
-                    className={`w-full h-40 rounded-2xl border border-dashed flex flex-col items-center justify-center gap-2.5 p-4 text-black/45 dark:text-white/45 cursor-pointer transition ${
+                    className={`w-full h-40 rounded-2xl border border-dashed p-4 text-black/45 dark:text-white/45 ${
                         is_drag_over
                             ? "border-black/50 dark:border-white/50 bg-black/6 dark:bg-white/8"
                             : "border-black/15 dark:border-white/15 hover:border-black/30 dark:hover:border-white/30"
                     }`}
                 >
-                    <ImageIcon width={28} height={28} />
-                    <span className="text-sm font-medium">Click or drop an image</span>
-                </button>
+                    <span className="flex flex-col items-center justify-center gap-2.5">
+                        <ImageIcon width={28} height={28} />
+                        <span className="text-sm font-medium">Click or drop an image</span>
+                    </span>
+                </Button>
             )}
         </div>
     )

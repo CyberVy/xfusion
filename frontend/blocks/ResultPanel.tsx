@@ -8,7 +8,7 @@ import {
     Trash2 as TrashIcon,
     Image as ImageIcon
 } from "lucide-react"
-import { Button, ContextMenu } from "@/components"
+import { Button, ContextMenu, EmptyState, HorizontalScroller, Image } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
 import type { GeneratedImageItem } from "@/core/api/types"
@@ -95,7 +95,7 @@ export function ResultPanel() {
                         ]}
                         close_label="Close"
                     >
-                        <img
+                        <Image
                             src={selected.image_base64}
                             alt={selected.prompt}
                             className={`max-w-full max-h-[65vh] object-contain rounded-2xl select-none transition-opacity ${
@@ -105,10 +105,11 @@ export function ResultPanel() {
                     </ContextMenu>
                 ) : (
                     !state.is_generating && (
-                        <div className="flex flex-col items-center gap-2 text-black/35 dark:text-white/35">
-                            <WandIcon width={36} height={36} />
-                            <span className="text-sm">Results will appear here</span>
-                        </div>
+                        <EmptyState
+                            icon={<WandIcon width={36} height={36} />}
+                            title="Results will appear here"
+                            className="py-8!"
+                        />
                     )
                 )}
 
@@ -120,13 +121,15 @@ export function ResultPanel() {
                                 ? `Step ${state.progress.step} / ${state.progress.total_steps} · image ${state.progress.image_index + 1} / ${state.progress.image_count}`
                                 : "Generating..."}
                         </span>
-                        <button
-                            type="button"
+                        <Button
+                            variant="ghost"
+                            size="xs"
+                            shape="pill"
                             onClick={() => generation_controller.cancel_generation()}
-                            className="text-xs text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white underline cursor-pointer transition mt-0.5"
+                            className="underline mt-0.5"
                         >
                             Cancel
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>
@@ -142,7 +145,10 @@ export function ResultPanel() {
                     </div>
                     <div className="flex shrink-0 gap-2 items-center pt-0.5">
                         <Button
-                            className="h-9 px-3.5 rounded-full text-xs font-medium bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/12"
+                            variant="secondary"
+                            size="sm"
+                            shape="pill"
+                            className="h-9 px-3.5 font-medium"
                             onClick={() => generation_controller.reuse_settings(selected)}
                             title="Copy prompt, seed and size into the editor"
                         >
@@ -161,7 +167,7 @@ export function ResultPanel() {
             )}
 
             {recent_items.length > 1 && (
-                <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-2 px-1.5">
+                <HorizontalScroller className="gap-2.5 py-2 px-1.5">
                     {recent_items.map((item) => (
                         <ContextMenu
                             key={item.id}
@@ -215,7 +221,7 @@ export function ResultPanel() {
                             }`}
                             close_label="Close"
                         >
-                            <img
+                            <Image
                                 src={item.image_base64}
                                 alt={item.prompt}
                                 className="w-full h-full object-cover"
@@ -223,7 +229,7 @@ export function ResultPanel() {
                             />
                         </ContextMenu>
                     ))}
-                </div>
+                </HorizontalScroller>
             )}
         </div>
     )
