@@ -1,14 +1,6 @@
 "use client"
 
-import {
-    X as CloseIcon,
-    Images as GalleryIcon,
-    Download as DownloadIcon,
-    Trash2 as TrashIcon,
-    WandSparkles as WandIcon,
-    Copy as CopyIcon,
-    Eye as EyeIcon
-} from "lucide-react"
+import { X, Images, Download, Trash2, WandSparkles, Copy, Eye } from "lucide-react"
 import { useState, useCallback } from "react"
 import {
     Badge,
@@ -95,7 +87,7 @@ export function GalleryView() {
             {state.history.length === 0 ? (
                 <EmptyState
                     size="page"
-                    icon={<GalleryIcon width={48} height={48} />}
+                    icon={<Images width={48} height={48} />}
                     title="No artworks generated yet"
                     description="Images you generate are saved on this device and listed here."
                 />
@@ -115,32 +107,32 @@ export function GalleryView() {
                                             {
                                                 key: "inspect",
                                                 label: menu_label("View details"),
-                                                icon: <EyeIcon width={16} height={16} />,
+                                                icon: <Eye width={16} height={16} />,
                                                 on_click: () => open_inspection(item)
                                             },
                                             {
                                                 key: "reuse",
                                                 label: menu_label("Reuse parameters"),
-                                                icon: <WandIcon width={16} height={16} />,
+                                                icon: <WandSparkles width={16} height={16} />,
                                                 on_click: () => handle_reuse_prompt(item)
                                             },
                                             {
                                                 key: "copy_prompt",
                                                 label: menu_label("Copy prompt"),
-                                                icon: <CopyIcon width={16} height={16} />,
+                                                icon: <Copy width={16} height={16} />,
                                                 disabled: !item.prompt,
                                                 on_click: () => handle_copy_prompt(item.prompt)
                                             },
                                             {
                                                 key: "download",
                                                 label: menu_label("Download"),
-                                                icon: <DownloadIcon width={16} height={16} />,
+                                                icon: <Download width={16} height={16} />,
                                                 on_click: () => handle_download(item)
                                             },
                                             {
                                                 key: "delete",
                                                 label: menu_label("Delete artwork"),
-                                                icon: <TrashIcon width={16} height={16} />,
+                                                icon: <Trash2 width={16} height={16} />,
                                                 tone: "destructive",
                                                 on_click: () => handle_delete(item.id)
                                             }
@@ -162,7 +154,7 @@ export function GalleryView() {
                                             loading="lazy"
                                         />
                                     }
-                                    hover_icon={<EyeIcon width={20} height={20} />}
+                                    hover_icon={<Eye width={20} height={20} />}
                                     top_left={
                                         <Badge mono className="uppercase">
                                             {item.type}
@@ -179,7 +171,7 @@ export function GalleryView() {
                                             title="Delete"
                                             aria-label="Delete artwork"
                                         >
-                                            <TrashIcon width={13} height={13} />
+                                            <Trash2 width={13} height={13} />
                                         </Button>
                                     }
                                     title={item.prompt || "(no prompt)"}
@@ -228,7 +220,7 @@ export function GalleryView() {
                                         onClick={close_inspection}
                                         aria-label="Close"
                                     >
-                                        <CloseIcon width={14} height={14} />
+                                        <X width={14} height={14} />
                                     </Button>
                                 </div>
 
@@ -271,7 +263,7 @@ export function GalleryView() {
                                     onClick={() => handle_reuse_prompt(current_modal_item)}
                                 >
                                     <span className="inline-flex items-center gap-1.5">
-                                        <WandIcon width={14} height={14} />
+                                        <WandSparkles width={14} height={14} />
                                         Reuse Prompt
                                     </span>
                                 </Button>
@@ -280,7 +272,7 @@ export function GalleryView() {
                                     download={`xfusion_${current_modal_item.seed}.png`}
                                     className="flex-1 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-semibold flex items-center justify-center hover:opacity-90 transition"
                                 >
-                                    <DownloadIcon width={14} height={14} className="mr-1.5" />
+                                    <Download width={14} height={14} className="mr-1.5" />
                                     Download
                                 </a>
                             </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronDown, RefreshCw as RefreshIcon, WandSparkles as WandIcon } from "lucide-react"
+import { Check, ChevronDown, RefreshCw, WandSparkles } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
 import { Button, SectionHeader, Select } from "@/components"
@@ -378,7 +378,7 @@ export function WorkspaceView() {
                         {state.is_generating ? (
                             <div className="flex gap-2 w-full">
                                 <div className="flex-1 h-12 rounded-2xl bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 text-sm font-medium flex items-center justify-center gap-2 select-none">
-                                    <RefreshIcon width={16} height={16} className="animate-spin" />
+                                    <RefreshCw width={16} height={16} className="animate-spin" />
                                     <span>
                                         {state.progress?.active
                                             ? `Step ${state.progress.step}/${state.progress.total_steps}`
@@ -406,7 +406,7 @@ export function WorkspaceView() {
                                 disabled={!can_generate}
                             >
                                 <span className="flex items-center gap-2">
-                                    <WandIcon width={18} height={18} />
+                                    <WandSparkles width={18} height={18} />
                                     Generate
                                 </span>
                             </Button>

@@ -1,6 +1,6 @@
 "use client"
 
-import { RefreshCw as RefreshIcon, Trash2 as TrashIcon, X } from "lucide-react"
+import { RefreshCw, Trash2, X } from "lucide-react"
 import { useState, useCallback, useSyncExternalStore } from "react"
 import { Alert, Badge, Button, SectionHeader, TextField } from "@/components"
 import { settings_controller, generation_controller, model_controller } from "@/core/controllers"
@@ -102,7 +102,7 @@ export function SettingsView() {
                     />
                     <Button variant="primary" size="md" onClick={verify_connection} disabled={is_checking}>
                         <span className="inline-flex items-center gap-1.5">
-                            <RefreshIcon width={14} height={14} className={is_checking ? "animate-spin" : ""} />
+                            <RefreshCw width={14} height={14} className={is_checking ? "animate-spin" : ""} />
                             Test
                         </span>
                     </Button>
@@ -174,7 +174,7 @@ export function SettingsView() {
                         disabled={history_count === 0}
                     >
                         <span className="inline-flex items-center gap-1">
-                            <TrashIcon width={13} height={13} />
+                            <Trash2 width={13} height={13} />
                             Clear
                         </span>
                     </Button>

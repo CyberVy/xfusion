@@ -1,6 +1,6 @@
 "use client"
 
-import { WandSparkles as WandIcon, Box as CubeIcon, Images as GalleryIcon, Settings as SettingIcon } from "lucide-react"
+import { WandSparkles, Box, Images, Settings } from "lucide-react"
 import { useState, useEffect } from "react"
 import { WorkspaceView, ModelManageView, GalleryView, SettingsView, LaunchAnimation } from "@/blocks"
 import { ViewSwitcher } from "@/components"
@@ -42,7 +42,7 @@ export default function App() {
                     views={[
                         {
                             id: "create",
-                            icon: <WandIcon width={22} height={22} />,
+                            icon: <WandSparkles width={22} height={22} />,
                             native_icon: "wand.and.stars",
                             label: "Create",
                             swipe_enabled: false,
@@ -50,7 +50,7 @@ export default function App() {
                         },
                         {
                             id: "models",
-                            icon: <CubeIcon width={22} height={22} />,
+                            icon: <Box width={22} height={22} />,
                             native_icon: "cube",
                             label: "Models",
                             swipe_enabled: false,
@@ -58,7 +58,7 @@ export default function App() {
                         },
                         {
                             id: "gallery",
-                            icon: <GalleryIcon width={22} height={22} />,
+                            icon: <Images width={22} height={22} />,
                             native_icon: "photo.on.rectangle.angled",
                             label: "Gallery",
                             swipe_enabled: false,
@@ -66,7 +66,7 @@ export default function App() {
                         },
                         {
                             id: "settings",
-                            icon: <SettingIcon width={22} height={22} />,
+                            icon: <Settings width={22} height={22} />,
                             native_icon: "gearshape",
                             label: "Settings",
                             swipe_enabled: false,

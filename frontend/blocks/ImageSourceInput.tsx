@@ -1,6 +1,6 @@
 "use client"
 
-import { Image as ImageIcon, Trash2 as TrashIcon, Copy as CopyIcon } from "lucide-react"
+import { Image, Trash2, Copy } from "lucide-react"
 import { useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { Button, ContextMenu } from "@/components"
@@ -86,19 +86,19 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                                     {
                                         key: "replace",
                                         label: menu_label("Replace image"),
-                                        icon: <ImageIcon width={16} height={16} />,
+                                        icon: <Image width={16} height={16} />,
                                         on_click: open_file_picker
                                     },
                                     {
                                         key: "paste",
                                         label: menu_label("Paste from clipboard"),
-                                        icon: <CopyIcon width={16} height={16} />,
+                                        icon: <Copy width={16} height={16} />,
                                         on_click: paste_from_clipboard
                                     },
                                     {
                                         key: "remove",
                                         label: menu_label("Remove image"),
-                                        icon: <TrashIcon width={16} height={16} />,
+                                        icon: <Trash2 width={16} height={16} />,
                                         tone: "destructive",
                                         on_click: () => on_change(null)
                                     }
@@ -147,7 +147,7 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                     }`}
                 >
                     <span className="flex flex-col items-center justify-center gap-2.5">
-                        <ImageIcon width={28} height={28} />
+                        <Image width={28} height={28} />
                         <span className="text-sm font-medium">Click or drop an image</span>
                     </span>
                 </Button>

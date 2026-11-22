@@ -1,15 +1,6 @@
 "use client"
 
-import {
-    Box as CubeIcon,
-    RefreshCw as RefreshIcon,
-    Trash2 as TrashIcon,
-    Copy as CopyIcon,
-    WandSparkles as WandIcon,
-    ChevronDown,
-    Check,
-    X
-} from "lucide-react"
+import { Box, RefreshCw, Trash2, Copy, WandSparkles, ChevronDown, Check, X } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
 import { Badge, Button, ContextMenu, EmptyState, ListRow, SectionHeader, Select, TextField } from "@/components"
@@ -95,7 +86,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                         {
                             key: "set_full",
                             label: menu_label("Set weight to 1.0"),
-                            icon: <RefreshIcon width={16} height={16} />,
+                            icon: <RefreshCw width={16} height={16} />,
                             on_click: () => {
                                 model_controller.set_lora_strength(name, 1.0)
                                 set_strength(1.0)
@@ -104,7 +95,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                         {
                             key: "set_half",
                             label: menu_label("Set weight to 0.5"),
-                            icon: <RefreshIcon width={16} height={16} />,
+                            icon: <RefreshCw width={16} height={16} />,
                             on_click: () => {
                                 model_controller.set_lora_strength(name, 0.5)
                                 set_strength(0.5)
@@ -113,13 +104,13 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                         {
                             key: "copy_name",
                             label: menu_label("Copy adapter name"),
-                            icon: <CopyIcon width={16} height={16} />,
+                            icon: <Copy width={16} height={16} />,
                             on_click: () => navigator.clipboard?.writeText(name)
                         },
                         {
                             key: "delete",
                             label: menu_label("Remove adapter"),
-                            icon: <TrashIcon width={16} height={16} />,
+                            icon: <Trash2 width={16} height={16} />,
                             tone: "destructive",
                             on_click: () => model_controller.delete_lora(name)
                         }
@@ -131,7 +122,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
             <ListRow
                 size="sm"
                 variant="filled"
-                leading={<CubeIcon width={16} height={16} className="text-black/40 dark:text-white/40" />}
+                leading={<Box width={16} height={16} className="text-black/40 dark:text-white/40" />}
                 title={name}
                 trailing={
                     <div className="flex items-center gap-2">
@@ -155,7 +146,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                             title="Remove adapter"
                             aria-label={`Remove ${name}`}
                         >
-                            <TrashIcon width={15} height={15} />
+                            <Trash2 width={15} height={15} />
                         </Button>
                     </div>
                 }
@@ -227,14 +218,14 @@ export function ModelManageView() {
                                           {
                                               key: "copy_model_name",
                                               label: menu_label("Copy model repo/path"),
-                                              icon: <CopyIcon width={16} height={16} />,
+                                              icon: <Copy width={16} height={16} />,
                                               on_click: () =>
                                                   navigator.clipboard?.writeText(state.system_info?.current_model || "")
                                           },
                                           {
                                               key: "paste_to_input",
                                               label: menu_label("Fill into model input"),
-                                              icon: <WandIcon width={16} height={16} />,
+                                              icon: <WandSparkles width={16} height={16} />,
                                               on_click: () => set_model_url(state.system_info?.current_model || "")
                                           }
                                       ]
@@ -382,7 +373,7 @@ export function ModelManageView() {
                 >
                     {state.is_loading_model ? (
                         <span className="flex items-center gap-2">
-                            <RefreshIcon width={14} height={14} className="animate-spin" />
+                            <RefreshCw width={14} height={14} className="animate-spin" />
                             Loading
                         </span>
                     ) : (

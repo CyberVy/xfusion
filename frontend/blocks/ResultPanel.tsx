@@ -1,14 +1,7 @@
 "use client"
 
-import {
-    Download as DownloadIcon,
-    RefreshCw as RefreshIcon,
-    WandSparkles as WandIcon,
-    Copy as CopyIcon,
-    Trash2 as TrashIcon,
-    Image as ImageIcon
-} from "lucide-react"
-import { Button, ContextMenu, EmptyState, HorizontalScroller, Image } from "@/components"
+import { Download, RefreshCw, WandSparkles, Copy, Trash2, Image } from "lucide-react"
+import { Button, ContextMenu, EmptyState, HorizontalScroller, Image as ImageView } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
 import type { GeneratedImageItem } from "@/core/api/types"
@@ -57,13 +50,13 @@ export function ResultPanel() {
                                     {
                                         key: "reuse",
                                         label: menu_label("Reuse parameters"),
-                                        icon: <WandIcon width={16} height={16} />,
+                                        icon: <WandSparkles width={16} height={16} />,
                                         on_click: () => generation_controller.reuse_settings(selected)
                                     },
                                     {
                                         key: "copy_prompt",
                                         label: menu_label("Copy prompt"),
-                                        icon: <CopyIcon width={16} height={16} />,
+                                        icon: <Copy width={16} height={16} />,
                                         disabled: !selected.prompt,
                                         on_click: () => {
                                             if (selected.prompt) {
@@ -74,19 +67,19 @@ export function ResultPanel() {
                                     {
                                         key: "copy_image",
                                         label: menu_label("Copy image"),
-                                        icon: <ImageIcon width={16} height={16} />,
+                                        icon: <Image width={16} height={16} />,
                                         on_click: () => copy_image_to_clipboard(selected.image_base64)
                                     },
                                     {
                                         key: "download",
                                         label: menu_label("Download"),
-                                        icon: <DownloadIcon width={16} height={16} />,
+                                        icon: <Download width={16} height={16} />,
                                         on_click: () => download_image_file(selected)
                                     },
                                     {
                                         key: "delete",
                                         label: menu_label("Delete from history"),
-                                        icon: <TrashIcon width={16} height={16} />,
+                                        icon: <Trash2 width={16} height={16} />,
                                         tone: "destructive",
                                         on_click: () => generation_controller.delete_image(selected.id)
                                     }
@@ -95,7 +88,7 @@ export function ResultPanel() {
                         ]}
                         close_label="Close"
                     >
-                        <Image
+                        <ImageView
                             src={selected.image_base64}
                             alt={selected.prompt}
                             className={`max-w-full max-h-[65vh] object-contain rounded-2xl select-none transition-opacity ${
@@ -106,7 +99,7 @@ export function ResultPanel() {
                 ) : (
                     !state.is_generating && (
                         <EmptyState
-                            icon={<WandIcon width={36} height={36} />}
+                            icon={<WandSparkles width={36} height={36} />}
                             title="Results will appear here"
                             className="py-8!"
                         />
@@ -115,7 +108,7 @@ export function ResultPanel() {
 
                 {state.is_generating && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-black/60 dark:text-white/60 bg-white/30 dark:bg-black/30 backdrop-blur-xs">
-                        <RefreshIcon width={28} height={28} className="animate-spin" />
+                        <RefreshCw width={28} height={28} className="animate-spin" />
                         <span className="text-sm text-center px-6">
                             {state.progress?.active
                                 ? `Step ${state.progress.step} / ${state.progress.total_steps} · image ${state.progress.image_index + 1} / ${state.progress.image_count}`
@@ -160,7 +153,7 @@ export function ResultPanel() {
                             className="size-9 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black hover:opacity-85 transition"
                             title="Download"
                         >
-                            <DownloadIcon width={16} height={16} />
+                            <Download width={16} height={16} />
                         </a>
                     </div>
                 </div>
@@ -177,19 +170,19 @@ export function ResultPanel() {
                                         {
                                             key: "select",
                                             label: menu_label("Select image"),
-                                            icon: <ImageIcon width={16} height={16} />,
+                                            icon: <Image width={16} height={16} />,
                                             on_click: () => generation_controller.select_image(item)
                                         },
                                         {
                                             key: "reuse",
                                             label: menu_label("Reuse parameters"),
-                                            icon: <WandIcon width={16} height={16} />,
+                                            icon: <WandSparkles width={16} height={16} />,
                                             on_click: () => generation_controller.reuse_settings(item)
                                         },
                                         {
                                             key: "copy_prompt",
                                             label: menu_label("Copy prompt"),
-                                            icon: <CopyIcon width={16} height={16} />,
+                                            icon: <Copy width={16} height={16} />,
                                             disabled: !item.prompt,
                                             on_click: () => {
                                                 if (item.prompt) {
@@ -200,13 +193,13 @@ export function ResultPanel() {
                                         {
                                             key: "download",
                                             label: menu_label("Download"),
-                                            icon: <DownloadIcon width={16} height={16} />,
+                                            icon: <Download width={16} height={16} />,
                                             on_click: () => download_image_file(item)
                                         },
                                         {
                                             key: "delete",
                                             label: menu_label("Delete"),
-                                            icon: <TrashIcon width={16} height={16} />,
+                                            icon: <Trash2 width={16} height={16} />,
                                             tone: "destructive",
                                             on_click: () => generation_controller.delete_image(item.id)
                                         }
@@ -221,7 +214,7 @@ export function ResultPanel() {
                             }`}
                             close_label="Close"
                         >
-                            <Image
+                            <ImageView
                                 src={item.image_base64}
                                 alt={item.prompt}
                                 className="w-full h-full object-cover"
