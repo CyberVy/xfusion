@@ -1,12 +1,12 @@
 import { BaseController } from "@/infra/base_controller"
-import { LocalForageMap } from "@/infra/storage/db.client"
-import { create_logger } from "@/infra/logger"
-import { ApiClient } from "../api/client"
+import { LocalForageMap } from "@/infra/storage/db"
+import { consola } from "consola"
+import { ApiClient } from "@/core/api"
 import { settings_controller } from "./settings_controller"
 import { model_controller } from "./model_controller"
-import type { GeneratedImageItem, GenerationProgress, GenerationResponse, StreamGenerationEvent } from "../api/types"
+import type { GeneratedImageItem, GenerationProgress, GenerationResponse, StreamGenerationEvent } from "@/core/api"
 
-const logger = create_logger("GenerationController")
+const logger = consola.withTag("GenerationController")
 
 export interface GenerationParams {
     prompt: string

@@ -17,7 +17,7 @@ import {
 } from "@/components"
 import { generation_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
-import type { GeneratedImageItem } from "@/core/api/types"
+import type { GeneratedImageItem } from "@/core/api"
 
 export function GalleryView() {
     const state = useController(generation_controller, {

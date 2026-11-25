@@ -1,9 +1,9 @@
-import { LocalForageMap } from "@/infra/storage/db.client"
+import { LocalForageMap } from "@/infra/storage/db"
 import { BaseKeyedController } from "@/infra/base_controller"
-import { create_logger } from "@/infra/logger"
-import { ApiClient } from "../api/client"
+import { consola } from "consola"
+import { ApiClient } from "@/core/api"
 
-const logger = create_logger("SettingsController")
+const logger = consola.withTag("SettingsController")
 
 export type SettingsEventType = "set" | "delete" | "clear" | `set:${string}` | `delete:${string}`
 

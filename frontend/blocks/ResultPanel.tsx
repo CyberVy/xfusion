@@ -4,7 +4,7 @@ import { Download, RefreshCw, WandSparkles, Copy, Trash2, Image } from "lucide-r
 import { Button, ContextMenu, EmptyState, HorizontalScroller, Image as ImageView, Text } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
-import type { GeneratedImageItem } from "@/core/api/types"
+import type { GeneratedImageItem } from "@/core/api"
 
 const RECENT_RESULT_COUNT = 24
 

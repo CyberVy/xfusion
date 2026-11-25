@@ -17,7 +17,7 @@ export class ApiClient {
             const url = `${this.clean_base_url(base_url)}/api/v1/system/health`
             const res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(10_000) })
             if (!res.ok) return false
-            const data = await res.json()
+            const data = (await res.json()) as { status?: string }
             return data.status === "healthy"
         } catch {
             return false
@@ -28,7 +28,7 @@ export class ApiClient {
         const url = `${this.clean_base_url(base_url)}/api/v1/system/info`
         const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
         if (!res.ok) throw new Error(`Failed to fetch system info: ${res.statusText}`)
-        return res.json()
+        return (await res.json()) as SystemInfo
     }
 
     public static async load_model(base_url: string, source: string, options?: ModelLoadOptions): Promise<any> {
@@ -40,7 +40,7 @@ export class ApiClient {
             signal: AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: string }
             throw new Error(err.detail || "Failed to load model")
         }
         return res.json()
@@ -59,7 +59,7 @@ export class ApiClient {
             body: JSON.stringify({ url: lora_url, lora_name, strength })
         })
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: string }
             throw new Error(err.detail || "Failed to load LoRA")
         }
         return res.json()
@@ -73,7 +73,7 @@ export class ApiClient {
             body: JSON.stringify({ lora_name })
         })
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: string }
             throw new Error(err.detail || "Failed to delete LoRA")
         }
         return res.json()
@@ -92,10 +92,10 @@ export class ApiClient {
             signal: signal ?? AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: string }
             throw new Error(err.detail || "Failed to generate image")
         }
-        return res.json()
+        return (await res.json()) as GenerationResponse
     }
 
     public static async generate_img2img(
@@ -111,10 +111,10 @@ export class ApiClient {
             signal: signal ?? AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: string }
             throw new Error(err.detail || "Failed to generate image")
         }
-        return res.json()
+        return (await res.json()) as GenerationResponse
     }
 
     public static async generate_inpaint(
@@ -130,10 +130,10 @@ export class ApiClient {
             signal: signal ?? AbortSignal.timeout(600_000)
         })
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: string }
             throw new Error(err.detail || "Failed to generate image")
         }
-        return res.json()
+        return (await res.json()) as GenerationResponse
     }
 
     public static async *generate_txt2img_stream(
@@ -176,7 +176,7 @@ export class ApiClient {
         const url = `${this.clean_base_url(base_url)}/api/v1/generate/progress`
         const res = await fetch(url, { signal: signal ?? AbortSignal.timeout(5_000) })
         if (!res.ok) throw new Error("Failed to read generation progress")
-        return res.json()
+        return (await res.json()) as GenerationProgress
     }
 
     public static async cancel_generation(base_url: string): Promise<boolean> {
@@ -246,7 +246,7 @@ export class ApiClient {
             body: body === undefined ? undefined : JSON.stringify(body)
         })
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: unknown }
             const detail = err.detail
             throw new Error(typeof detail === "string" ? detail : "Request failed")
         }
@@ -277,10 +277,12 @@ export class ApiClient {
                 signal: signal ?? AbortSignal.timeout(600_000)
             })
             if (!fallback_res.ok) {
-                const err = await fallback_res.json().catch(() => ({ detail: fallback_res.statusText }))
+                const err = (await fallback_res.json().catch(() => ({ detail: fallback_res.statusText }))) as {
+                    detail?: string
+                }
                 throw new Error(err.detail || "Generation request failed")
             }
-            const data: GenerationResponse = await fallback_res.json()
+            const data = (await fallback_res.json()) as GenerationResponse
             for (let i = 0; i < data.images.length; i++) {
                 const img = data.images[i]
                 yield {
@@ -307,7 +309,7 @@ export class ApiClient {
         }
 
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: res.statusText }))
+            const err = (await res.json().catch(() => ({ detail: res.statusText }))) as { detail?: string }
             throw new Error(err.detail || "Generation request failed")
         }
 

@@ -1,10 +1,10 @@
 import { BaseController } from "@/infra/base_controller"
-import { create_logger } from "@/infra/logger"
-import { ApiClient } from "../api/client"
+import { consola } from "consola"
+import { ApiClient } from "@/core/api"
 import { settings_controller } from "./settings_controller"
-import type { SystemInfo, ModelLoadOptions } from "../api/types"
+import type { SystemInfo, ModelLoadOptions } from "@/core/api"
 
-const logger = create_logger("ModelController")
+const logger = consola.withTag("ModelController")
 
 export interface ModelState {
     system_info: SystemInfo | null

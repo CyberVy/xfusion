@@ -12,8 +12,6 @@ draft/
 .debug/
 *.tsbuildinfo
 /buildServer.json
-/public/sw.js
-/public/debug_bridge.js
 
 # Local environment files
 .env
