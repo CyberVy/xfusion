@@ -3,7 +3,7 @@
 import { Box, RefreshCw, Trash2, Copy, WandSparkles, ChevronDown, Check, X } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { Badge, Button, ContextMenu, EmptyState, ListRow, SectionHeader, Select, TextField } from "@/components"
+import { Badge, Button, ContextMenu, EmptyState, ListRow, SectionHeader, Select, Text, TextField } from "@/components"
 import { model_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 
@@ -53,16 +53,16 @@ const FIELD_CLASS =
 const SELECT_INDICATOR = <ChevronDown width={14} height={14} className="opacity-55" />
 const SELECT_SELECTED_INDICATOR = <Check width={14} height={14} />
 
-function menu_label(text: string) {
-    return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
-}
-
 function Panel({ title, description, children }: { title: string; description: string; children: ReactNode }) {
     return (
         <section className="flex flex-col gap-4 py-6 border-b border-black/8 dark:border-white/10 last:border-b-0">
             <div>
-                <h3 className="text-base font-semibold">{title}</h3>
-                <p className="text-sm text-black/50 dark:text-white/50">{description}</p>
+                <Text as="h3" variant="headline">
+                    {title}
+                </Text>
+                <Text as="p" variant="body" tone="secondary">
+                    {description}
+                </Text>
             </div>
             {children}
         </section>
@@ -85,7 +85,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                     items: [
                         {
                             key: "set_full",
-                            label: menu_label("Set weight to 1.0"),
+                            label: "Set weight to 1.0",
                             icon: <RefreshCw width={16} height={16} />,
                             on_click: () => {
                                 model_controller.set_lora_strength(name, 1.0)
@@ -94,7 +94,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                         },
                         {
                             key: "set_half",
-                            label: menu_label("Set weight to 0.5"),
+                            label: "Set weight to 0.5",
                             icon: <RefreshCw width={16} height={16} />,
                             on_click: () => {
                                 model_controller.set_lora_strength(name, 0.5)
@@ -103,13 +103,13 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                         },
                         {
                             key: "copy_name",
-                            label: menu_label("Copy adapter name"),
+                            label: "Copy adapter name",
                             icon: <Copy width={16} height={16} />,
                             on_click: () => navigator.clipboard?.writeText(name)
                         },
                         {
                             key: "delete",
-                            label: menu_label("Remove adapter"),
+                            label: "Remove adapter",
                             icon: <Trash2 width={16} height={16} />,
                             tone: "destructive",
                             on_click: () => model_controller.delete_lora(name)
@@ -137,7 +137,9 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                             className="w-24 accent-black dark:accent-white cursor-pointer shrink-0"
                             aria-label={`${name} strength`}
                         />
-                        <span className="w-8 text-right font-mono text-xs shrink-0">{strength}</span>
+                        <Text variant="caption" mono align="right" className="w-8 shrink-0">
+                            {strength}
+                        </Text>
                         <Button
                             variant="ghost"
                             size="icon"
@@ -158,9 +160,13 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
 function ErrorText({ message }: { message: string | null }) {
     if (!message) return null
     return (
-        <p className="p-3 rounded-xl text-xs leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 wrap-break-word">
+        <Text
+            as="p"
+            variant="caption"
+            className="p-3 rounded-xl leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 wrap-break-word"
+        >
             {message}
-        </p>
+        </Text>
     )
 }
 
@@ -217,14 +223,14 @@ export function ModelManageView() {
                                       items: [
                                           {
                                               key: "copy_model_name",
-                                              label: menu_label("Copy model repo/path"),
+                                              label: "Copy model repo/path",
                                               icon: <Copy width={16} height={16} />,
                                               on_click: () =>
                                                   navigator.clipboard?.writeText(state.system_info?.current_model || "")
                                           },
                                           {
                                               key: "paste_to_input",
-                                              label: menu_label("Fill into model input"),
+                                              label: "Fill into model input",
                                               icon: <WandSparkles width={16} height={16} />,
                                               on_click: () => set_model_url(state.system_info?.current_model || "")
                                           }
@@ -237,8 +243,12 @@ export function ModelManageView() {
                 >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-black/4 dark:bg-white/6">
                         <div className="min-w-0 flex-1">
-                            <p className="text-xs text-black/50 dark:text-white/50">Currently loaded</p>
-                            <p className="text-sm font-mono truncate">{state.system_info?.current_model || "None"}</p>
+                            <Text as="p" variant="caption" tone="secondary">
+                                Currently loaded
+                            </Text>
+                            <Text as="p" variant="body" mono truncate>
+                                {state.system_info?.current_model || "None"}
+                            </Text>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                             {state.system_info?.dtype && state.system_info.dtype !== "auto" && (
@@ -344,14 +354,16 @@ export function ModelManageView() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 cursor-pointer select-none">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
                         <input
                             type="checkbox"
                             checked={delete_file_after_load}
                             onChange={(e) => set_delete_file_after_load(e.target.checked)}
                             className="accent-black dark:accent-white cursor-pointer"
                         />
-                        Purge downloaded archive after loading into memory
+                        <Text variant="caption" tone="secondary">
+                            Purge downloaded archive after loading into memory
+                        </Text>
                     </label>
                 </div>
 
@@ -405,7 +417,9 @@ export function ModelManageView() {
                         />
 
                         <label className={`h-11 flex items-center gap-2 px-3 ${FIELD_CLASS}`}>
-                            <span className="text-xs text-black/50 dark:text-white/50">Strength</span>
+                            <Text variant="caption" tone="secondary">
+                                Strength
+                            </Text>
                             <input
                                 type="range"
                                 min={0}
@@ -415,7 +429,9 @@ export function ModelManageView() {
                                 onChange={(e) => set_lora_strength(Number(e.target.value))}
                                 className="flex-1 min-w-0 accent-black dark:accent-white cursor-pointer"
                             />
-                            <span className="w-8 text-right font-mono text-xs">{lora_strength}</span>
+                            <Text variant="caption" mono align="right" className="w-8">
+                                {lora_strength}
+                            </Text>
                         </label>
 
                         <Button
@@ -480,12 +496,18 @@ export function ModelManageView() {
                             <ListRow
                                 size="sm"
                                 variant="filled"
-                                title={<span className="font-mono">{ip_adapter.weight}</span>}
+                                title={
+                                    <Text variant="body" weight="medium" tone="inherit" mono>
+                                        {ip_adapter.weight}
+                                    </Text>
+                                }
                                 subtitle={ip_adapter.source}
                                 className="rounded-2xl px-3.5 py-3"
                             />
                             <label className={`h-11 flex items-center gap-2 px-3 ${FIELD_CLASS}`}>
-                                <span className="text-xs text-black/50 dark:text-white/50">Strength</span>
+                                <Text variant="caption" tone="secondary">
+                                    Strength
+                                </Text>
                                 <input
                                     type="range"
                                     min={0}
@@ -498,7 +520,9 @@ export function ModelManageView() {
                                     }
                                     className="flex-1 accent-black dark:accent-white cursor-pointer"
                                 />
-                                <span className="w-8 text-right font-mono text-xs">{ip_adapter.strength}</span>
+                                <Text variant="caption" mono align="right" className="w-8">
+                                    {ip_adapter.strength}
+                                </Text>
                             </label>
                             <Button
                                 variant="secondary"
@@ -546,7 +570,9 @@ export function ModelManageView() {
                                 className={`h-11 ${FIELD_CLASS}`}
                             />
                             <label className={`h-11 flex items-center gap-2 px-3 ${FIELD_CLASS}`}>
-                                <span className="text-xs text-black/50 dark:text-white/50">Strength</span>
+                                <Text variant="caption" tone="secondary">
+                                    Strength
+                                </Text>
                                 <input
                                     type="range"
                                     min={0}
@@ -556,7 +582,9 @@ export function ModelManageView() {
                                     onChange={(e) => set_ip_strength(Number(e.target.value))}
                                     className="flex-1 accent-black dark:accent-white cursor-pointer"
                                 />
-                                <span className="w-8 text-right font-mono text-xs">{ip_strength}</span>
+                                <Text variant="caption" mono align="right" className="w-8">
+                                    {ip_strength}
+                                </Text>
                             </label>
                             <Button
                                 variant="primary"
@@ -593,9 +621,9 @@ export function ModelManageView() {
                         variant="filled"
                         title={state.system_info?.controlnet_loaded ? "Loaded" : "Not loaded"}
                         trailing={
-                            <span className="text-xs font-mono text-black/50 dark:text-white/50 truncate max-w-48">
+                            <Text variant="caption" tone="secondary" mono truncate className="max-w-48">
                                 {controlnet_model || "default"}
-                            </span>
+                            </Text>
                         }
                         className="rounded-2xl px-3.5 py-3"
                     />

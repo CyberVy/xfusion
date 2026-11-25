@@ -1,16 +1,12 @@
 "use client"
 
 import { Download, RefreshCw, WandSparkles, Copy, Trash2, Image } from "lucide-react"
-import { Button, ContextMenu, EmptyState, HorizontalScroller, Image as ImageView } from "@/components"
+import { Button, ContextMenu, EmptyState, HorizontalScroller, Image as ImageView, Text } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller } from "@/core/controllers"
 import type { GeneratedImageItem } from "@/core/api/types"
 
 const RECENT_RESULT_COUNT = 24
-
-function menu_label(text: string) {
-    return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
-}
 
 async function copy_image_to_clipboard(base64: string) {
     try {
@@ -49,13 +45,13 @@ export function ResultPanel() {
                                 items: [
                                     {
                                         key: "reuse",
-                                        label: menu_label("Reuse parameters"),
+                                        label: "Reuse parameters",
                                         icon: <WandSparkles width={16} height={16} />,
                                         on_click: () => generation_controller.reuse_settings(selected)
                                     },
                                     {
                                         key: "copy_prompt",
-                                        label: menu_label("Copy prompt"),
+                                        label: "Copy prompt",
                                         icon: <Copy width={16} height={16} />,
                                         disabled: !selected.prompt,
                                         on_click: () => {
@@ -66,19 +62,19 @@ export function ResultPanel() {
                                     },
                                     {
                                         key: "copy_image",
-                                        label: menu_label("Copy image"),
+                                        label: "Copy image",
                                         icon: <Image width={16} height={16} />,
                                         on_click: () => copy_image_to_clipboard(selected.image_base64)
                                     },
                                     {
                                         key: "download",
-                                        label: menu_label("Download"),
+                                        label: "Download",
                                         icon: <Download width={16} height={16} />,
                                         on_click: () => download_image_file(selected)
                                     },
                                     {
                                         key: "delete",
-                                        label: menu_label("Delete from history"),
+                                        label: "Delete from history",
                                         icon: <Trash2 width={16} height={16} />,
                                         tone: "destructive",
                                         on_click: () => generation_controller.delete_image(selected.id)
@@ -109,11 +105,11 @@ export function ResultPanel() {
                 {state.is_generating && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-black/60 dark:text-white/60 bg-white/30 dark:bg-black/30 backdrop-blur-xs">
                         <RefreshCw width={28} height={28} className="animate-spin" />
-                        <span className="text-sm text-center px-6">
+                        <Text variant="body" tone="inherit" align="center" className="px-6">
                             {state.progress?.active
                                 ? `Step ${state.progress.step} / ${state.progress.total_steps} · image ${state.progress.image_index + 1} / ${state.progress.image_count}`
                                 : "Generating..."}
-                        </span>
+                        </Text>
                         <Button
                             variant="ghost"
                             size="xs"
@@ -130,11 +126,13 @@ export function ResultPanel() {
             {selected && (
                 <div className="flex items-start justify-between gap-4 px-2 py-0.5">
                     <div className="min-w-0 flex flex-col gap-1">
-                        <p className="text-sm line-clamp-2 leading-relaxed">{selected.prompt || "(no prompt)"}</p>
-                        <p className="text-xs font-mono text-black/50 dark:text-white/50">
+                        <Text as="p" variant="body" lines={2} className="leading-relaxed">
+                            {selected.prompt || "(no prompt)"}
+                        </Text>
+                        <Text as="p" variant="caption" tone="secondary" mono>
                             {selected.type} · {selected.width}×{selected.height} · seed {selected.seed}
                             {selected.elapsed_seconds !== undefined && ` · ${selected.elapsed_seconds}s`}
-                        </p>
+                        </Text>
                     </div>
                     <div className="flex shrink-0 gap-2 items-center pt-0.5">
                         <Button
@@ -169,19 +167,19 @@ export function ResultPanel() {
                                     items: [
                                         {
                                             key: "select",
-                                            label: menu_label("Select image"),
+                                            label: "Select image",
                                             icon: <Image width={16} height={16} />,
                                             on_click: () => generation_controller.select_image(item)
                                         },
                                         {
                                             key: "reuse",
-                                            label: menu_label("Reuse parameters"),
+                                            label: "Reuse parameters",
                                             icon: <WandSparkles width={16} height={16} />,
                                             on_click: () => generation_controller.reuse_settings(item)
                                         },
                                         {
                                             key: "copy_prompt",
-                                            label: menu_label("Copy prompt"),
+                                            label: "Copy prompt",
                                             icon: <Copy width={16} height={16} />,
                                             disabled: !item.prompt,
                                             on_click: () => {
@@ -192,13 +190,13 @@ export function ResultPanel() {
                                         },
                                         {
                                             key: "download",
-                                            label: menu_label("Download"),
+                                            label: "Download",
                                             icon: <Download width={16} height={16} />,
                                             on_click: () => download_image_file(item)
                                         },
                                         {
                                             key: "delete",
-                                            label: menu_label("Delete"),
+                                            label: "Delete",
                                             icon: <Trash2 width={16} height={16} />,
                                             tone: "destructive",
                                             on_click: () => generation_controller.delete_image(item.id)

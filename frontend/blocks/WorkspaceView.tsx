@@ -3,7 +3,7 @@
 import { Check, ChevronDown, RefreshCw, WandSparkles } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { Button, SectionHeader, Select } from "@/components"
+import { Button, SectionHeader, Select, Text } from "@/components"
 import { useController } from "@/components/hooks"
 import { generation_controller, model_controller } from "@/core/controllers"
 import { ImageSourceInput } from "./ImageSourceInput"
@@ -53,7 +53,9 @@ function DimensionInput({
 
     return (
         <label className="flex items-center gap-2">
-            <span className="w-12 text-sm text-black/55 dark:text-white/55">{label}</span>
+            <Text variant="body" tone="secondary" className="w-12">
+                {label}
+            </Text>
             <input
                 type="number"
                 min={512}
@@ -89,9 +91,11 @@ type ParamSliderProps = {
 function ParamSlider({ label, value, min, max, step, on_change }: ParamSliderProps) {
     return (
         <label className="flex flex-col gap-1.5 px-0.5">
-            <span className="flex justify-between text-sm">
-                <span>{label}</span>
-                <span className="font-mono text-black/60 dark:text-white/60">{value}</span>
+            <span className="flex justify-between">
+                <Text variant="body">{label}</Text>
+                <Text variant="body" tone="secondary" mono>
+                    {value}
+                </Text>
             </span>
             <input
                 type="range"
@@ -240,9 +244,9 @@ export function WorkspaceView() {
 
                     <Section title="ControlNet">
                         {!supports_controlnet ? (
-                            <p className="text-sm text-black/50 dark:text-white/50">
+                            <Text as="p" variant="body" tone="secondary">
                                 ControlNet is not available for this model.
-                            </p>
+                            </Text>
                         ) : (
                             <>
                                 <Button
@@ -275,11 +279,11 @@ export function WorkspaceView() {
                                                 />
                                             )}
                                         </ImageSourceInput>
-                                        <p className="text-xs text-black/45 dark:text-white/45">
+                                        <Text as="p" variant="caption" tone="tertiary">
                                             {needs_source
                                                 ? "Empty uses the source image. The server turns it into a Canny edge map."
                                                 : "The server turns this image into a Canny edge map."}
-                                        </p>
+                                        </Text>
                                         <ParamSlider
                                             label="Control scale"
                                             value={state.controlnet_scale}
@@ -321,7 +325,11 @@ export function WorkspaceView() {
                                         >
                                             {is_previewing ? "Rendering preview" : "Preview edges"}
                                         </Button>
-                                        {preview_error && <p className="text-xs wrap-break-word">{preview_error}</p>}
+                                        {preview_error && (
+                                            <Text as="p" variant="caption" className="wrap-break-word">
+                                                {preview_error}
+                                            </Text>
+                                        )}
                                         {control_preview && (
                                             <div className="flex justify-center p-3 rounded-2xl bg-black/4 dark:bg-white/6">
                                                 <img
@@ -377,13 +385,13 @@ export function WorkspaceView() {
                     <div className="flex flex-col gap-2">
                         {state.is_generating ? (
                             <div className="flex gap-2 w-full">
-                                <div className="flex-1 h-12 rounded-2xl bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 text-sm font-medium flex items-center justify-center gap-2 select-none">
+                                <div className="flex-1 h-12 rounded-2xl bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 flex items-center justify-center gap-2 select-none">
                                     <RefreshCw width={16} height={16} className="animate-spin" />
-                                    <span>
+                                    <Text variant="body" weight="medium" tone="inherit">
                                         {state.progress?.active
                                             ? `Step ${state.progress.step}/${state.progress.total_steps}`
                                             : "Generating..."}
-                                    </span>
+                                    </Text>
                                 </div>
                                 <Button
                                     variant="secondary"
@@ -412,12 +420,18 @@ export function WorkspaceView() {
                             </Button>
                         )}
                         {generate_hint && !state.is_generating && (
-                            <p className="text-xs text-center text-black/45 dark:text-white/45">{generate_hint}</p>
+                            <Text as="p" variant="caption" tone="tertiary" align="center">
+                                {generate_hint}
+                            </Text>
                         )}
                         {state.error && (
-                            <p className="p-3 rounded-xl text-xs leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 wrap-break-word">
+                            <Text
+                                as="p"
+                                variant="caption"
+                                className="p-3 rounded-xl leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 wrap-break-word"
+                            >
                                 {state.error}
-                            </p>
+                            </Text>
                         )}
                     </div>
 
@@ -437,10 +451,10 @@ export function WorkspaceView() {
                                     )
                                 }
                             />
-                            <p className="text-xs text-black/45 dark:text-white/45">
+                            <Text as="p" variant="caption" tone="tertiary">
                                 Lower keeps more of the source. The source aspect is kept, and these dimensions set the
                                 pixel budget.
-                            </p>
+                            </Text>
                         </Section>
                     )}
 
@@ -520,7 +534,7 @@ export function WorkspaceView() {
                         )}
                         {schedulers.length > 0 && (
                             <div className="flex flex-col gap-1.5">
-                                <span className="text-sm">Scheduler</span>
+                                <Text variant="body">Scheduler</Text>
                                 <Select
                                     aria_label="Scheduler"
                                     align="left"
@@ -535,7 +549,7 @@ export function WorkspaceView() {
                             </div>
                         )}
                         <div className="flex flex-col gap-1.5">
-                            <span className="text-sm">Seed</span>
+                            <Text variant="body">Seed</Text>
                             <div className="flex gap-2">
                                 <input
                                     type="number"

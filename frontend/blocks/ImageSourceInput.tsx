@@ -3,16 +3,12 @@
 import { Image, Trash2, Copy } from "lucide-react"
 import { useRef, useState } from "react"
 import type { ReactNode } from "react"
-import { Button, ContextMenu } from "@/components"
+import { Button, ContextMenu, Text } from "@/components"
 
 export type ImageSourceInputProps = {
     image: string | null
     on_change: (image: string | null) => void
     children?: ReactNode
-}
-
-function menu_label(text: string) {
-    return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
 }
 
 function read_file_as_data_url(file: File): Promise<string> {
@@ -85,19 +81,19 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                                 items: [
                                     {
                                         key: "replace",
-                                        label: menu_label("Replace image"),
+                                        label: "Replace image",
                                         icon: <Image width={16} height={16} />,
                                         on_click: open_file_picker
                                     },
                                     {
                                         key: "paste",
-                                        label: menu_label("Paste from clipboard"),
+                                        label: "Paste from clipboard",
                                         icon: <Copy width={16} height={16} />,
                                         on_click: paste_from_clipboard
                                     },
                                     {
                                         key: "remove",
-                                        label: menu_label("Remove image"),
+                                        label: "Remove image",
                                         icon: <Trash2 width={16} height={16} />,
                                         tone: "destructive",
                                         on_click: () => on_change(null)
@@ -148,7 +144,9 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                 >
                     <span className="flex flex-col items-center justify-center gap-2.5">
                         <Image width={28} height={28} />
-                        <span className="text-sm font-medium">Click or drop an image</span>
+                        <Text variant="body" weight="medium" tone="inherit">
+                            Click or drop an image
+                        </Text>
                     </span>
                 </Button>
             )}

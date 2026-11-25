@@ -2,7 +2,7 @@
 
 import { RefreshCw, Trash2, X } from "lucide-react"
 import { useState, useCallback, useSyncExternalStore } from "react"
-import { Alert, Badge, Button, SectionHeader, TextField } from "@/components"
+import { Alert, Badge, Button, SectionHeader, Text, TextField } from "@/components"
 import { settings_controller, generation_controller, model_controller } from "@/core/controllers"
 import { useKeyedController, useController } from "@/components/hooks"
 import type { GenerationState, ModelState } from "@/core/controllers"
@@ -57,14 +57,20 @@ export function SettingsView() {
     return (
         <div className="w-full max-w-xl mx-auto px-4 md:px-6 py-6 pb-32">
             <div className="pb-4 border-b border-black/10 dark:border-white/10">
-                <h2 className="text-lg font-semibold">Settings</h2>
-                <p className="text-xs text-black/50 dark:text-white/50">Configure backend API & inference endpoint</p>
+                <Text as="h2" variant="title" weight="semibold">
+                    Settings
+                </Text>
+                <Text as="p" variant="caption" tone="secondary">
+                    Configure backend API & inference endpoint
+                </Text>
             </div>
 
             {/* API Endpoint Configuration */}
             <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
                 <div className="flex items-center justify-between mb-2.5">
-                    <label className="text-sm font-medium">Inference API Endpoint</label>
+                    <Text as="label" variant="body" weight="medium">
+                        Inference API Endpoint
+                    </Text>
                     <Badge
                         tone="custom"
                         shape="pill"
@@ -107,49 +113,69 @@ export function SettingsView() {
                         </span>
                     </Button>
                 </div>
-                <p className="text-[11px] text-black/40 dark:text-white/40 mt-2.5">
+                <Text as="p" variant="footnote" tone="tertiary" className="mt-2.5">
                     Provide the HTTP/HTTPS address where your Python xfusion backend is running (e.g. local GPU or cloud
                     server).
-                </p>
+                </Text>
             </div>
 
             {/* GPU & Model Info */}
             <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
                 <SectionHeader title="Hardware & Model State" className="mb-3" />
-                <div className="space-y-1.5 text-xs">
+                <div className="space-y-1.5">
                     <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
-                        <span className="text-black/60 dark:text-white/60">GPU Count</span>
-                        <span className="font-mono">{system_info?.gpu_count ?? 0}</span>
+                        <Text variant="caption" tone="secondary">
+                            GPU Count
+                        </Text>
+                        <Text variant="caption" mono>
+                            {system_info?.gpu_count ?? 0}
+                        </Text>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
-                        <span className="text-black/60 dark:text-white/60">Active Model</span>
-                        <span className="font-mono text-right max-w-xs truncate">
+                        <Text variant="caption" tone="secondary">
+                            Active Model
+                        </Text>
+                        <Text variant="caption" mono align="right" truncate className="max-w-xs">
                             {system_info?.current_model || "None Loaded"}
-                        </span>
+                        </Text>
                     </div>
                     {system_info?.python_version && (
                         <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
-                            <span className="text-black/60 dark:text-white/60">Python</span>
-                            <span className="font-mono">{system_info.python_version}</span>
+                            <Text variant="caption" tone="secondary">
+                                Python
+                            </Text>
+                            <Text variant="caption" mono>
+                                {system_info.python_version}
+                            </Text>
                         </div>
                     )}
                     {system_info?.os_platform && (
                         <div className="flex justify-between gap-4 py-1.5 border-b border-black/5 dark:border-white/5">
-                            <span className="shrink-0 text-black/60 dark:text-white/60">OS</span>
-                            <span className="font-mono text-right truncate">{system_info.os_platform}</span>
+                            <Text variant="caption" tone="secondary" className="shrink-0">
+                                OS
+                            </Text>
+                            <Text variant="caption" mono align="right" truncate>
+                                {system_info.os_platform}
+                            </Text>
                         </div>
                     )}
                     <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
-                        <span className="text-black/60 dark:text-white/60">Architecture Version</span>
-                        <span className="font-mono uppercase">{system_info?.model_version || "N/A"}</span>
+                        <Text variant="caption" tone="secondary">
+                            Architecture Version
+                        </Text>
+                        <Text variant="caption" mono className="uppercase">
+                            {system_info?.model_version || "N/A"}
+                        </Text>
                     </div>
                     {system_info?.gpu_names && system_info.gpu_names.length > 0 && (
                         <div className="flex flex-col py-1.5">
-                            <span className="text-black/60 dark:text-white/60 mb-1">Devices:</span>
+                            <Text variant="caption" tone="secondary" className="mb-1">
+                                Devices:
+                            </Text>
                             {system_info.gpu_names.map((name, i) => (
-                                <span key={i} className="font-mono text-[11px] text-black/80 dark:text-white/80">
+                                <Text key={i} variant="footnote" mono className="text-black/80 dark:text-white/80">
                                     [{i}] {name}
-                                </span>
+                                </Text>
                             ))}
                         </div>
                     )}
@@ -161,10 +187,12 @@ export function SettingsView() {
                 <SectionHeader title="Client Storage" className="mb-3" />
                 <div className="flex items-center justify-between">
                     <div>
-                        <div className="text-xs font-medium">Generation History</div>
-                        <div className="text-[11px] text-black/50 dark:text-white/50">
+                        <Text as="div" variant="caption" weight="medium">
+                            Generation History
+                        </Text>
+                        <Text as="div" variant="footnote" tone="secondary">
                             {history_count} images saved in client database
-                        </div>
+                        </Text>
                     </div>
                     <Button
                         variant="outline"

@@ -12,15 +12,12 @@ import {
     Image,
     LazyContainer,
     Modal,
+    Text,
     view_switcher_controller
 } from "@/components"
 import { generation_controller } from "@/core/controllers"
 import { useController } from "@/components/hooks"
 import type { GeneratedImageItem } from "@/core/api/types"
-
-function menu_label(text: string) {
-    return <span className="min-w-0 truncate text-[13px] font-medium leading-tight">{text}</span>
-}
 
 export function GalleryView() {
     const state = useController(generation_controller, {
@@ -77,10 +74,12 @@ export function GalleryView() {
         <div className="w-full max-w-6xl mx-auto px-4 py-6 pb-28">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h2 className="text-lg font-semibold">Artworks Gallery</h2>
-                    <p className="text-xs text-black/50 dark:text-white/50">
+                    <Text as="h2" variant="title" weight="semibold">
+                        Artworks Gallery
+                    </Text>
+                    <Text as="p" variant="caption" tone="secondary">
                         {state.history.length} creations saved in local device storage
-                    </p>
+                    </Text>
                 </div>
             </div>
 
@@ -106,32 +105,32 @@ export function GalleryView() {
                                         items: [
                                             {
                                                 key: "inspect",
-                                                label: menu_label("View details"),
+                                                label: "View details",
                                                 icon: <Eye width={16} height={16} />,
                                                 on_click: () => open_inspection(item)
                                             },
                                             {
                                                 key: "reuse",
-                                                label: menu_label("Reuse parameters"),
+                                                label: "Reuse parameters",
                                                 icon: <WandSparkles width={16} height={16} />,
                                                 on_click: () => handle_reuse_prompt(item)
                                             },
                                             {
                                                 key: "copy_prompt",
-                                                label: menu_label("Copy prompt"),
+                                                label: "Copy prompt",
                                                 icon: <Copy width={16} height={16} />,
                                                 disabled: !item.prompt,
                                                 on_click: () => handle_copy_prompt(item.prompt)
                                             },
                                             {
                                                 key: "download",
-                                                label: menu_label("Download"),
+                                                label: "Download",
                                                 icon: <Download width={16} height={16} />,
                                                 on_click: () => handle_download(item)
                                             },
                                             {
                                                 key: "delete",
-                                                label: menu_label("Delete artwork"),
+                                                label: "Delete artwork",
                                                 icon: <Trash2 width={16} height={16} />,
                                                 tone: "destructive",
                                                 on_click: () => handle_delete(item.id)
@@ -225,32 +224,57 @@ export function GalleryView() {
                                 </div>
 
                                 <div>
-                                    <h4 className="text-[11px] font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">
+                                    <Text
+                                        as="h4"
+                                        variant="footnote"
+                                        weight="semibold"
+                                        tone="secondary"
+                                        className="uppercase tracking-wider"
+                                    >
                                         Prompt
-                                    </h4>
-                                    <p className="text-xs mt-1.5 p-3 rounded-xl bg-black/4 dark:bg-white/6 max-h-24 overflow-y-auto leading-relaxed">
+                                    </Text>
+                                    <Text
+                                        as="p"
+                                        variant="caption"
+                                        className="mt-1.5 p-3 rounded-xl bg-black/4 dark:bg-white/6 max-h-24 overflow-y-auto leading-relaxed"
+                                    >
                                         {current_modal_item.prompt || "(no prompt)"}
-                                    </p>
+                                    </Text>
                                 </div>
 
                                 {current_modal_item.negative_prompt && (
                                     <div>
-                                        <h4 className="text-[11px] font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider">
+                                        <Text
+                                            as="h4"
+                                            variant="footnote"
+                                            weight="semibold"
+                                            tone="secondary"
+                                            className="uppercase tracking-wider"
+                                        >
                                             Negative Prompt
-                                        </h4>
-                                        <p className="text-[11px] text-black/60 dark:text-white/60 mt-1.5 p-2.5 rounded-xl bg-black/4 dark:bg-white/6 max-h-16 overflow-y-auto leading-relaxed">
+                                        </Text>
+                                        <Text
+                                            as="p"
+                                            variant="footnote"
+                                            tone="secondary"
+                                            className="mt-1.5 p-2.5 rounded-xl bg-black/4 dark:bg-white/6 max-h-16 overflow-y-auto leading-relaxed"
+                                        >
                                             {current_modal_item.negative_prompt}
-                                        </p>
+                                        </Text>
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-2 text-[11px] p-3.5 rounded-xl bg-black/4 dark:bg-white/6 font-mono text-black/75 dark:text-white/75">
-                                    <div>Seed: {current_modal_item.seed}</div>
-                                    <div>
+                                <div className="grid grid-cols-2 gap-2 p-3.5 rounded-xl bg-black/4 dark:bg-white/6">
+                                    <Text as="div" variant="footnote" mono>
+                                        Seed: {current_modal_item.seed}
+                                    </Text>
+                                    <Text as="div" variant="footnote" mono>
                                         Size: {current_modal_item.width}×{current_modal_item.height}
-                                    </div>
+                                    </Text>
                                     {current_modal_item.elapsed_seconds !== undefined && (
-                                        <div>Time: {current_modal_item.elapsed_seconds}s</div>
+                                        <Text as="div" variant="footnote" mono>
+                                            Time: {current_modal_item.elapsed_seconds}s
+                                        </Text>
                                     )}
                                 </div>
                             </div>
@@ -259,21 +283,25 @@ export function GalleryView() {
                                 <Button
                                     variant="outline"
                                     size="auto"
-                                    className="flex-1 py-2.5 px-4 text-xs font-semibold"
+                                    className="flex-1 py-2.5 px-4"
                                     onClick={() => handle_reuse_prompt(current_modal_item)}
                                 >
                                     <span className="inline-flex items-center gap-1.5">
                                         <WandSparkles width={14} height={14} />
-                                        Reuse Prompt
+                                        <Text variant="caption" weight="semibold" tone="inherit">
+                                            Reuse Prompt
+                                        </Text>
                                     </span>
                                 </Button>
                                 <a
                                     href={current_modal_item.image_base64}
                                     download={`xfusion_${current_modal_item.seed}.png`}
-                                    className="flex-1 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-semibold flex items-center justify-center hover:opacity-90 transition"
+                                    className="flex-1 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center hover:opacity-90 transition"
                                 >
                                     <Download width={14} height={14} className="mr-1.5" />
-                                    Download
+                                    <Text variant="caption" weight="semibold" tone="inherit">
+                                        Download
+                                    </Text>
                                 </a>
                             </div>
                         </div>
