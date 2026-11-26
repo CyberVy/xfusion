@@ -104,8 +104,8 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                         close_label="Close"
                     >
                         <div
-                            className={`flex justify-center rounded-2xl p-3 sm:p-3.5 bg-black/4 dark:bg-white/6 transition ${
-                                is_drag_over ? "ring-2 ring-black/40 dark:ring-white/40" : ""
+                            className={`flex justify-center rounded-2xl p-3 sm:p-3.5 bg-ui-fill-subtle transition ${
+                                is_drag_over ? "ring-2 ring-ui-border-strong" : ""
                             }`}
                         >
                             {children}
@@ -136,10 +136,10 @@ export function ImageSourceInput({ image, on_change, children }: ImageSourceInpu
                 <Button
                     variant="unstyled"
                     onClick={open_file_picker}
-                    className={`w-full h-40 rounded-2xl border border-dashed p-4 text-black/45 dark:text-white/45 ${
+                    className={`w-full h-40 rounded-2xl border border-dashed p-4 text-ui-label-tertiary ${
                         is_drag_over
-                            ? "border-black/50 dark:border-white/50 bg-black/6 dark:bg-white/8"
-                            : "border-black/15 dark:border-white/15 hover:border-black/30 dark:hover:border-white/30"
+                            ? "border-ui-border-strong bg-ui-fill-active"
+                            : "border-ui-border-hover hover:border-ui-border-strong"
                     }`}
                 >
                     <span className="flex flex-col items-center justify-center gap-2.5">

@@ -48,14 +48,14 @@ const MEMORY_MODES = [
 ]
 
 const FIELD_CLASS =
-    "rounded-xl bg-black/4 dark:bg-white/6 border border-black/8 dark:border-white/10 focus-within:border-black/30 dark:focus-within:border-white/30 transition"
+    "rounded-xl bg-ui-fill-subtle border border-ui-border focus-within:border-ui-border-strong transition"
 
 const SELECT_INDICATOR = <ChevronDown width={14} height={14} className="opacity-55" />
 const SELECT_SELECTED_INDICATOR = <Check width={14} height={14} />
 
 function Panel({ title, description, children }: { title: string; description: string; children: ReactNode }) {
     return (
-        <section className="flex flex-col gap-4 py-6 border-b border-black/8 dark:border-white/10 last:border-b-0">
+        <section className="flex flex-col gap-4 py-6 border-b border-ui-border last:border-b-0">
             <div>
                 <Text as="h3" variant="headline">
                     {title}
@@ -122,7 +122,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
             <ListRow
                 size="sm"
                 variant="filled"
-                leading={<Box width={16} height={16} className="text-black/40 dark:text-white/40" />}
+                leading={<Box width={16} height={16} className="text-ui-label-tertiary" />}
                 title={name}
                 trailing={
                     <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ function LoraAdapterRow({ name, weight }: { name: string; weight: number }) {
                             value={strength}
                             onChange={(e) => set_strength(Number(e.target.value))}
                             onPointerUp={() => model_controller.set_lora_strength(name, strength)}
-                            className="w-24 accent-black dark:accent-white cursor-pointer shrink-0"
+                            className="w-24 accent-ui-fill-solid cursor-pointer shrink-0"
                             aria-label={`${name} strength`}
                         />
                         <Text variant="caption" mono align="right" className="w-8 shrink-0">
@@ -163,7 +163,7 @@ function ErrorText({ message }: { message: string | null }) {
         <Text
             as="p"
             variant="caption"
-            className="p-3 rounded-xl leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 wrap-break-word"
+            className="p-3 rounded-xl leading-relaxed bg-ui-fill-subtle border border-ui-border-hover wrap-break-word"
         >
             {message}
         </Text>
@@ -241,7 +241,7 @@ export function ModelManageView() {
                     }
                     close_label="Close"
                 >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-black/4 dark:bg-white/6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-ui-fill-subtle">
                         <div className="min-w-0 flex-1">
                             <Text as="p" variant="caption" tone="secondary">
                                 Currently loaded
@@ -359,7 +359,7 @@ export function ModelManageView() {
                             type="checkbox"
                             checked={delete_file_after_load}
                             onChange={(e) => set_delete_file_after_load(e.target.checked)}
-                            className="accent-black dark:accent-white cursor-pointer"
+                            className="accent-ui-fill-solid cursor-pointer"
                         />
                         <Text variant="caption" tone="secondary">
                             Purge downloaded archive after loading into memory
@@ -427,7 +427,7 @@ export function ModelManageView() {
                                 step={0.05}
                                 value={lora_strength}
                                 onChange={(e) => set_lora_strength(Number(e.target.value))}
-                                className="flex-1 min-w-0 accent-black dark:accent-white cursor-pointer"
+                                className="flex-1 min-w-0 accent-ui-fill-solid cursor-pointer"
                             />
                             <Text variant="caption" mono align="right" className="w-8">
                                 {lora_strength}
@@ -475,7 +475,7 @@ export function ModelManageView() {
                         {active_loras.length === 0 ? (
                             <EmptyState
                                 title="No LoRA adapters loaded"
-                                className="py-6! border border-dashed border-black/12 dark:border-white/12 rounded-2xl"
+                                className="py-6! border border-dashed border-ui-border rounded-2xl"
                             />
                         ) : (
                             active_loras.map(([name, weight]) => (
@@ -518,7 +518,7 @@ export function ModelManageView() {
                                     onPointerUp={(e) =>
                                         model_controller.set_ip_adapter_strength(Number(e.currentTarget.value))
                                     }
-                                    className="flex-1 accent-black dark:accent-white cursor-pointer"
+                                    className="flex-1 accent-ui-fill-solid cursor-pointer"
                                 />
                                 <Text variant="caption" mono align="right" className="w-8">
                                     {ip_adapter.strength}
@@ -580,7 +580,7 @@ export function ModelManageView() {
                                     step={0.05}
                                     value={ip_strength}
                                     onChange={(e) => set_ip_strength(Number(e.target.value))}
-                                    className="flex-1 accent-black dark:accent-white cursor-pointer"
+                                    className="flex-1 accent-ui-fill-solid cursor-pointer"
                                 />
                                 <Text variant="caption" mono align="right" className="w-8">
                                     {ip_strength}

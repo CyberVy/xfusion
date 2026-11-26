@@ -28,7 +28,7 @@ const SIZE_PRESETS = [
 ]
 
 const FIELD_CLASS =
-    "w-full rounded-xl bg-black/4 dark:bg-white/6 border border-black/8 dark:border-white/10 focus:outline-none focus:border-black/30 dark:focus:border-white/30 transition"
+    "w-full rounded-xl bg-ui-fill-subtle border border-ui-border focus:outline-none focus:border-ui-border-strong transition"
 
 function snap_dimension(value: number): number {
     const clamped = Math.min(2048, Math.max(512, Math.round(value) || 512))
@@ -104,7 +104,7 @@ function ParamSlider({ label, value, min, max, step, on_change }: ParamSliderPro
                 step={step}
                 value={value}
                 onChange={(e) => on_change(Number(e.target.value))}
-                className="w-full accent-black dark:accent-white cursor-pointer"
+                className="w-full accent-ui-fill-solid cursor-pointer"
             />
         </label>
     )
@@ -195,7 +195,7 @@ export function WorkspaceView() {
 
                 <div className="min-w-0 flex flex-col gap-6">
                     <div
-                        className={`grid p-1.5 rounded-full bg-black/5 dark:bg-white/8 gap-1 ${
+                        className={`grid p-1.5 rounded-full bg-ui-fill-subtle gap-1 ${
                             visible_modes.length <= 1
                                 ? "grid-cols-1"
                                 : visible_modes.length === 2
@@ -212,8 +212,8 @@ export function WorkspaceView() {
                                 onClick={() => handle_mode_change(item.id)}
                                 className={`h-9 text-xs sm:text-sm font-medium ${
                                     selected_mode === item.id
-                                        ? "bg-white text-black shadow-sm dark:bg-white/15 dark:text-white"
-                                        : "text-black/55 dark:text-white/55 hover:text-black dark:hover:text-white"
+                                        ? "bg-ui-surface-elevated text-ui-label-strong shadow-sm"
+                                        : "text-ui-label-secondary hover:text-ui-label-strong"
                                 }`}
                             >
                                 {item.label}
@@ -331,7 +331,7 @@ export function WorkspaceView() {
                                             </Text>
                                         )}
                                         {control_preview && (
-                                            <div className="flex justify-center p-3 rounded-2xl bg-black/4 dark:bg-white/6">
+                                            <div className="flex justify-center p-3 rounded-2xl bg-ui-fill-subtle">
                                                 <img
                                                     src={control_preview}
                                                     alt="Canny preview"
@@ -377,7 +377,7 @@ export function WorkspaceView() {
                                 onChange={(e) => generation_controller.set_params({ negative_prompt: e.target.value })}
                                 placeholder="Negative prompt"
                                 rows={2}
-                                className={`${FIELD_CLASS} p-3 text-xs leading-relaxed text-black/70 dark:text-white/70 resize-y`}
+                                className={`${FIELD_CLASS} p-3 text-xs leading-relaxed text-ui-label-secondary resize-y`}
                             />
                         )}
                     </Section>
@@ -385,7 +385,7 @@ export function WorkspaceView() {
                     <div className="flex flex-col gap-2">
                         {state.is_generating ? (
                             <div className="flex gap-2 w-full">
-                                <div className="flex-1 h-12 rounded-2xl bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 flex items-center justify-center gap-2 select-none">
+                                <div className="flex-1 h-12 rounded-2xl bg-ui-fill-active text-ui-label-secondary flex items-center justify-center gap-2 select-none">
                                     <RefreshCw width={16} height={16} className="animate-spin" />
                                     <Text variant="body" weight="medium" tone="inherit">
                                         {state.progress?.active
@@ -428,7 +428,7 @@ export function WorkspaceView() {
                             <Text
                                 as="p"
                                 variant="caption"
-                                className="p-3 rounded-xl leading-relaxed bg-black/5 dark:bg-white/8 border border-black/15 dark:border-white/20 wrap-break-word"
+                                className="p-3 rounded-xl leading-relaxed bg-ui-fill-subtle border border-ui-border-hover wrap-break-word"
                             >
                                 {state.error}
                             </Text>

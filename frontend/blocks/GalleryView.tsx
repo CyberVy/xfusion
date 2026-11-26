@@ -166,7 +166,7 @@ export function GalleryView() {
                                             shape="pill"
                                             onPointerDown={(e) => e.stopPropagation()}
                                             onClick={(e) => handle_delete(item.id, e)}
-                                            className="size-7 bg-black/55 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-black/80"
+                                            className="size-7 bg-ui-scrim text-ui-label-overlay opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-ui-scrim-strong"
                                             title="Delete"
                                             aria-label="Delete artwork"
                                         >
@@ -191,13 +191,12 @@ export function GalleryView() {
                 open={!!inspected_item}
                 on_close={close_inspection}
                 duration={200}
-                backdrop_class_name="bg-black/40"
                 container_class_name="p-4 sm:p-6"
                 className="p-5 sm:p-6 max-w-3xl w-full max-h-[88vh] overflow-y-auto"
             >
                 {current_modal_item && (
                     <div className="flex flex-col md:flex-row gap-6">
-                        <div className="md:w-1/2 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-2xl overflow-hidden aspect-square p-2.5 sm:p-3">
+                        <div className="md:w-1/2 flex items-center justify-center bg-ui-fill-subtle rounded-2xl overflow-hidden aspect-square p-2.5 sm:p-3">
                             <Image
                                 src={current_modal_item.image_base64}
                                 alt={current_modal_item.prompt}
@@ -236,7 +235,7 @@ export function GalleryView() {
                                     <Text
                                         as="p"
                                         variant="caption"
-                                        className="mt-1.5 p-3 rounded-xl bg-black/4 dark:bg-white/6 max-h-24 overflow-y-auto leading-relaxed"
+                                        className="mt-1.5 p-3 rounded-xl bg-ui-fill-subtle max-h-24 overflow-y-auto leading-relaxed"
                                     >
                                         {current_modal_item.prompt || "(no prompt)"}
                                     </Text>
@@ -257,14 +256,14 @@ export function GalleryView() {
                                             as="p"
                                             variant="footnote"
                                             tone="secondary"
-                                            className="mt-1.5 p-2.5 rounded-xl bg-black/4 dark:bg-white/6 max-h-16 overflow-y-auto leading-relaxed"
+                                            className="mt-1.5 p-2.5 rounded-xl bg-ui-fill-subtle max-h-16 overflow-y-auto leading-relaxed"
                                         >
                                             {current_modal_item.negative_prompt}
                                         </Text>
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-2 p-3.5 rounded-xl bg-black/4 dark:bg-white/6">
+                                <div className="grid grid-cols-2 gap-2 p-3.5 rounded-xl bg-ui-fill-subtle">
                                     <Text as="div" variant="footnote" mono>
                                         Seed: {current_modal_item.seed}
                                     </Text>
@@ -296,7 +295,7 @@ export function GalleryView() {
                                 <a
                                     href={current_modal_item.image_base64}
                                     download={`xfusion_${current_modal_item.seed}.png`}
-                                    className="flex-1 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center hover:opacity-90 transition"
+                                    className="flex-1 py-2.5 rounded-xl bg-ui-fill-solid text-ui-label-inverse flex items-center justify-center hover:opacity-90 transition"
                                 >
                                     <Download width={14} height={14} className="mr-1.5" />
                                     <Text variant="caption" weight="semibold" tone="inherit">

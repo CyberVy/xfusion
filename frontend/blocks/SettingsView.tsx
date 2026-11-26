@@ -56,7 +56,7 @@ export function SettingsView() {
 
     return (
         <div className="w-full max-w-xl mx-auto px-4 md:px-6 py-6 pb-32">
-            <div className="pb-4 border-b border-black/10 dark:border-white/10">
+            <div className="pb-4 border-b border-ui-border">
                 <Text as="h2" variant="title" weight="semibold">
                     Settings
                 </Text>
@@ -66,7 +66,7 @@ export function SettingsView() {
             </div>
 
             {/* API Endpoint Configuration */}
-            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
+            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-ui-fill-subtle border border-ui-border">
                 <div className="flex items-center justify-between mb-2.5">
                     <Text as="label" variant="body" weight="medium">
                         Inference API Endpoint
@@ -76,17 +76,17 @@ export function SettingsView() {
                         shape="pill"
                         className={`gap-1.5 px-2.5 py-0.5 text-xs border ${
                             connection_status === "connected"
-                                ? "border-black/20 dark:border-white/25"
-                                : "border-black/10 dark:border-white/10 text-black/50 dark:text-white/50"
+                                ? "border-ui-border-hover"
+                                : "border-ui-border text-ui-label-secondary"
                         }`}
                     >
                         <span
                             className={`size-1.5 rounded-full ${
                                 connection_status === "connected"
-                                    ? "bg-black dark:bg-white"
+                                    ? "bg-ui-fill-solid"
                                     : connection_status === "checking"
-                                      ? "bg-black/40 dark:bg-white/40 animate-pulse"
-                                      : "border border-black/40 dark:border-white/40"
+                                      ? "bg-ui-fill-solid/40 animate-pulse"
+                                      : "border border-ui-border-strong"
                             }`}
                         />
                         {connection_status === "connected"
@@ -104,7 +104,7 @@ export function SettingsView() {
                         value={api_url}
                         on_change={handle_api_change}
                         placeholder="http://localhost:8000"
-                        className="flex-1 bg-white dark:bg-[#1a1a1a] text-sm"
+                        className="flex-1 bg-ui-surface-elevated text-sm"
                     />
                     <Button variant="primary" size="md" onClick={verify_connection} disabled={is_checking}>
                         <span className="inline-flex items-center gap-1.5">
@@ -120,10 +120,10 @@ export function SettingsView() {
             </div>
 
             {/* GPU & Model Info */}
-            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
+            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-ui-fill-subtle border border-ui-border">
                 <SectionHeader title="Hardware & Model State" className="mb-3" />
                 <div className="space-y-1.5">
-                    <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
+                    <div className="flex justify-between py-1.5 border-b border-ui-separator">
                         <Text variant="caption" tone="secondary">
                             GPU Count
                         </Text>
@@ -131,7 +131,7 @@ export function SettingsView() {
                             {system_info?.gpu_count ?? 0}
                         </Text>
                     </div>
-                    <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
+                    <div className="flex justify-between py-1.5 border-b border-ui-separator">
                         <Text variant="caption" tone="secondary">
                             Active Model
                         </Text>
@@ -140,7 +140,7 @@ export function SettingsView() {
                         </Text>
                     </div>
                     {system_info?.python_version && (
-                        <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
+                        <div className="flex justify-between py-1.5 border-b border-ui-separator">
                             <Text variant="caption" tone="secondary">
                                 Python
                             </Text>
@@ -150,7 +150,7 @@ export function SettingsView() {
                         </div>
                     )}
                     {system_info?.os_platform && (
-                        <div className="flex justify-between gap-4 py-1.5 border-b border-black/5 dark:border-white/5">
+                        <div className="flex justify-between gap-4 py-1.5 border-b border-ui-separator">
                             <Text variant="caption" tone="secondary" className="shrink-0">
                                 OS
                             </Text>
@@ -159,7 +159,7 @@ export function SettingsView() {
                             </Text>
                         </div>
                     )}
-                    <div className="flex justify-between py-1.5 border-b border-black/5 dark:border-white/5">
+                    <div className="flex justify-between py-1.5 border-b border-ui-separator">
                         <Text variant="caption" tone="secondary">
                             Architecture Version
                         </Text>
@@ -173,7 +173,7 @@ export function SettingsView() {
                                 Devices:
                             </Text>
                             {system_info.gpu_names.map((name, i) => (
-                                <Text key={i} variant="footnote" mono className="text-black/80 dark:text-white/80">
+                                <Text key={i} variant="footnote" mono>
                                     [{i}] {name}
                                 </Text>
                             ))}
@@ -183,7 +183,7 @@ export function SettingsView() {
             </div>
 
             {/* Local Storage & History */}
-            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-black/4 dark:bg-white/5 border border-black/8 dark:border-white/10">
+            <div className="my-4.5 p-4.5 sm:p-5 rounded-2xl bg-ui-fill-subtle border border-ui-border">
                 <SectionHeader title="Client Storage" className="mb-3" />
                 <div className="flex items-center justify-between">
                     <div>

@@ -91,7 +91,7 @@ export function MaskPainter({ image_src, on_mask_change }: MaskPainterProps) {
                 )}
             </div>
 
-            <div className="flex items-center gap-3 w-full text-black/60 dark:text-white/60 px-3 py-2 rounded-xl bg-black/4 dark:bg-white/6">
+            <div className="flex items-center gap-3 w-full text-ui-label-secondary px-3 py-2 rounded-xl bg-ui-fill-subtle">
                 <Text variant="caption" weight="medium" tone="inherit" className="shrink-0">
                     Brush
                 </Text>
@@ -101,7 +101,7 @@ export function MaskPainter({ image_src, on_mask_change }: MaskPainterProps) {
                     max={120}
                     value={brush_size}
                     onChange={(e) => set_brush_size(Number(e.target.value))}
-                    className="flex-1 accent-black dark:accent-white cursor-pointer"
+                    className="flex-1 accent-ui-fill-solid cursor-pointer"
                 />
                 <Text variant="caption" tone="inherit" mono align="right" className="w-8">
                     {brush_size}

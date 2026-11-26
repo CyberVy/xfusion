@@ -36,7 +36,7 @@ export function ResultPanel() {
 
     return (
         <div className="flex flex-col gap-3.5">
-            <div className="relative flex items-center justify-center min-h-[40vh] md:min-h-[60vh] rounded-3xl bg-black/4 dark:bg-white/5 p-3 sm:p-4 overflow-hidden">
+            <div className="relative flex items-center justify-center min-h-[40vh] md:min-h-[60vh] rounded-3xl bg-ui-fill-subtle p-3 sm:p-4 overflow-hidden">
                 {selected ? (
                     <ContextMenu
                         className="w-full h-full flex items-center justify-center"
@@ -103,7 +103,7 @@ export function ResultPanel() {
                 )}
 
                 {state.is_generating && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-black/60 dark:text-white/60 bg-white/30 dark:bg-black/30 backdrop-blur-xs">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-ui-label-secondary bg-ui-surface-glass backdrop-blur-xs">
                         <RefreshCw width={28} height={28} className="animate-spin" />
                         <Text variant="body" tone="inherit" align="center" className="px-6">
                             {state.progress?.active
@@ -148,7 +148,7 @@ export function ResultPanel() {
                         <a
                             href={selected.image_base64}
                             download={`xfusion_${selected.type}_${selected.seed}.png`}
-                            className="size-9 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black hover:opacity-85 transition"
+                            className="size-9 rounded-full flex items-center justify-center bg-ui-fill-solid text-ui-label-inverse hover:opacity-85 transition"
                             title="Download"
                         >
                             <Download width={16} height={16} />
@@ -206,9 +206,7 @@ export function ResultPanel() {
                             ]}
                             on_click_trigger={() => generation_controller.select_image(item)}
                             className={`shrink-0 size-16 rounded-xl overflow-hidden cursor-pointer transition ${
-                                item.id === selected?.id
-                                    ? "ring-2 ring-black dark:ring-white"
-                                    : "opacity-60 hover:opacity-100"
+                                item.id === selected?.id ? "ring-2 ring-ui-fill-solid" : "opacity-60 hover:opacity-100"
                             }`}
                             close_label="Close"
                         >
