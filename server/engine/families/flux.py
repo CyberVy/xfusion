@@ -136,7 +136,6 @@ class FluxFamily:
                 return {}
             if prompt_embeds is None or pooled_prompt_embeds is None:
                 return {}
-            free_memory_to_system()
             return {
                 "prompt_embeds": prompt_embeds,
                 "pooled_prompt_embeds": pooled_prompt_embeds,

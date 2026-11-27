@@ -7,11 +7,29 @@ _ALLOC_CONF = "expandable_segments:True,garbage_collection_threshold:0.8"
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", _ALLOC_CONF)
 os.environ.setdefault("PYTORCH_ALLOC_CONF", _ALLOC_CONF)
 
+def _warmup_cuda_linalg() -> None:
+    """Eagerly load PyTorch's lazy CUDA linalg library on the main thread.
+
+    libtorch_cuda_linalg.so is loaded lazily on first CUDA torch.linalg call via a
+    non-thread-safe wrapper (PyTorch #90613). Triggering it once at startup prevents
+    concurrent multi-GPU worker threads from tripping 'lazy wrapper should be called
+    at most once'.
+    """
+    try:
+        eye = torch.eye(1, device="cuda")
+        torch.linalg.inv(eye)
+        torch.linalg.solve_triangular(eye, eye, upper=False, unitriangular=True)
+        del eye
+    except Exception as exc:
+        print(f"Warning: CUDA linalg warmup failed: {exc}")
+
+
 GPU_COUNT: int = torch.cuda.device_count() if torch.cuda.is_available() else 0
 GPU_NAME: List[str] = [torch.cuda.get_device_name(i) for i in range(GPU_COUNT)]
 if GPU_COUNT > 0:
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
+    _warmup_cuda_linalg()
 
 XFUSION_COOKIE: Optional[str] = os.environ.get("XFUSION_COOKIE")
 XFUSION_PROXY: Optional[str] = os.environ.get("XFUSION_PROXY")

@@ -3,10 +3,13 @@ import random
 import asyncio
 import json
 import os
+import queue as std_queue
 import threading
+import traceback
 from concurrent.futures import Future, ThreadPoolExecutor, wait as wait_futures
 from contextlib import aclosing
-from typing import List, Dict, Optional, Tuple, Union, TypedDict, AsyncGenerator, Any
+from dataclasses import replace
+from typing import List, Dict, Optional, Set, Tuple, Union, TypedDict, AsyncGenerator, Any
 import anyio
 from PIL import Image
 
@@ -50,6 +53,7 @@ class PipelineManager:
         self._cancel_event: Optional[threading.Event] = None
         self._progress_lock = threading.Lock()
         self._active_futures: List[Future[None]] = []
+        self._gpu_executors: List[ThreadPoolExecutor] = []
         self.progress: ProgressDict = {
             "active": False,
             "step": 0,
@@ -57,6 +61,26 @@ class PipelineManager:
             "image_index": 0,
             "image_count": 0,
         }
+
+    def _ensure_gpu_executors(self, count: int) -> None:
+        while len(self._gpu_executors) < count:
+            gpu_index = len(self._gpu_executors)
+            self._gpu_executors.append(
+                ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"xfusion-gpu-{gpu_index}")
+            )
+
+    def shutdown(self) -> None:
+        self.cancel()
+        pending = [future for future in self._active_futures if not future.done()]
+        if pending:
+            wait_futures(pending)
+        self._active_futures.clear()
+        for model in self.models:
+            model.clear()
+        self.models = []
+        for executor in self._gpu_executors:
+            executor.shutdown(wait=True, cancel_futures=True)
+        self._gpu_executors.clear()
 
     @property
     def model_version(self) -> Optional[str]:
@@ -121,10 +145,16 @@ class PipelineManager:
         self.models = []
         free_memory_to_system()
         loaded: List[LoadedModel] = []
+        gpu_count = max(GPU_COUNT, 1)
         try:
-            for gpu_id in range(max(GPU_COUNT, 1)):
-                loaded.append(load_model(settings, gpu_id=gpu_id, download_kwargs=self.download_kwargs))
+            for gpu_id in range(gpu_count):
+                per_gpu_settings = replace(
+                    settings,
+                    delete_file_after_load=settings.delete_file_after_load and gpu_id == gpu_count - 1,
+                )
+                loaded.append(load_model(per_gpu_settings, gpu_id=gpu_id, download_kwargs=self.download_kwargs))
                 free_memory_to_system()
+            self._ensure_gpu_executors(len(loaded))
             self.models = loaded
             self.current_model = settings.source
             self.settings = settings
@@ -143,6 +173,8 @@ class PipelineManager:
         if pending:
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, wait_futures, pending)
+            for model in self.models:
+                model.reset_interrupt()
             free_memory_to_system()
         self._active_futures.clear()
 
@@ -345,48 +377,86 @@ class PipelineManager:
 
             cancel_event = threading.Event()
             self._cancel_event = cancel_event
-            with self._progress_lock:
-                self.progress = {
+            default_steps = max(1, int(req.steps or 1))
+            image_steps: Dict[int, int] = {i: 0 for i in range(len(seeds))}
+            image_totals: Dict[int, int] = {i: default_steps for i in range(len(seeds))}
+            started_images: Set[int] = set()
+            completed_images: Set[int] = set()
+
+            def build_progress_locked() -> ProgressDict:
+                unfinished = [i for i in range(len(seeds)) if i not in completed_images]
+                if unfinished:
+                    lead = max(unfinished, key=lambda i: (image_steps[i], -i))
+                    total_steps = image_totals[lead]
+                    step = min(image_steps[lead], total_steps)
+                else:
+                    total_steps = image_totals[len(seeds) - 1]
+                    step = total_steps
+                return {
                     "active": True,
-                    "step": 0,
-                    "total_steps": int(req.steps or 0),
-                    "image_index": 0,
+                    "step": step,
+                    "total_steps": total_steps,
+                    "image_index": min(len(completed_images), len(seeds) - 1),
                     "image_count": len(seeds),
                 }
 
+            with self._progress_lock:
+                self.progress = build_progress_locked()
+
             loop = asyncio.get_running_loop()
             queue: asyncio.Queue[Tuple[str, Any]] = asyncio.Queue()
-            assignments: List[List[Tuple[int, int]]] = [[] for _ in self.models]
+            work_queue: std_queue.Queue[Tuple[int, int]] = std_queue.Queue()
             for index, item_seed in enumerate(seeds):
-                assignments[index % len(self.models)].append((index, item_seed))
+                work_queue.put_nowait((index, item_seed))
 
             def emit(msg_type: str, payload: Any) -> None:
                 if not loop.is_closed():
                     loop.call_soon_threadsafe(queue.put_nowait, (msg_type, payload))
 
-            def run_worker(model_index: int, task_list: List[Tuple[int, int]]) -> None:
+            def run_worker(model_index: int) -> None:
                 model = self.models[model_index]
-                for index, item_seed in task_list:
+                while not cancel_event.is_set():
+                    try:
+                        index, item_seed = work_queue.get_nowait()
+                    except std_queue.Empty:
+                        break
                     if cancel_event.is_set():
                         emit("cancelled", None)
                         break
                     try:
                         started = time.time()
                         with self._progress_lock:
-                            self.progress = {**self.progress, "image_index": index, "step": 0}
-                            progress_snapshot = dict(self.progress)
+                            started_images.add(index)
+                            progress_snapshot = build_progress_locked()
+                            self.progress = progress_snapshot
                         emit("progress", progress_snapshot)
 
-                        def on_step(step: int, total: int) -> None:
+                        def on_step(step: int, total: int, img_idx: int = index) -> None:
                             if cancel_event.is_set():
                                 model.interrupt()
                                 raise GenerationInterrupted("Generation cancelled by user")
+                            resolved_total = max(1, int(total or default_steps))
                             with self._progress_lock:
-                                self.progress = {**self.progress, "step": step, "total_steps": total}
-                                progress_snapshot = dict(self.progress)
+                                if image_totals[img_idx] != resolved_total:
+                                    image_totals[img_idx] = resolved_total
+                                    for pending_idx in image_totals:
+                                        if pending_idx not in started_images and image_totals[pending_idx] == default_steps:
+                                            image_totals[pending_idx] = resolved_total
+                                image_steps[img_idx] = max(image_steps[img_idx], min(int(step), resolved_total))
+                                progress_snapshot = build_progress_locked()
+                                self.progress = progress_snapshot
                             emit("progress", progress_snapshot)
 
                         result = model.generate(self._engine_request(task, req, item_seed), on_step=on_step)
+                        if cancel_event.is_set():
+                            emit("cancelled", None)
+                            break
+                        with self._progress_lock:
+                            image_steps[index] = image_totals[index]
+                            completed_images.add(index)
+                            progress_snapshot = build_progress_locked()
+                            self.progress = progress_snapshot
+                        emit("progress", progress_snapshot)
                         item = {
                             "image_base64": pil_to_base64_data_uri(result.image),
                             "seed": result.seed,
@@ -400,13 +470,15 @@ class PipelineManager:
                         emit("cancelled", None)
                         break
                     except Exception as exc:
+                        traceback.print_exc()
                         emit("error", str(exc))
                         break
 
-            active_workers = [index for index in range(len(self.models)) if assignments[index]]
-            pool = ThreadPoolExecutor(max_workers=max(1, len(active_workers)))
+            self._ensure_gpu_executors(len(self.models))
+            active_worker_count = min(len(self.models), len(seeds))
             futures: List[Future[None]] = [
-                pool.submit(run_worker, model_index, assignments[model_index]) for model_index in active_workers
+                self._gpu_executors[model_index].submit(run_worker, model_index)
+                for model_index in range(active_worker_count)
             ]
 
             completed_count = 0
@@ -449,11 +521,10 @@ class PipelineManager:
                     for model in self.models:
                         model.interrupt()
                 if is_generator_exit:
-                    pool.shutdown(wait=False, cancel_futures=True)
                     self._active_futures = futures
                 else:
                     with anyio.CancelScope(shield=True):
-                        await loop.run_in_executor(None, pool.shutdown, True)
+                        await loop.run_in_executor(None, wait_futures, futures)
                     for model in self.models:
                         model.reset_interrupt()
                     self._active_futures = []
