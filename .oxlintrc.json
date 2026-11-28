@@ -12,7 +12,6 @@
     ".wrangler",
     "dist",
     "cli/dist",
-    "src-tauri/src/inject.js",
     "draft",
     "extensions/vscode/dist"
   ],
